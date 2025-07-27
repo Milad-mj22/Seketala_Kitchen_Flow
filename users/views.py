@@ -938,7 +938,6 @@ def show_food_material(request,id):
 
 
         data.pop('food_name','Not found location')
-        user = User.objects.get(pk=request.user.id)
 
         values ={}
 
@@ -1319,11 +1318,10 @@ def add_store(request):
                 pass
                 
             
-        print('milaaaaaaaad')
 
 
 
-        profile = Profile.objects.get(id = request.user.id)
+        profile = request.user.profile
 
         ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1411,7 +1409,7 @@ def material_composition_view(request):
             return
 
 
-        profile = Profile.objects.get(id = request.user.id)
+        profile = request.user.profile
         ware_house = Warehouse.objects.get(id = ware_house)
 
 
@@ -1522,7 +1520,6 @@ def take_store(request):
         elif ware_house is None:
             return
 
-        profile = Profile.objects.get(id = request.user.id)
 
         selected_warehouse = Warehouse.objects.get(name = ware_house)
 
