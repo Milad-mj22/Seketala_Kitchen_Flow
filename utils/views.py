@@ -12,7 +12,7 @@ from .utils import detect_gender, fix_persian_text
 import pandas as pd
 from django.shortcuts import render
 from .forms import CSVUploadForm
-from users.models import Buyer , mother_material , raw_material , mode_raw_materials
+from users.models import Buyer, MaterialComposition , mother_material , raw_material , mode_raw_materials
 
 
 
@@ -232,3 +232,104 @@ def import_raw_materials_csv(request):
         form = CSVUploadForm()
 
     return render(request, 'import_csv_material.html', {'form': form})
+
+
+def create_new_composition_materail(name , code, unit):
+    mother_code = code[:4]
+    mother_code  = int(float(mother_code))
+    from users.models import  raw_material
+    mother_obj = mother_material.objects.filter(describe=mother_code).first()
+
+    raw_material_obj = raw_material.objects.get_or_create(name = name,describe =code ,unit = unit,mother=mother_obj)
+
+    return raw_material_obj
+    # MaterialComposition.objects.get_or_create(nam)
+
+
+@login_required
+def import_composition_materials_csv(request):
+    created_count = 0
+    updated_count = 0
+    skipped_count = 0
+    created_names = []
+    updated_names = []
+    skipped_names = []
+
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = request.FILES['file']
+
+            try:
+                df = pd.read_csv(csv_file)
+            except Exception as e:
+                return render(request, 'import_csv.html', {
+                    'form': form,
+                    'error': 'خطا در خواندن فایل CSV: ' + str(e),
+                })
+            
+            col_material_code = request.POST.get('col_id')
+            col_sub_material_code = request.POST.get('col_id2')
+            col_name = request.POST.get('col_name')
+            col_ratio = request.POST.get('col_ratio')
+            col_unit = request.POST.get('col_unit')
+
+
+
+
+            for _, row in df.iterrows():
+                material_code = str(row.get(col_material_code, '')).strip()
+                sub_material_code = str(row.get(col_sub_material_code, '')).strip()
+                name = str(row.get(col_name, '')).strip()
+                ratio = str(row.get(col_ratio, '')).strip()
+                unit = str(row.get(col_unit, '')).strip()
+
+
+
+
+                if material_code[:4] == '1007' :
+                    raw_material_obj = create_new_composition_materail(name = name , unit = unit , code= material_code)
+                    composition_material_obj_flag = True
+                    continue
+                    food_material = False
+                elif material_code[:4] == '1008':
+                    composition_material_obj_flag = False
+                    food_material = True
+
+                if  composition_material_obj_flag:
+                        
+                    composition_material = raw_material_obj[0]
+
+                    if sub_material_code !='' :
+                        sub_material_obj = raw_material.objects.filter(describe=sub_material_code)  
+                        if sub_material_obj.exists():
+                            sub_material_obj = sub_material_obj.first()
+                            # materaial_coposition_obj = MaterialComposition.objects.filter(main_material=composition_material)
+                            # if materaial_coposition_obj.exists():
+                            MaterialComposition.objects.get_or_create(main_material=composition_material,ingredient =sub_material_obj,ratio=ratio )
+                                
+                        else:
+                            try:
+                                print('not exist : ',name)
+                                mother_code = sub_material_code[:4]
+                                mother_code  = int(float(mother_code))
+                                mother_obj = mother_material.objects.filter(describe=mother_code).first()
+                                sub_material_obj = raw_material.objects.create(name=name,describe=sub_material_code,unit=unit,mother=mother_obj)
+                                MaterialComposition.objects.get_or_create(main_material=composition_material,ingredient =sub_material_obj,ratio=ratio )
+                            except:
+                                print('Errior in ',name,mother_code,sub_material_code)
+                
+                
+
+            return render(request, 'import_result_material.html', {
+                'created': created_count,
+                'updated': updated_count,
+                'skipped': skipped_count,
+                'created_names': created_names,
+                'update_names': updated_names,
+                'skipped_names': skipped_names,
+            })
+    else:
+        form = CSVUploadForm()
+
+    return render(request, 'import_csv_material_copmosition.html', {'form': form})

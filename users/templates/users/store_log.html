@@ -301,12 +301,24 @@ $(document).ready(function () {
                     <td class="text-center">{{ log.amount }}</td>
                     <td class="text-center">{{ log.jalali_date }}</td>
                     <td class="text-center">{{ log.inventory.inventory_raw_material.name }}</td>
+
                     <td class="text-center">{{ log.inventory.warehouse.name }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+<script>
+function handleClick(id) {
+  alert('Clicked: ' + id);
+  // You can redirect or do other things here
+  window.location.href = '/stone_flow/coops/' +id;
+}
+</script>
+
+
+
 </body>
 
 {% endblock %}

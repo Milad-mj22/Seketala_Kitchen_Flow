@@ -9,15 +9,16 @@ from django.views import View
 from django.contrib.auth.decorators import login_required
 from khayyam import JalaliDatetime
 
+from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
 from users.utils.utils import send_push_notification
 from .decorators import job_required
 from users.utils.CalulatedDistance import calculate_distance
 
-from .forms import BuyerAttributeForm, JobForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
+from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, JobForm, MotherMaterialForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerAttribute, BuyerAttributeValue, CapturedImage, Inventory, InventoryLog, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -61,6 +62,7 @@ from .models import Buyer, InventoryLog
 from .forms import BuyerLoginForm
 from .forms import UserForm, ProfileForm
 
+from django.core.exceptions import ObjectDoesNotExist
 
 
 from .models import DailyReports , ReportTitles
@@ -80,13 +82,35 @@ BACKEND_ENDPOINT = 'http://127.0.0.1:8000'
 
 from django.contrib.auth.views import LogoutView
 
+def clean_buyer_names(buyers):
+    try:
+        for buyer in buyers:
+
+            buyer.first_name = buyer.first_name.replace('�','')
+            buyer.last_name = buyer.last_name.replace('�','')
+            full_name = f"{buyer.first_name} {buyer.last_name or ''}"
+            buyer.short_name = full_name[:40] + ('…' if len(full_name) > 50 else '')
+    except:    
+        return buyers
+
+    return buyers
+
+
+
+
 class CustomLogoutView(LogoutView):
     def get(self, request, *args, **kwargs):
-        print('milad'*20)
         messages.success(request, "You have been logged out successfully.")
+        logout(request)
+
         return redirect(to='login')
         return redirect('users-register')
         return self.post(request, *args, **kwargs)
+
+def logout_view(request):
+    logout(request)
+    return render(request, 'users/logout.html')
+
 
 
 def home(request):
@@ -255,21 +279,77 @@ def save_subscription(request):
         
 # Class based view that extends from the built in login view to add a remember me functionality
 
+# class CustomLoginView(LoginView):
+#     form_class = LoginForm
+
+#     def form_valid(self, form):
+#         remember_me = form.cleaned_data.get('remember_me')
+
+#         if not remember_me:
+#             # set session expiry to 0 seconds. So it will automatically close the session after the browser is closed.
+#             self.request.session.set_expiry(0)
+
+#             # Set session as modified to force data updates/cookie to be saved.
+#             self.request.session.modified = True
+
+#         # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
+#         return super(CustomLoginView, self).form_valid(form)
+
+
+
 class CustomLoginView(LoginView):
     form_class = LoginForm
 
     def form_valid(self, form):
         remember_me = form.cleaned_data.get('remember_me')
 
-        if not remember_me:
-            # set session expiry to 0 seconds. So it will automatically close the session after the browser is closed.
-            self.request.session.set_expiry(0)
+        username = form.cleaned_data.get('username')
 
-            # Set session as modified to force data updates/cookie to be saved.
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.error(self.request, 'کاربری با این نام وجود ندارد.')
+            return self.form_invalid(form)
+
+        # Now check if Profile exists for that user
+        try:
+            profile = user.profile
+        except ObjectDoesNotExist:
+            messages.error(self.request, 'پروفایل کاربر یافت نشد.')
+            return self.form_invalid(form)
+
+
+
+        if not remember_me:
+            self.request.session.set_expiry(0)
             self.request.session.modified = True
 
-        # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
-        return super(CustomLoginView, self).form_valid(form)
+
+
+        # انجام ورود
+        response = super().form_valid(form)
+        # بررسی اینکه آیا پروفایل وجود دارد یا نه
+        try:
+            self.request.user.profile
+        except ObjectDoesNotExist:
+            messages.error(self.request, 'پروفایل شما وجود ندارد. لطفاً با مدیر سیستم تماس بگیرید.')
+            
+            return redirect(reverse_lazy('login'))
+
+
+
+        return response
+
+
+
+@login_required
+def post_login_redirect(request):
+
+    job_name = request.user.profile.job_position.name
+    if hasattr(request.user, 'profile') and (job_name == 'CEO' or job_name == 'Technical Manager' or job_name == 'Programmer'):
+        return redirect('mian_dashboard')  # نام view یا نام urlpattern
+
+    return redirect('users-home')  # نام view یا نام urlpattern
 
 
 
@@ -938,6 +1018,7 @@ def show_food_material(request,id):
 
 
         data.pop('food_name','Not found location')
+        user = User.objects.get(pk=request.user.id)
 
         values ={}
 
@@ -1318,10 +1399,11 @@ def add_store(request):
                 pass
                 
             
+        print('milaaaaaaaad')
 
 
 
-        profile = request.user.profile
+        profile = Profile.objects.get(id = request.user.id)
 
         ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1383,8 +1465,8 @@ def get_total_quantity(material):
 
 
 
-
-
+from django.db import transaction
+@transaction.atomic
 # views.py
 def material_composition_view(request):
 
@@ -1414,44 +1496,45 @@ def material_composition_view(request):
 
 
 
-
+        flag_error = False
         
-        for key , value in data.items():
-            discard=False
-            if float(value)>0:
+        try:
+            with transaction.atomic():
+                for key, value in data.items():
+                    discard = False
+                    if float(value) > 0:
+                        decimal_value = Decimal(value)
+                        try:
+                            raw_material_instance = raw_material.objects.get(name=key)
+                        except raw_material.DoesNotExist:
+                            flag_error = True
+                            error_message = f'ماده اولیه "{key}" یافت نشد.'
+                            raise Exception(error_message)
 
-                if key not in main_materials:
+                        inventory, _ = Inventory.objects.get_or_create(
+                            inventory_raw_material=raw_material_instance,
+                            warehouse=ware_house
+                        )
 
-                    print('Remove :',key , 'value : ',value)
-                    decimal_value = Decimal(value)
-                    raw_material_instance = raw_material.objects.get(name=key)
-                    inventory, created = Inventory.objects.get_or_create(inventory_raw_material=raw_material_instance,warehouse=ware_house)
-                    status,message = inventory.remove_stock(amount=decimal_value,user=profile)
-                    # print(status,message)
+                        if key not in main_materials:
+                            # Remove stock
+                            status, message = inventory.remove_stock(amount=decimal_value, user=profile)
+                            print('Remove:', key, 'value:', value)
+                        else:
+                            # Add stock
+                            receipt_number = '9000'  # You can make this dynamic if needed
+                            status, message = inventory.add_stock(amount=decimal_value, user=profile, receipt_number=receipt_number)
+                            print('Add:', key, 'value:', value)
 
-                    if not status:
-                        return redirect('error_page')
-                
-                    
+                        if not status:
+                            flag_error = True
+                            error_message = f'{message} - {key}'
+                            raise Exception(error_message)
 
+        except Exception as e:
+            return render(request, 'users/error_page.html', {'text': str(e)})
 
-                else:
-
-
-                    print('ADD: ',key , 'value : ',value)
-                    receipt_number = '{}'.format(9000)
-                    decimal_value = Decimal(value)
-                    raw_material_instance = raw_material.objects.get(name=key)
-                    inventory, created = Inventory.objects.get_or_create(inventory_raw_material=raw_material_instance,warehouse=ware_house)
-                    status,message = inventory.add_stock(amount=decimal_value,user=profile,receipt_number=receipt_number)
-                    # print(status,message)
-
-                    if not status:
-                        return redirect('error_page')
-                
-                        
-
-        return redirect('success_page')  # Redirect to a success page
+        return redirect('success_page')
     
 
 
@@ -1520,6 +1603,7 @@ def take_store(request):
         elif ware_house is None:
             return
 
+        profile = Profile.objects.get(id = request.user.id)
 
         selected_warehouse = Warehouse.objects.get(name = ware_house)
 
@@ -2136,14 +2220,18 @@ def no_access(request):
 
 from .models import Buyer
 from .forms import BuyerForm
-
+@login_required
 def add_buyer(request):
     if request.method == 'POST':
         form = BuyerForm(request.POST)
         buyer_attributes = BuyerAttribute.objects.all()
 
         if form.is_valid():
-            buyer = form.save()
+
+            buyer = form.save(commit=False)
+            buyer.created_by = request.user  # 👈 ست کردن کاربر لاگین شده
+            buyer.save()
+
             for attr in buyer_attributes:
                 field_name = f"attr_{attr.id}"
 
@@ -2214,47 +2302,128 @@ def edit_buyer(request, pk):
                         defaults={'value': value, 'image': None}
                     )
             return redirect('buyer_list')
+            
+        else:
+            return redirect('error_page')
+
+
+
     else:
+
+
+        
         form = BuyerForm(instance=buyer)
-        buyer_attrs = BuyerAttributeValue.objects.filter(buyer=pk)
+        buyer_attrs = BuyerAttribute.objects.all()
+
+        categories = BuyerCategory.objects.all()
+
+    return render(request, 'Buyer/buyer_edit.html', {'form': form, 'title': 'ویرایش خریدار','buyer_attributes':buyer_attrs,'categories':categories})
 
 
-
-    return render(request, 'Buyer/buyer_edit.html', {'form': form, 'title': 'ویرایش خریدار','buyer_attributes':buyer_attrs})
-
+from django.db.models import Q
 
 def buyer_list(request):
-    buyers = Buyer.objects.all().order_by('-id')  # نزولی (آخرین رکورد اول)
-    return render(request, 'Buyer/buyer_list.html', {'buyers': buyers})
+    query = request.GET.get('q')
 
+    if request.user.profile.job_position.name =='CEO':
+        buyers = Buyer.objects.all().order_by('-id').filter(is_active=True)
+
+    else:
+        buyers = Buyer.objects.all().order_by('-id').filter(is_active=True,created_by = request.user)
+
+    if query:
+        buyers = buyers.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(phone_number__icontains=query) |
+            Q(nationality__name__icontains=query)|
+            Q(categories__name__icontains=query)  # این خط اضافه شد
+        ).distinct()
+
+        buyers = buyers.filter(is_active=True)
+
+
+    buyers = clean_buyer_names(buyers=buyers)
+
+
+    try:
+        len_buyer = len(buyers)
+    except:
+        len_buyer = 0
+    return render(request, 'Buyer/buyer_list.html', {
+        'counts' : len_buyer,
+        'buyers': buyers,
+        'query': query,
+        
+    })
+
+@login_required
+def delete_buyer(request, buyer_id):
+    buyer = get_object_or_404(Buyer, id=buyer_id)
+    
+    if request.method == 'POST':
+        buyer.is_active = False
+        buyer.save()
+        messages.success(request, 'مشتری با موفقیت حذف شد، در انتظار تایید مدیر میباشد.')
+        return redirect('buyer_list')  # replace with your actual buyer list url name
+
+    return render(request, 'Buyer/confirm_delete.html', {'buyer': buyer})
+
+@login_required
+def review_delete_buyers_requests(request):
+    requests = Buyer.objects.filter(is_active=False)
+    return render(request, 'Buyer/buyer_delete_request.html', {'requests': requests})
+
+@login_required
+def confirm_delete_buyer_request(request,buyer_id):
+
+    delete_request = get_object_or_404(Buyer, id=buyer_id, is_active=False)
+    delete_request.delete()
+    return redirect('review_delete_buyers_requests')
+
+@login_required
+def reject_delete_buyer_request(request,buyer_id):
+
+    delete_request = get_object_or_404(Buyer, id=buyer_id, is_active=False)
+    delete_request.is_active=True
+    delete_request.save()
+    return redirect('review_delete_buyers_requests')
 
 
 from django.db.models import Count, Sum
 from django.shortcuts import render
 from .models import Buyer, InventoryLog
+from django.db.models import Count, Sum
+from collections import defaultdict
+from StoneFlow.models import PreInvoice, PreInvoiceItem, Buyer  # Adjust import paths
 
-def buyer_dashboard(request):
-    purchase_logs = InventoryLog.objects.filter(change_type='REMOVE', buyer__isnull=False)
 
-    # مشتریان برتر
-    top_buyers = purchase_logs.values('buyer__id', 'buyer__first_name').annotate(
+def calc_buyer_dashboard():
+        # Only consider sold pre-invoices
+    sold_invoices = PreInvoice.objects.filter(is_sell=True)
+
+    # مشتریان برتر (Top Buyers)
+    top_buyers = sold_invoices.values('customer__id', 'customer__first_name','customer__last_name').annotate(
         total_purchases=Count('id')
     ).order_by('-total_purchases')[:10]
 
-    # محصولات محبوب هر مشتری
-    from collections import defaultdict
+    # محصولات محبوب هر مشتری (Most Bought Product by Each Buyer)
     buyer_products = defaultdict(list)
-    top_buyer_ids = [b['buyer__id'] for b in top_buyers]
-    for log in purchase_logs.filter(buyer__id__in=top_buyer_ids):
-        buyer_products[log.buyer.id].append(log)
+    top_buyer_ids = [b['customer__id'] for b in top_buyers]
+    
+    # Get all items of sold invoices for top buyers
+    items = PreInvoiceItem.objects.filter(pre_invoice__is_sell=True, pre_invoice__customer__id__in=top_buyer_ids)
+
+    for item in items:
+        buyer_products[item.pre_invoice.customer.id].append(item)
 
     top_products = []
-    for buyer_id, logs in buyer_products.items():
+    for buyer_id, item_list in buyer_products.items():
         product_totals = defaultdict(float)
-        buyer_name = logs[0].buyer.first_name if logs else ""
-        for log in logs:
-            material_name = log.inventory.inventory_raw_material.name
-            product_totals[material_name] += float(log.amount)
+        buyer_name = item_list[0].pre_invoice.customer.first_name if item_list else ""
+        for item in item_list:
+            material_name = item.coop.material.name
+            product_totals[material_name] += float(item.unit_price or 0)
 
         if product_totals:
             top_product = max(product_totals.items(), key=lambda x: x[1])
@@ -2265,16 +2434,18 @@ def buyer_dashboard(request):
                 'top_product_amount': top_product[1],
             })
 
-    # مشتریان بدون خرید
-    inactive_buyers = Buyer.objects.exclude(id__in=purchase_logs.values_list('buyer_id', flat=True))
+    # مشتریان بدون خرید (Buyers Without Purchase)
+    all_buyers_with_purchase = sold_invoices.values_list('customer_id', flat=True)
+    inactive_buyers = Buyer.objects.exclude(id__in=all_buyers_with_purchase)
+    inactive_buyers = inactive_buyers.filter(is_active=True)
 
-    # مشتریان وفادار
-    loyal_buyers = purchase_logs.values('buyer__id', 'buyer__first_name').annotate(
+    # مشتریان وفادار (Loyal Buyers - 5+ purchases)
+    loyal_buyers = sold_invoices.values('customer__id', 'customer__first_name','customer__last_name').annotate(
         total_purchases=Count('id')
     ).filter(total_purchases__gte=5).order_by('-total_purchases')
 
-    # برای نمودار
-    chart_labels = [b['buyer__first_name'] for b in top_buyers]
+    # For Chart
+    chart_labels = [b['customer__first_name'] for b in top_buyers]
     chart_data = [b['total_purchases'] for b in top_buyers]
 
     context = {
@@ -2285,10 +2456,18 @@ def buyer_dashboard(request):
         'chart_labels': chart_labels,
         'chart_data': chart_data,
     }
+    return context
 
+
+@login_required
+def buyer_dashboard(request):
+    context = calc_buyer_dashboard()
     return render(request, 'Buyer/buyer_dashboard.html', context)
 
-
+@login_required
+def buyer_dashboard_partial(request):
+    context = calc_buyer_dashboard()
+    return render(request, 'Buyer/buyer_dashboard_partial.html', context)
 
 
 
@@ -2395,9 +2574,78 @@ def delete_buyer_attribute(request, attr_id):
 
 
 
+def buyer_detail(request, buyer_id):
+    buyer = get_object_or_404(Buyer, id=buyer_id)
+    # activities = BuyerActivity.get_activity_type_labels()
+    activities = BuyerActivity.get_activity_type_label_icon_list()
+
+
+    buyer = clean_buyer_names(buyer )
+
+    
+    return render(request, 'Buyer/buyer_history.html', {
+        'buyer': buyer,
+        'activities': activities,
+        
+    })
+
+
+def activity_presian2english(persian_activity):
+    try:
+        PERSIAN_TO_ENGLISH = dict((fa, en) for en, fa in BuyerActivity.ACTIVITY_TYPE_CHOICES)
+        return  PERSIAN_TO_ENGLISH.get(persian_activity)
+    except:
+        return ''
+
+def buyer_activity_detail(request, buyer_id, activity_type):
+    activity_type_english = activity_presian2english(activity_type)
+    
+    activity_logs = BuyerActivity.objects.filter(buyer_id=buyer_id, activity_type=activity_type_english)
+    factor_items = None
+    total_price =0
+    if activity_type=='فاکتور ها و خرید':
+        # گرفتن فاکتورهای مربوط به مشتری خاص
+        factors = PreInvoice.objects.filter(customer=buyer_id,is_sell=True)
+
+        # گرفتن آیتم‌های مربوط به همه فاکتورها
+        factor_items = PreInvoiceItem.objects.filter(pre_invoice__in=factors)
+        
+        for item in factor_items:
+            total_price+=float(item.total_price())
+
+        # جمع کل قیمت‌ها
+        # total_price = sum(item.total_price or 0 for item in factor_items)
+
+    return render(request, 'Buyer/partials/activity_logs.html', {
+        'logs': activity_logs,
+        'buyer_id': buyer_id,
+        'activity_choices': BuyerActivity.get_activity_type_labels(),
+        'selected_activity_type': activity_type,  # Add this line
+        'factors':factor_items,
+        'total_price':total_price,
+    })
+
+def add_buyer_activity(request, buyer_id):
+    if request.method == 'POST':
+        activity_type = request.POST.get('activity_type')
+        description = request.POST.get('description')
+
+        BuyerActivity.objects.create(
+        
+            buyer_id=buyer_id,
+            activity_type=activity_type,
+            description=description,
+            created_by=request.user  # if your model supports it
+        )
+        return redirect('buyer_detail', buyer_id=buyer_id)
 
 
 
+@login_required
+def show_factor(request, pk):
+
+    invoice = get_object_or_404(PreInvoice, pk=pk)
+    return render(request, 'preinvoice/detail.html', {'preinvoice': invoice})
 
 
 # views.py
@@ -2416,39 +2664,123 @@ def delete_buyer_attribute(request, attr_id):
 #     reports = DailyReports.objects.filter(user=request.user).order_by('-date', '-created_at')
 #     types = ReportTitles.objects.all()
 #     return render(request, 'users/daily_report.html', {'form': form, 'reports': reports,'types':types})
+import jdatetime
+
+def convert_jalali_to_gregorian(jalali_date_str):
+    # فرض: فرمت ورودی '۱۴۰۴/۰۵/۱۴' و به صورت فارسی
+    jalali_date_str = jalali_date_str.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
+    year, month, day = map(int, jalali_date_str.split('/'))
+    gregorian_date = jdatetime.date(year, month, day).togregorian()
+    return gregorian_date.strftime('%Y-%m-%d')
 
 
 
 @login_required
 def daily_report_view(request):
-    reports = DailyReports.objects.filter(user=request.user).order_by('-created_at')
-    last_report = reports.first()  # Get only the most recent one
+    reports = BuyerActivity.objects.filter(created_by=request.user).order_by('-timestamp')
+    last_report = reports.first()
+
+    # داده‌هایی که می‌خواهی به قالب بفرستی
+    buyers = Buyer.objects.filter(is_active=True , created_by = request.user  )
+    countries = buyers.values_list('nationality__name', flat=True).distinct()
+
+    activities = BuyerActivity.get_activity_type_label_icon_list()  # یا هر مدل مرتبط
+
+    # Get filters
+    search_query = request.GET.get('search')
+    selected_country = request.GET.get('country')
+
+    # Apply filters
+    if search_query:
+        buyers = buyers.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    if selected_country:
+        if selected_country =='None':
+            selected_country = None
+        buyers = buyers.filter(nationality__name=selected_country)
+
+    buyers = clean_buyer_names(buyers=buyers)
+
+
+
     if request.method == 'POST':
-        report_id = request.POST.get("report_id")
-        if report_id and str(last_report.id) == report_id:
-            # Edit only the last report
-            form = DailyReportForm(request.POST, instance=last_report)
-        else:
-            form = DailyReportForm(request.POST)
+        buyer_id = request.POST.get('buyer')
+        activity_type = request.POST.get('activity_type')
+        title = request.POST.get('activity_title')
+        description = request.POST.get('description')
+        next_followup = request.POST.get('next_followup')
 
-        if form.is_valid():
-            report = form.save(commit=False)
-            report.user = request.user
-            report.save()
-            return redirect('daily_report')
+        if buyer_id and activity_type:
+            # activity_type = get_object_or_404(ActivityType, id=activity_type_id)
+            buyer = get_object_or_404(Buyer, id=buyer_id)
 
-    else:
-        form = DailyReportForm()
+            if next_followup != '':
+
+                next_followup = convert_jalali_to_gregorian(next_followup)
+            
+                BuyerActivity.objects.create(
+                    title = title,
+                    buyer=buyer,
+                    activity_type=activity_type,
+                    description=description,
+                    created_by=request.user,  # if your model supports it
+                    next_followup = next_followup
+                )
+
+            else:
+                BuyerActivity.objects.create(
+                    title = title,
+                    buyer=buyer,
+                    activity_type=activity_type,
+                    description=description,
+                    created_by=request.user,  # if your model supports it
+                )
+
+
+            return redirect('buyer_detail', buyer_id=buyer.id)
 
     return render(request, 'users/daily_report.html', {
-        'form': form,
         'reports': reports,
         'last_report_id': last_report.id if last_report else None,
+        'buyers': buyers,
+        'activities': activities,
+        'countries': countries,
+        'query_name': search_query,
+        'query_country': selected_country,
+
+
     })
 
 
+@login_required
+def edit_buyer_activity(request, pk):
+    activity = get_object_or_404(BuyerActivity, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = DailyReportForm(request.POST, instance=activity)
+        if form.is_valid():
+            form.save()
+            return redirect('daily_report')
+    else:
+        form = DailyReportForm(instance=activity)
 
+    return render(request, 'Buyer/buyer_edit_activity.html', {
+        'form': form,
+        'activity': activity,
+    })
 
+@login_required
+def delete_buyer_activity(request, pk):
+    activity = get_object_or_404(BuyerActivity, pk=pk, user=request.user)
+    if request.method == 'POST':
+        activity.delete()
+        return redirect('daily_report')
+
+    return render(request, 'Buyer/buyer_delete_activity.html', {
+        'activity': activity,
+    })
 
 
 
@@ -2676,3 +3008,119 @@ def manage_role_access(request):
         'menu_items': menu_items,
         'role_access': role_access,
     })
+
+
+
+
+def category_list(request):
+    categories = BuyerCategory.objects.all()
+    return render(request, 'Buyer/BuyerCategories/list.html', {'categories': categories})
+
+def category_create(request):
+    form = BuyerCategoryForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        return redirect('category_list')
+    return render(request, 'Buyer/BuyerCategories/form.html', {'form': form, 'title': 'افزودن دسته‌بندی'})
+
+def category_update(request, pk):
+    category = get_object_or_404(BuyerCategory, pk=pk)
+    form = BuyerCategoryForm(request.POST or None, instance=category)
+    if form.is_valid():
+        form.save()
+        return redirect('category_list')
+    return render(request, 'Buyer/BuyerCategories/form.html', {'form': form, 'title': 'ویرایش دسته‌بندی'})
+
+def category_delete(request, pk):
+    category = get_object_or_404(BuyerCategory, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('category_list')
+    return render(request, 'Buyer/BuyerCategories/delete.html', {'category': category})
+
+
+
+
+from django.views.generic import ListView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+
+# --- MOTHER MATERIAL ---
+
+
+def mother_material_list(request):
+    materials = MotherMaterial.objects.all()
+    return render(request, 'materials/mother_material_list.html', {'materials': materials})
+
+
+def raw_material_list(request):
+    materials = raw_material.objects.all()
+    return render(request, 'materials/raw_material_list.html', {'materials': materials})
+
+
+def mother_material_edit(request, pk):
+    item = get_object_or_404(MotherMaterial, pk=pk)
+    if request.method == 'POST':
+        form = MotherMaterialForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('mother_material_list')
+    else:
+        form = MotherMaterialForm(instance=item)
+    return render(request, 'materials/mother_material_form.html', {'form': form})
+
+
+def confirm_delete_view(request, pk):
+    obj = get_object_or_404(MotherMaterial, pk=pk)
+    if request.method == 'POST':
+        obj.delete()
+        return redirect('mother_material_list')
+    return render(request, 'materials/mother_material_confirm_delete.html', {'materials': obj})
+
+
+def mother_material_add(request):
+    if request.method == "POST":
+        form = MotherMaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('mother_material_list')
+    else:
+        form = MotherMaterialForm()
+    return render(request, 'materials/mother_material_form.html', {'form': form, 'title': 'افزودن ماده اولیه مادر'})
+
+
+
+
+
+# --- Raw Material ---
+
+def raw_material_list(request):
+    materials = raw_material.objects.all()
+    return render(request, 'materials/raw_material_list.html', {'materials': materials})
+
+def raw_material_add(request):
+    if request.method == 'POST':
+        form = RawMaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('raw_material_list')
+    else:
+        form = RawMaterialForm()
+    return render(request, 'materials/raw_material_form.html', {'form': form, 'title': 'افزودن ماده اولیه'})
+
+def raw_material_edit(request, pk):
+    item = get_object_or_404(raw_material, pk=pk)
+    if request.method == 'POST':
+        form = RawMaterialForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('raw_material_list')
+    else:
+        form = RawMaterialForm(instance=item)
+    return render(request, 'materials/raw_material_form.html', {'form': form, 'title': 'ویرایش ماده اولیه'})
+
+def raw_material_delete(request, pk):
+    item = get_object_or_404(raw_material, pk=pk)
+    if request.method == 'POST':
+        item.delete()
+        return redirect('raw_material_list')
+    return render(request, 'materials/mother_material_confirm_delete.html', {'object': item, 'title': 'حذف ماده اولیه'})

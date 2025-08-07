@@ -209,21 +209,6 @@
 
 
 
-    document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        // Show success popup (can use Bootstrap modal or simple alert)
-        alert('مقادیر مورد نظر با موفقیت اضافه گردید')
-
-        // Wait for a few seconds (e.g., 2 seconds) then redirect
-        setTimeout(function() {
-            window.location.href = "{% url 'success_page' %}";
-        }, 2000);  // 2-second delay
-        });
-    });
-
 
 
 
@@ -254,67 +239,77 @@
         <!-- Materials -->
         <div>
             {% for mother_material in materials_with_ingredients %}
-                <div class="card">
-                    <a href="javascript:void(0);" onclick="toggleSubmaterials('submaterials-{{ mother_material.id }}')">
-                        {{ mother_material.main_material }} 
-                        
-                    </a>
-                    <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
-                        {% for field in mother_material.ingredients %}
-                            <div class="col">
-                                <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            {{ field.name }}
-                                            :
+            <div class="card mb-3">
+                <a href="javascript:void(0);" onclick="toggleSubmaterials('submaterials-{{ mother_material.id }}')">
+                {{ mother_material.main_material }}
+                </a>
 
-                                            <span style="font-size: smaller;">نسبت پیشنهادی</span> 
-                                            <span style="font-size: smaller;">{{ field.ratio }}</span> 
-                                            --
-                                            <span style="font-size: smaller;">موجودی  </span>          
-                                            <span style="font-size: smaller;">{{ field.quantity }}</span> 
-                                        </h5>
-
-                                        <div class="input-wrapper">
-                                            {% if field.has_discard %}
-                                            ناخالص : 
-                                            {% endif %}
-
-                          
-                                            <button type="button" class="btn btn-decrement" onclick="changeValue('{{ field.id }}_input', -1)">-</button>
-                                            <input class="form-control digit-input" type="text" step="1" id="{{ field.id }}_input" name="{{ field.name }}" value="0">
-                                            <button type="button" class="btn btn-increment" onclick="changeValue('{{ field.id }}_input', 1)">+</button>
-                                            <div class="input-group-append">
-                                                <span class="input-group-text">{{ field.unit }}</span>
-                                            </div>
-
-
-                               
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
+                <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
+                
+                {% for field in mother_material.ingredients %}
+                    <div class="col">
+                    <div class="card shadow-lg border-10 rounded-lg mt-2 mb-2">
+                        <div class="card-body">
+                        <h5 class="card-title">
+                            {{ field.name }} :
+                            <span style="font-size: smaller;">نسبت پیشنهادی</span> 
+                            <span style="font-size: smaller;">{{ field.ratio }}</span> 
+                            --
+                            <span style="font-size: smaller;">موجودی</span>          
+                            <span style="font-size: smaller;">{{ field.quantity }}</span> 
+                        </h5>
 
                         <div class="input-wrapper">
+                            {% if field.has_discard %}
+                            ناخالص :
+                            {% endif %}
 
+                            <button type="button" class="btn btn-decrement" onclick="changeValueAndUpdate('{{ field.id }}_input', -1, {{ field.id }})">-</button>
 
-                        تولید شده :
-                        <button type="button" class="btn btn-decrement" onclick="changeValue('{{ mother_material.id }}_input', -1)">-</button>
-                        <input class="form-control digit-input" type="text" step="1" id="{{ mother_material.id }}_input" name="{{ mother_material.main_material }}" value="0">
-                        <button type="button" class="btn btn-increment" onclick="changeValue('{{ mother_material.id }}_input', 1)">+</button>
-                        <div class="input-group-append">
-                            <span class="input-group-text">{{ mother_material.unit }}</span>
+                            <input 
+                            class="form-control digit-input" 
+                            type="text" 
+                            step="1" 
+                            id="{{ field.id }}_input" 
+                            name="{{ field.name }}" 
+                            value="0"
+                            data-ratio="{{ field.ratio }}" 
+                            data-main="{{ mother_material.id }}"
+                            
+                            >
+
+                            <button type="button" class="btn btn-increment" onclick="changeValueAndUpdate('{{ field.id }}_input', 1, {{ field.id }})">+</button>
+
+                            <div class="input-group-append">
+                            <span class="input-group-text">{{ field.unit }}</span>
+                            </div>
                         </div>
                         </div>
+                    </div>
+                    </div>
+                {% endfor %}
 
-
-
-
-
+                <div class="input-wrapper mt-3">
+                    تولید شده :
+                    <button type="button" class="btn btn-decrement" onclick="changeValueAndUpdate('{{ mother_material.id }}_input', -1, {{ mother_material.id }})">-</button>
+                    <input 
+                    class="form-control digit-input" 
+                    type="text" 
+                    step="1" 
+                    id="{{ mother_material.id }}_input" 
+                    name="{{ mother_material.main_material }}" 
+                    value="0" 
+                    onchange="updateIngredientsBasedOnProduction({{ mother_material.id }})"
+                    >
+                    <button type="button" class="btn btn-increment" onclick="changeValueAndUpdate('{{ mother_material.id }}_input', 1, {{ mother_material.id }})">+</button>
+                    <div class="input-group-append">
+                    <span class="input-group-text">{{ mother_material.unit }}</span>
                     </div>
                 </div>
+                </div>
+            </div>
             {% endfor %}
+
         </div>
 
 
@@ -365,7 +360,42 @@
 </script>
 
 
+<script>
+  function toggleSubmaterials(id) {
+    const div = document.getElementById(id);
+    if (div.style.display === "none") {
+      div.style.display = "block";
+    } else {
+      div.style.display = "none";
+    }
+  }
 
+  function changeValue(inputId, increment) {
+    const input = document.getElementById(inputId);
+    let value = parseFloat(input.value) || 0;
+    value += increment;
+    if (value < 0) value = 0;
+    input.value = value;
+  }
+
+  function changeValueAndUpdate(inputId, increment, mainMaterialId) {
+    changeValue(inputId, increment);
+    updateIngredientsBasedOnProduction(mainMaterialId);
+  }
+
+  function updateIngredientsBasedOnProduction(mainMaterialId) {
+    const mainInput = document.getElementById(`${mainMaterialId}_input`);
+    const producedValue = parseFloat(mainInput.value) || 0;
+
+    const subInputs = document.querySelectorAll(`input[data-main='${mainMaterialId}']`);
+
+    subInputs.forEach(input => {
+      const ratio = parseFloat(input.getAttribute('data-ratio')) || 1;
+      const newValue = producedValue * ratio;
+      input.value = newValue.toFixed(2);
+    });
+  }
+</script>
 
 
 {% endblock %}

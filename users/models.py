@@ -11,7 +11,6 @@ from tinymce.models import HTMLField
 from users.fields import JalaliDateField  # Adjust the import path as needed
 from phonenumber_field.modelfields import PhoneNumberField
 from khayyam import JalaliDatetime
-
 try:
     RESAMPLING = Image.Resampling.LANCZOS
 except AttributeError:
@@ -29,6 +28,19 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.title
 
+
+class SubMenuItem(models.Model):
+    parent_menu = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='submenus', verbose_name="منوی والد")
+    title = models.CharField(max_length=100, verbose_name="عنوان زیرمنو")
+    icon = models.CharField(max_length=100, blank=True, verbose_name="آیکون (کلاس FontAwesome)")
+    url = models.CharField(max_length=200, verbose_name="آدرس URL")
+    order = models.PositiveIntegerField(default=0, verbose_name="ترتیب نمایش")
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.parent_menu.title} -> {self.title}"
 
 class jobs(models.Model):
     name = models.CharField(max_length=200)
@@ -497,14 +509,14 @@ class Inventory(models.Model):
     receipt_Number = models.IntegerField( null=True,blank=True, default=0)
 
 
-    def add_stock(self, amount,user,receipt_number):
+    def add_stock(self, amount,user,receipt_number,coop=None):
         """افزودن کالا به انبار و ایجاد لاگ به‌طور خودکار"""
         try:
             self.quantity += amount
             self.last_updated = timezone.now()
             self.receipt_Number = receipt_number  # ذخیره شماره فیش
             self.save()
-            InventoryLog.objects.create(inventory=self, change_type='ADD', amount=amount,user=user,receipt_Number = self.receipt_Number)
+            InventoryLog.objects.create(inventory=self, change_type='ADD', amount=amount,user=user,receipt_Number = self.receipt_Number,coop=coop)
             return True , 'مقادیر مورد نظر با موفقیت اضافه گردید'
         except:
             return False, 'خطا در افزودن در دیتابیس'
@@ -520,6 +532,17 @@ class Inventory(models.Model):
         else:
             # raise ValueError("موجودی کافی نیست.")
             return False , 'موجودی کافی نیست'
+    
+
+    def coop_remove(self,coop,amount,user:Profile,buyer=None):
+
+
+        object_add = InventoryLog.objects.filter(change_type='ADD', coop=coop)
+        object_remove = InventoryLog.objects.filter(change_type='REMOVE', coop=coop)
+        if object_add.exists() and not object_remove.exists():
+            InventoryLog.objects.create(inventory=self, change_type='REMOVE',coop=coop, amount=amount,user=user,receipt_Number = '1',buyer=buyer)
+
+
             
 
     def __str__(self):
@@ -549,7 +572,13 @@ class IntroductionMethod(models.Model):
         return self.title
 
 
+class BuyerCategory(models.Model):
+    name = models.CharField(max_length=100, verbose_name='نام دسته‌بندی')
+    color = models.CharField(max_length=10, default='#cccccc')  # مثال: '#FF0000'
+    description = models.TextField(blank=True, null=True, verbose_name='توضیحات')
 
+    def __str__(self):
+        return self.name
 
 class Buyer(models.Model):
 
@@ -586,18 +615,121 @@ class Buyer(models.Model):
     nation = models.CharField(max_length=50, verbose_name='شهر', blank=True, null=True)
     address = models.TextField(verbose_name='آدرس', blank=True, null=True)
 
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="کاربر ثبت‌کننده"
+    )
 
 
     details = models.TextField(verbose_name='توضیحات تکمیلی', blank=True, null=True)
 
     created_date = models.DateTimeField(default=timezone.now,null=True,blank=True)
 
+    categories = models.ManyToManyField(
+        BuyerCategory,
+        blank=True,
+        verbose_name='دسته‌بندی‌های خریدار'
+    )
+
+
+    is_active = models.BooleanField(default=True)
 
 
     def __str__(self):
         return f"{self.first_name} - {self.last_name}"
+    
 
 
+class BuyerActivity(models.Model):
+    ACTIVITY_TYPE_CHOICES = [
+        ('call', 'تماس تلفنی'),
+        ('meeting', 'جلسه'),
+        ('message', 'پیام'),
+        ('email', 'ایمیل'),
+        ('whatsapp', 'واتساپ'),
+        ('note', 'یادداشت'),
+        # ('update', 'به‌روزرسانی اطلاعات'),
+        ('factors', 'فاکتور ها و خرید'),
+    ]
+
+    ACTIVITY_TYPE_ICONS = {
+    'call': 'fa-solid fa-phone',
+    'meeting': 'fa-solid fa-users',
+    'message': 'fa-solid fa-comment',
+    'email': 'fa-solid fa-envelope',
+    'whatsapp': 'fa-brands fa-whatsapp',
+    'note': 'fa-solid fa-sticky-note',
+    'factors': 'fa-solid fa-file-invoice',
+    }
+
+    
+
+    buyer = models.ForeignKey(
+        Buyer,
+        on_delete=models.CASCADE,
+        related_name='activities',
+        verbose_name="خریدار"
+    )
+    activity_type = models.CharField(
+        max_length=20,
+        choices=ACTIVITY_TYPE_CHOICES,
+        verbose_name="نوع فعالیت"
+    )
+    title = models.CharField(max_length=255, verbose_name="عنوان فعالیت")
+    description = models.TextField(blank=True, null=True, verbose_name="توضیحات")
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="کاربر ثبت‌کننده"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    next_followup = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پیگیری بعدی")
+
+
+    logo = models.ImageField(
+        upload_to='activity_logos/',
+        null=True,
+        blank=True,
+        verbose_name='لوگو فعالیت'
+    )
+
+    
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = "فعالیت خریدار"
+        verbose_name_plural = "فعالیت‌های خریدار"
+
+    def __str__(self):
+        return f"{self.get_activity_type_display()} برای {self.buyer.first_name} {self.buyer.last_name} - {self.title}"
+
+    @classmethod
+    def get_activity_type_display_by_index(cls, index_key):
+        """Return label for a given index_key (e.g., 'call')"""
+        return dict(cls.ACTIVITY_TYPE_CHOICES).get(index_key, 'نامشخص')
+    
+    @classmethod
+    def get_activity_type_labels(cls):
+        return [label for _, label in cls.ACTIVITY_TYPE_CHOICES]
+        
+    @classmethod
+    def get_activity_type_label_icon_list(cls):
+        return [
+            {
+                'value': key,
+                'label': label,
+                'icon': cls.ACTIVITY_TYPE_ICONS.get(key, 'fa-solid fa-question')
+            }
+            for key, label in cls.ACTIVITY_TYPE_CHOICES
+        ]
+    
+    def convert_persian2rnglish(cls):
+        dict((fa, en) for en, fa in BuyerActivity.ACTIVITY_TYPE_CHOICES)
 
 class BuyerAttribute(models.Model):
     FIELD_TYPES = [
@@ -637,6 +769,10 @@ class BuyerAttributeValue(models.Model):
 
 
 class InventoryLog(models.Model):
+
+    from StoneFlow.models import coops
+
+
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='logs')
     change_type = models.CharField(max_length=10, choices=(('ADD', 'افزودن'), ('REMOVE', 'برداشتن')))
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -645,6 +781,9 @@ class InventoryLog(models.Model):
     buyer = models.ForeignKey(Buyer, on_delete=models.SET_NULL, null=True, blank=True)
    
     receipt_Number = models.IntegerField( null=True,blank=True, default=0)
+
+    coop = models.ForeignKey(coops, on_delete= models.CASCADE,related_name='coop_inventory_log',blank=True,null=True,default=1)
+
 
     confirmed_by_buyer = models.BooleanField(default=False)  # Add this line
     

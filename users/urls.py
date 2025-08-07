@@ -1,12 +1,12 @@
 from django.urls import path
-from .views import buyer_attr_manage, buyer_dashboard, buyer_dashboard_view, buyer_login_view, buyer_logout_view, confirm_purchase_view, create_user_view, daily_report_view, delete_buyer_attribute, delete_user, edit_user, error_page, home, job_create_view, job_delete_view, job_edit_view, job_list_view, manage_role_access, material_composition_view, no_access, profile, RegisterView, save_subscription, send_notification, send_test_notification, show_menu_options,tools \
+from .views import  add_buyer_activity, buyer_activity_detail, buyer_attr_manage, buyer_dashboard, buyer_dashboard_partial, buyer_dashboard_view, buyer_detail, buyer_login_view, buyer_logout_view, category_create, category_delete, category_list, category_update, confirm_delete_buyer_request, confirm_delete_view, confirm_purchase_view, delete_buyer_activity, edit_buyer_activity, logout_view, mother_material_add, mother_material_edit, mother_material_list, post_login_redirect, raw_material_add, raw_material_delete, raw_material_edit, raw_material_list, reject_delete_buyer_request, review_delete_buyers_requests, show_factor,create_user_view, daily_report_view, delete_buyer, delete_buyer_attribute, delete_user, edit_user, error_page, home, job_create_view, job_delete_view, job_edit_view, job_list_view, manage_role_access, material_composition_view, no_access, profile, RegisterView, save_subscription, send_notification, send_test_notification, show_menu_options,tools \
         ,my_orders,add_raw_material,post_edit_quil\
         ,create_order,add_mother_material,show_order,snapp,show_restaurant_list,\
         restaurant_food_list,add_restaurant,print_order,foodRawMaterials,addfoodrawmaterial,show_food_material,night_food_order,\
         load_temp,CustomLogoutView,add_store,success_page,\
         show_store,submit_data,show_test,take_store,confrim_take_store,log_view_store,\
         register_entry,register_exit,get_allowed_locations,histoty_entry,update_prices, show_night_order_material,\
-        add_buyer,edit_buyer,buyer_list , subscribe , send_test_notification, user_list_view
+        add_buyer,edit_buyer,buyer_list , subscribe , send_test_notification, user_list_view 
 
 from menu.views import set_sold_out
         
@@ -17,8 +17,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', home, name='users-home'),
+    path('redirect_after_login/', post_login_redirect, name='post_login_redirect'),
     path('register/', RegisterView.as_view(), name='users-register'),
-    path('logout/', CustomLogoutView.as_view(), name='logout'),
+
+    path("logout/", logout_view, name="logout"),
     path('profile/', profile, name='users-profile'),
     path('tools/',tools, name='tools'),
     path('tools/snapp',snapp, name='tools'),
@@ -41,6 +43,20 @@ urlpatterns = [
     path('orders/print_order/<int:id>', print_order, name='order-show'),
 
 
+
+
+
+    path('mother-materials/', mother_material_list, name='mother_material_list'),
+    path('mother-materials/add/', mother_material_add, name='mother_material_add'),
+    path('mother-materials/<int:pk>/edit/', mother_material_edit, name='mother_material_edit'),
+    path('mother-materials/<int:pk>/delete/', confirm_delete_view, name='mother_material_delete'),
+
+
+    # Raw material urls
+    path('raw-materials/', raw_material_list, name='raw_material_list'),
+    path('raw-materials/add/', raw_material_add, name='raw_material_add'),
+    path('raw-materials/edit/<int:pk>/', raw_material_edit, name='raw_material_edit'),
+    path('raw-materials/delete/<int:pk>/', raw_material_delete, name='raw_material_delete'),
     
     path('profile/create_order', create_order, name='create_post'),
     path('profile/my_orders', my_orders, name='my_posts'),
@@ -71,7 +87,8 @@ urlpatterns = [
     # path('profile/<int:id>/register_entry/', register_exit, name='register_exit'),
     path('get_allowed_locations/', get_allowed_locations, name='register_entry'),
     path('profile/daily-report/', daily_report_view, name='daily_report'),
-
+    path('profile/daily-report/edit/<int:pk>/', edit_buyer_activity, name='edit_buyer_activity'),
+    path('profile/daily-report/delete/<int:pk>/', delete_buyer_activity, name='delete_buyer_activity'),
     
 
 
@@ -101,7 +118,16 @@ urlpatterns = [
     path('buyers/', buyer_list, name='buyer_list'),
     path('buyers/add/', add_buyer, name='add_buyer'),
     path('buyers/edit/<int:pk>/', edit_buyer, name='edit_buyer'),
+    path('buyers/delete/<int:buyer_id>/', delete_buyer, name='delete_buyer'),
+    path('buyers/details/<int:buyer_id>/', buyer_detail, name='buyer_detail'),
+    path('buyers/activity/<int:buyer_id>/<str:activity_type>/', buyer_activity_detail, name='buyer_activity_detail'),
+    path('buyers/delete/<int:buyer_id>/', confirm_delete_buyer_request, name='confirm_delete_buyer_request'),
+    path('buyers/reject_delete/<int:buyer_id>/', reject_delete_buyer_request, name='reject_buyer_delete'),
+    path('buyers/<int:buyer_id>/add-activity/', add_buyer_activity, name='add_buyer_activity'),
+    path('buyers/admin/review_delete_buyers_requests/', review_delete_buyers_requests, name='review_delete_buyers_requests'),
+
     path('buyers/dashboard/', buyer_dashboard, name='buyer_dashboard'),
+    path('buyers/dashboard_partial/', buyer_dashboard_partial, name='buyer_dashboard_partial'),
     # path('buyers/login/', auth_views.LoginView.as_view(template_name='Buyer/buyer_login.html'), name='login'),
     # path('buyers/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
@@ -110,7 +136,15 @@ urlpatterns = [
     path('buyers/dashboard_person/', buyer_dashboard_view, name='person_buyer_dashboard'),
     path('buyers/logout/',buyer_logout_view, name='buyer_logout'),
     path('buyers/confirm/<int:log_id>/', confirm_purchase_view, name='confirm_purchase'),
+    path('buyers/factor/<int:pk>/', show_factor, name='show_factor'),
 
+    path('buyers/admin/categories/', category_list, name='category_list'),
+    path('buyers/admin/categories/create/', category_create, name='category_create'),
+    path('buyers/admin/categories/<int:pk>/edit/', category_update, name='category_update'),
+    path('buyers/admin/categories/<int:pk>/delete/', category_delete, name='category_delete'),
+
+
+    
 
     path('users/admin/create-user/', create_user_view, name='create_user'),
     path('users/admin/users/', user_list_view, name='user_list'),
@@ -128,6 +162,7 @@ urlpatterns = [
     path('buyer-attributes/admin/delete/<int:attr_id>/', delete_buyer_attribute, name='delete_buyer_attribute'),
 
     path('manage_role_access/admin/', manage_role_access, name='manage_role_access'),
+
 
 
 

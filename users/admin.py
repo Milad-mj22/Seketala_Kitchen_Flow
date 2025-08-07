@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from users.forms import LocationForm
-from .models import  Location, MenuItem, Profile
+from .models import  BuyerActivity, Location, MenuItem, Profile, SubMenuItem
 from .models import Tools,Post,Tools,Post_quill , jobs , Projects ,raw_material,create_order\
                     ,mother_material,FoodFilter,SnappFoodList,cities,FoodRawMaterial,mother_food,mode_raw_materials,\
                     Inventory,InventoryLog,Warehouse,RestaurantBranch,NightOrderRemainder,AllowedLocation,\
@@ -30,11 +30,11 @@ admin.site.register(raw_material)
 admin.site.register(mother_material)
 admin.site.register(create_order)
 admin.site.register(Tools)
-# admin.site.register(FoodFilter)
-# admin.site.register(SnappFoodList)
+admin.site.register(FoodFilter)
+admin.site.register(SnappFoodList)
 admin.site.register(cities)
-# admin.site.register(FoodRawMaterial)
-# admin.site.register(mother_food)
+admin.site.register(FoodRawMaterial)
+admin.site.register(mother_food)
 admin.site.register(mode_raw_materials)
 admin.site.register(CapturedImage)
 admin.site.register(MaterialComposition)
@@ -44,6 +44,8 @@ admin.site.register(Buyer)
 admin.site.register(ReportTitles)
 admin.site.register(DailyReports)
 admin.site.register(MenuItem)
+admin.site.register(SubMenuItem)
+admin.site.register(BuyerActivity)
 
 
 # admin.site.register(mode_raw_materials)
@@ -108,7 +110,7 @@ admin.site.register(Warehouse, WarehouseAdmin)
 
 class InventoryLogAdmin(admin.ModelAdmin):
     # Fields to display in the list view
-    list_display = ('inventory','buyer', 'change_type', 'amount', 'jalali_date', 'user', 'warehouse' , 'receipt_Number')
+    list_display = ('inventory','buyer', 'change_type', 'amount', 'jalali_date', 'user', 'warehouse' , 'receipt_Number','coop')
 
     # Add filtering options
     list_filter = ('change_type','buyer', 'inventory__warehouse', 'date')
@@ -117,7 +119,7 @@ class InventoryLogAdmin(admin.ModelAdmin):
     search_fields = ('inventory__raw_material__name', 'user__username', 'inventory__warehouse__name')
     
     # Fields to display in the form
-    fields = ('inventory','buyer', 'change_type', 'amount', 'date', 'user', 'receipt_Number')
+    fields = ('inventory','buyer', 'change_type', 'amount', 'date', 'user', 'receipt_Number','coop')
     
     # Method to display the Jalali date in the admin list view
     def jalali_date(self, obj):
@@ -146,6 +148,9 @@ admin.site.register(EntryExitLog)
 
 
 admin.site.register(Location)
+
+
+
 
 
 
