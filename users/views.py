@@ -586,7 +586,8 @@ def my_orders(request):
                         # except:
                         #     print('eror')
                 except:
-                    print(values[field])
+                    pass
+         
 
 
     return render(request, 'users/my_orders.html', {'orders': orders,'editable':editable})
@@ -1056,10 +1057,7 @@ def show_food_material(request,id):
         ).order_by('describe')
 
 
-        for mother_material in mother_materials:
-            submaterials = mother_material.mother_material.all()
-            for submaterial in submaterials :
-                print(submaterial)
+
 
 
 
@@ -1290,8 +1288,7 @@ def calculateProducibleMeals():
 
     for food in foods:
         recepi = food.data  # Recipe for the food (ingredients and their required quantities)
-        print('Food:', food.name)
-        
+     
         max_food_quantity = float('inf')  # Start with infinity, then find the limiting material
 
         for item, required_qty in recepi.items():  # Iterate through each material in the recipe
@@ -1318,7 +1315,6 @@ def calculateProducibleMeals():
     # Print the producible foods and the quantity
     # for food, quantity in producible_foods:
     #     print(f'You can make {quantity} of {food.name}')
-    print(producible_foods)
 
     return producible_foods
 
@@ -1403,7 +1399,8 @@ def add_store(request):
 
 
 
-        profile = Profile.objects.get(id = request.user.id)
+    
+        profile = request.user.profile
 
         ware_house = Warehouse.objects.get(id = ware_house)
 

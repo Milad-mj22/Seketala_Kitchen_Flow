@@ -6,7 +6,7 @@ import uuid
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 import openpyxl
-import win32com.client
+#import win32com.client
 
 from .models import AttributeGroup, CoopAttribute, CoopAttributeValue, CoopDeleteRequest, Cutting_factory, CuttingAround, CuttingSaw, PreInvoice, PreInvoiceItem, PriceAttribute
 from django.http import HttpResponseForbidden
@@ -1175,8 +1175,8 @@ def export_group_excel(request, group_id):
 
 
 
-import pythoncom
-import win32com.client
+#import pythoncom
+#import win32com.client
 
 def convert_excel_to_pdf(excel_path, pdf_path):
     pythoncom.CoInitialize()  # 👈 مهم
