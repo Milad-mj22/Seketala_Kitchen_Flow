@@ -1,117 +1,325 @@
 {% extends "users/base.html" %}
+{% load static %}
 {% load widget_tweaks %}
-{% block title %}ورود به حساب کاربری{% endblock title %}
+{% block title %}ورود | سامانه سکه‌طلا{% endblock title %}
 
 {% block content %}
 <style>
-    body {
-        direction: rtl;
-        font-family: 'Vazir', sans-serif;
-        background-color: #f8f9fa;
-    }
+  /* ————— Brand & Base ————— */
+  :root{
+    --brand-yellow:#F0C540;   /* لوگو */
+    --brand-gray:#9AA0A6;     /* لوگو */
+    --bg-1:#0b0f14;           /* زمینه تیره */
+    --glass:#0f1420cc;
+    --glass-border:#ffffff1f;
+    --white:#f6f7fb;
+    --muted:#aab2bd;
+  }
+  body{ direction: rtl; background: var(--bg-1); font-family: 'Vazir', sans-serif; }
 
-    .login-card {
-        background-color: #fff;
-        border-radius: 16px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
-        margin-top: 60px;
-    }
+  /* ————— Scene ————— */
+  .scene{
+    min-height: calc(100vh - 60px);
+    display:flex; align-items:center; justify-content:center;
+    padding: 36px 18px;
+    position: relative; overflow:hidden;
+  }
 
-    .form-label {
-        font-weight: 600;
-    }
+  /* animated gradient haze */
+  .haze{
+    position:absolute; inset:-20% -10% auto -10%; height: 60vh; filter: blur(60px); opacity:.55; pointer-events:none;
+    background:
+      radial-gradient(45rem 25rem at 90% 10%, rgba(240,197,64,.23), transparent 60%),
+      radial-gradient(35rem 20rem at 10% 90%, rgba(255,60,60,.15), transparent 60%),
+      radial-gradient(30rem 18rem at 50% 40%, rgba(154,160,166,.15), transparent 60%);
+    animation: fog 16s ease-in-out infinite alternate;
+  }
+  @keyframes fog{ from{ transform: translateY(-10px) scale(1);} to{ transform: translateY(10px) scale(1.05);} }
 
-    .form-control {
-        border-radius: 10px;
-        padding: 0.75rem;
-        font-size: 0.95rem;
-    }
+  /* floating particles */
+  .stars{ position:absolute; inset:0; pointer-events:none; }
+  .stars i{
+    position:absolute; width:3px; height:3px; background: #ffffff30; border-radius:50%;
+    animation: float 8s linear infinite;
+  }
+  @keyframes float{ from{ transform: translateY(0); } to{ transform: translateY(-80vh); } }
 
-    .btn-login {
-        background: #0d6efd;
-        color: white;
-        font-weight: 600;
-        border-radius: 12px;
-        padding: 10px 20px;
-        transition: all 0.3s ease;
-    }
+  /* ————— Card ————— */
+  .card-auth{
+    width:100%; max-width: 980px; border-radius: 22px;
+    background: linear-gradient(180deg, #0c121d, #0d131f) padding-box,
+                linear-gradient(135deg, #ffffff22, #00000022) border-box;
+    border: 1px solid var(--glass-border);
+    overflow:hidden; box-shadow: 0 28px 80px rgba(0,0,0,.45);
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+    transition: transform .5s cubic-bezier(.2,.75,.25,1);
+  }
+  .card-auth:hover{ transform: perspective(1000px) rotateX(.7deg) rotateY(-.7deg); }
 
-    .btn-login:hover {
-        background: #0b5ed7;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
+  .grid{
+    display:grid; grid-template-columns: 1.25fr 1fr;
+  }
+  @media (max-width: 992px){ .grid{ grid-template-columns:1fr; } }
 
-    .card-footer a {
-        color: #495057;
-        text-decoration: none;
-    }
+  /* ————— Brand Side ————— */
+  .brand-side{
+    position:relative; padding: 28px; background: linear-gradient(180deg, #0c121d88, #0c121d33);
+  }
+  .brand-head{ display:flex; align-items:center; gap:12px; }
+  .logo{
+    width:60px; height:60px; border-radius:14px; background:#fff; object-fit:cover;
+    box-shadow: 0 10px 30px rgba(240,197,64,.25);
+  }
+  .brand-title{ color: var(--white); font-weight:800; letter-spacing:.2px; }
+  .brand-sub{ color: var(--muted); }
 
-    .card-footer a:hover {
-        text-decoration: underline;
-    }
+  .hero{
+    margin-top:18px; border-radius:16px; position:relative; overflow:hidden;
+    border:1px solid var(--glass-border);
+    aspect-ratio: 15/9;
+    background:
+      linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
+      url("{% static 'images/hero1.png' %}") center/cover no-repeat;
+  }
+  .hero-badges{
+    position:absolute; inset:auto 12px 12px auto; display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .chip{
+    background: #ffffff13; color:#fff; border:1px solid #ffffff30; border-radius: 999px; padding:.35rem .7rem; font-size:.78rem;
+    backdrop-filter: blur(6px);
+  }
 
-    .alert {
-        border-radius: 12px;
-    }
+  /* rotating slogans */
+  .slogans{ margin-top:16px; color:#fff; min-height: 28px; font-weight:700; }
+  .slogans span{ display:none; }
+  .slogans span.active{ display:inline; }
 
-    @media (max-width: 576px) {
-        .login-card {
-            padding: 1.5rem;
-        }
-    }
+  /* ————— Form Side ————— */
+  .form-side{
+    padding: 30px; background: #0e1522b3; border-inline-start: 1px solid var(--glass-border);
+  }
+  .form-title{ color:#fff; font-weight:800; }
+  .form-desc{ color:#b7c0cb; }
+
+  label.form-label{ color:#e8edf3; font-weight:700; font-size:.95rem; }
+  .form-control{
+    background: #131c2c; border:1px solid #2a3852; color:#e9edf2; border-radius:12px; padding:.9rem .9rem;
+  }
+  .form-control:focus{ background:#0f1a2b; border-color: var(--brand-yellow); box-shadow: 0 0 0 .15rem rgba(240,197,64,.2); }
+
+  .input-group-text{
+    background:#131c2c; border:1px solid #2a3852; color:#e9edf2; border-radius:0 12px 12px 0; cursor:pointer;
+  }
+
+  .btn-login{
+    border:none; width:100%;
+    background: conic-gradient(from 0deg, #ff6262, #ffb703, #ff6262);
+    color:#161616; font-weight:900; border-radius:14px; padding: .9rem 1rem;
+    box-shadow: 0 12px 30px rgba(255,183,3,.2);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .btn-login:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+  .btn-login:disabled{ opacity:.75; }
+
+  .helper a{ color:#d9dee6; text-decoration:none; }
+  .helper a:hover{ color:#fff; text-decoration:underline; }
+
+  .caps{ color:var(--brand-yellow); font-size:.85rem; display:none; }
+
+  /* shake on error */
+  .shake{ animation: shake .4s ease; }
+  @keyframes shake{
+    10%{ transform: translateX(-4px); }
+    30%{ transform: translateX(4px); }
+    50%{ transform: translateX(-3px); }
+    70%{ transform: translateX(3px); }
+    90%{ transform: translateX(-2px); }
+  }
+
+  /* tiny note */
+  .note{ color:#93a0b2; font-size:.82rem; }
+
+  /* form alignment */
+  .rtl-right{ text-align: right; }
 </style>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="login-card">
-                <h4 class="text-center mb-4">👤 ورود به حساب کاربری</h4>
-                {% if messages %}
-                    {% for message in messages %}
-                    
-                        <div class="alert alert-{{ message.tags }}" style="text-align: right; display: block;">
-                        {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
+<div class="scene">
+  <div class="haze"></div>
+  <div class="stars" aria-hidden="true"></div>
 
-
-                {% if form.errors %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <div id="form_errors">
-                        {% for key, value in form.errors.items %}
-                        <strong>{{ value }}</strong><br>
-                        {% endfor %}
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endif %}
-
-                <form method="POST" novalidate>
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="id_username" class="form-label" style="text-align: right; display: block;">نام کاربری</label>
-                        {{ form.username|add_class:"form-control" }}
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_password" class="form-label" style="text-align: right; display: block;">رمز عبور</label>
-                        {{ form.password|add_class:"form-control" }}
-                    </div>
-                    <div class="form-check mb-3" style="text-align: right; display: block;">
-                        {{ form.remember_me }}
-                        <label class="form-check-label" >مرا به خاطر بسپار</label>
-                    </div>
-                    <button type="submit" class="btn btn-login w-100">ورود</button>
-                </form>
-
-                <div class="card-footer mt-4 text-center">
-                    <a href="{% url 'users-register' %}">ثبت‌نام حساب جدید</a><br>
-                    <a href="{% url 'password_reset' %}">فراموشی رمز عبور</a>
-                </div>
-            </div>
+  <div class="card-auth" id="card">
+    <div class="grid">
+      <!-- brand -->
+      <div class="brand-side">
+        <div class="brand-head rtl-right" style="text-align: right;">
+          <img src="{% static 'icons/logo.jpg' %}" alt="لوگوی سکه‌طلا" class="logo" width="60" height="60">
+          <div>
+            <div class="brand-title rtl-right" style="text-align: right;">سامانه تولید فست‌ فود سکه‌طلا</div>
+            <div class="brand-sub rtl-right" style="text-align: right;">یک ورود؛ همه‌چیز زیر کنترل</div>
+          </div>
         </div>
+
+        <div class="hero">
+          <div class="hero-badges">
+            <div class="chip">🍔 سفارش‌سازی سریع</div>
+            <div class="chip">📦 انبار هوشمند</div>
+            <div class="chip">⚡ گزارش لحظه‌ای</div>
+          </div>
+        </div>
+
+        <div class="slogans rtl-right" style="text-align:right;">
+          <span class="active">کیفیت ثابت؛ سرعت برق‌آسا.</span>
+          <span>از سفارش تا ارسال، بی‌دردسر.</span>
+          <span>دقیق مثل وزن سس روی سیب‌زمینی!</span>
+        </div>
+      </div>
+
+      <!-- form -->
+      <div class="form-side">
+        <h4 class="form-title mb-1 rtl-right" style="text-align: right;">ورود به حساب</h4>
+        <div class="form-desc mb-3 rtl-right" style="text-align: right;">لطفاً اطلاعات ورود خود را وارد کنید.</div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-3 rtl-right" style="text-align: right;">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+          <div class="alert alert-danger alert-dismissible fade show mb-3 shake rtl-right" role="alert" style="text-align: right;">
+            {% for key, value in form.errors.items %}
+              <div><strong>{{ value }}</strong></div>
+            {% endfor %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+          </div>
+        {% endif %}
+
+        <form id="loginForm" method="POST" novalidate autocomplete="on" class="rtl-right" style="text-align: right;">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_username" class="form-label rtl-right" style="text-align: right;">نام کاربری</label>
+            <div class="input-group">
+              {{ form.username|add_class:"form-control"|attr:"placeholder=مثلاً admin"|attr:"style=text-align: right;" }}
+              <span class="input-group-text" title="نام کاربری"><i class="bi bi-person"></i></span>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <label for="id_password" class="form-label rtl-right" style="text-align: right;">رمز عبور</label>
+            <div class="input-group">
+              {{ form.password|add_class:"form-control"|attr:"placeholder=••••••••"|attr:"style=text-align: right;" }}
+              <span class="input-group-text" id="togglePwd" title="نمایش/مخفی‌سازی"><i class="bi bi-eye"></i></span>
+            </div>
+            <div id="capsHint" class="caps mt-2 rtl-right" style="text-align: right;">⚠️ کلید Caps Lock روشن است</div>
+          </div>
+
+          <div class="form-check my-3 rtl-right" style="text-align:right;">
+            {{ form.remember_me|add_class:"form-check-input" }}
+            <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">مرا به خاطر بسپار</label>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-login">
+            <span class="btn-text">ورود</span>
+            <span class="btn-spinner d-none ms-2">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            </span>
+          </button>
+
+          <div class="d-flex justify-content-between mt-3 helper">
+            <a href="{% url 'password_reset' %}" class="rtl-right" style="text-align: right;">فراموشی رمز عبور</a>
+            <a href="{% url 'users-register' %}" class="rtl-right" style="text-align: right;">ثبت‌نام حساب جدید</a>
+          </div>
+
+          <div class="note mt-4 rtl-right" style="text-align: right;">
+            با ورود، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید.
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<script>
+(function(){
+  // -------- particles (lightweight) --------
+  const stars = document.querySelector('.stars');
+  if(stars){
+    const N = 40;
+    for(let i=0;i<N;i++){
+      const s = document.createElement('i');
+      s.style.left = Math.random()*100+'%';
+      s.style.top  = (60+Math.random()*40)+'%';
+      s.style.opacity = .3 + Math.random()*.6;
+      s.style.animationDelay = (Math.random()*8)+'s';
+      s.style.transform = 'translateY(0)';
+      stars.appendChild(s);
+    }
+  }
+
+  // -------- rotating slogans --------
+  const slogans = document.querySelectorAll('.slogans span');
+  let idx = 0;
+  setInterval(()=>{
+    slogans[idx].classList.remove('active');
+    idx = (idx+1) % slogans.length;
+    slogans[idx].classList.add('active');
+  }, 2600);
+
+  // -------- focus & shortcuts --------
+  const u = document.getElementById('id_username');
+  const p = document.getElementById('id_password');
+  if (u) u.focus();
+  document.addEventListener('keydown', e=>{
+    if (e.ctrlKey && e.key.toLowerCase()==='k'){ e.preventDefault(); u && u.focus(); }
+    if (e.key === 'Enter' && document.activeElement){ // submit on Enter
+      const form = document.getElementById('loginForm'); if(form) form.requestSubmit();
+    }
+  });
+
+  // -------- show/hide password + CapsLock --------
+  const toggle = document.getElementById('togglePwd');
+  if (toggle && p){
+    toggle.addEventListener('click', function(){
+      const isText = p.type === 'text';
+      p.type = isText ? 'password' : 'text';
+      this.innerHTML = isText ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+    });
+    const hint = document.getElementById('capsHint');
+    ['keydown','keyup'].forEach(ev=>{
+      p.addEventListener(ev, e=>{
+        const on = e.getModifierState && e.getModifierState('CapsLock');
+        if(hint) hint.style.display = on ? 'block' : 'none';
+      });
+    });
+  }
+
+  // -------- submit UX --------
+  const form = document.getElementById('loginForm');
+  const btn  = document.getElementById('submitBtn');
+  if (form && btn){
+    form.addEventListener('submit', ()=>{
+      btn.disabled = true;
+      btn.querySelector('.btn-text').textContent = 'در حال ورود...';
+      btn.querySelector('.btn-spinner').classList.remove('d-none');
+    });
+  }
+
+  // -------- subtle tilt based on mouse --------
+  const card = document.getElementById('card');
+  let raf=null;
+  if(card){
+    card.addEventListener('mousemove', e=>{
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(()=>{
+        const r = card.getBoundingClientRect();
+        const cx = (e.clientX - r.left)/r.width - .5;
+        const cy = (e.clientY - r.top)/r.height - .5;
+        card.style.transform = `perspective(1000px) rotateX(${cy*2}deg) rotateY(${-cx*2}deg)`;
+      });
+    });
+    card.addEventListener('mouseleave', ()=> card.style.transform='perspective(1000px) rotateX(0) rotateY(0)');
+  }
+})();
+</script>
 {% endblock content %}
