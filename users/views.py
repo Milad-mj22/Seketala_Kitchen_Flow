@@ -1963,18 +1963,22 @@ def log_view_store(request):
     end_date_str   = (request.GET.get('date_to')   or '').strip()
 
     if start_date_str:
-        start_dt = convert_jalali_to_gregorian(start_date_str)  # implement this util
-        if start_dt:
-            logs = logs.filter(date__gte=start_dt)
+        if start_date_str !='None':
+
+            start_dt = convert_jalali_to_gregorian(start_date_str)  # implement this util
+            if start_dt:
+                logs = logs.filter(date__gte=start_dt)
 
     if end_date_str:
-        end_dt_str = convert_jalali_to_gregorian(end_date_str)  # e.g. '2025-08-15'
-        try:
-            end_dt = datetime.strptime(end_dt_str, '%Y-%m-%d')  # adjust format if needed
-            end_dt_inclusive = end_dt + timedelta(hours=23, minutes=59, seconds=59, microseconds=999999)
-            logs = logs.filter(date__lte=end_dt_inclusive)
-        except ValueError:
-            pass
+        if end_date_str !='None':
+
+            end_dt_str = convert_jalali_to_gregorian(end_date_str)  # e.g. '2025-08-15'
+            try:
+                end_dt = datetime.strptime(end_dt_str, '%Y-%m-%d')  # adjust format if needed
+                end_dt_inclusive = end_dt + timedelta(hours=23, minutes=59, seconds=59, microseconds=999999)
+                logs = logs.filter(date__lte=end_dt_inclusive)
+            except ValueError:
+                pass
     # ---- Pagination
     per_page_param = (request.GET.get('per_page') or '').strip()
     default_page_size = 20
@@ -2032,7 +2036,7 @@ def log_view_store(request):
         'default_date_to': default_date_to,
         'default_raw_materials': default_raw_materials,
         'default_warehouse': default_warehouse,
-        
+
         'show_all_query': show_all_query,   # ✅ here
 
         
