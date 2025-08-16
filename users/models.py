@@ -509,14 +509,14 @@ class Inventory(models.Model):
     receipt_Number = models.IntegerField( null=True,blank=True, default=0)
 
 
-    def add_stock(self, amount,user,receipt_number,coop=None):
+    def add_stock(self, amount,user,receipt_number):
         """افزودن کالا به انبار و ایجاد لاگ به‌طور خودکار"""
         try:
             self.quantity += amount
             self.last_updated = timezone.now()
             self.receipt_Number = receipt_number  # ذخیره شماره فیش
             self.save()
-            InventoryLog.objects.create(inventory=self, change_type='ADD', amount=amount,user=user,receipt_Number = self.receipt_Number,coop=coop)
+            InventoryLog.objects.create(inventory=self, change_type='ADD', amount=amount,user=user,receipt_Number = self.receipt_Number)
             return True , 'مقادیر مورد نظر با موفقیت اضافه گردید'
         except:
             return False, 'خطا در افزودن در دیتابیس'
@@ -770,7 +770,6 @@ class BuyerAttributeValue(models.Model):
 
 class InventoryLog(models.Model):
 
-    from StoneFlow.models import coops
 
 
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='logs')
@@ -782,10 +781,8 @@ class InventoryLog(models.Model):
    
     receipt_Number = models.IntegerField( null=True,blank=True, default=0)
 
-    coop = models.ForeignKey(coops, on_delete= models.CASCADE,related_name='coop_inventory_log',blank=True,null=True,default=1)
 
 
-    confirmed_by_buyer = models.BooleanField(default=False)  # Add this line
     
     def jalali_date(self):
         return JalaliDatetime(self.date).strftime('%Y/%m/%d %H:%M:%S')

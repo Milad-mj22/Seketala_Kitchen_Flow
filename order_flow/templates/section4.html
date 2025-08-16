@@ -112,7 +112,7 @@
 <body>
 
     {% if messages %}
-    <div class="alert alert-success" id="success-message">
+    <div class="alert alert-success" style="text-align: right; display: block;" id="success-message">
         {% for message in messages %}
             {{ message }}
         {% endfor %}
@@ -128,17 +128,9 @@
     <form method="post">
         {% csrf_token %}
         
-        <div class="user-info">
-            <div class="avatar">
-                {{ request.user.username|first|upper }} 
-            </div>
-            <div class="user-details">
-                <p><strong>کاربر:</strong> {{ request.user.username }}</p>
-                <p><strong>سمت:</strong> {{ user_role }}</p>
-            </div>
-        </div>
+
         
-        <div class="table-responsive">
+        <div class="table-responsive scrollable-table">
             <table class="table table-bordered">
                 <thead class="table-dark">
                     <tr>
@@ -150,7 +142,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for usage in material_usages.items %}zz
+                    {% for usage in material_usages.items %}
                     <tr>
                         <td>{{ usage.0 }}</td>
                         <td>{{ usage.1.quantity_used |floatformat:"-4" }}</td>

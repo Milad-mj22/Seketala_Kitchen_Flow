@@ -113,14 +113,14 @@
 
 <body>
 
-    <!-- {% if messages %}
-    <div class="alert alert-success" id="success-message">
+    {% if messages %}
+    <div class="alert alert-success" style="text-align: right; display: block;" id="success-message">
         {% for message in messages %}
             {{ message }}
         {% endfor %}
     </div>
 
-    {% endif %} -->
+    {% endif %}
 
 <div class="container-fluid p-0 m-0">  <!-- Removed padding/margin -->
     <div class="card page-title-card shadow-lg rounded-lg p-4 mb-4">
@@ -130,17 +130,9 @@
     <form method="post">
         {% csrf_token %}
         
-        <div class="user-info">
-            <div class="avatar">
-                {{ request.user.username|first|upper }} 
-            </div>
-            <div class="user-details">
-                <p><strong>کاربر:</strong> {{ request.user.username }}</p>
-                <p><strong>سمت:</strong> {{ user_role }}</p>
-            </div>
-        </div>
+
         
-        <div class="table-responsive">
+        <div class="table-responsive scrollable-table">
             <table class="table table-bordered">
                 <thead class="table-dark">
                     <tr>

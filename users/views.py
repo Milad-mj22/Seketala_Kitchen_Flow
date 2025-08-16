@@ -422,7 +422,7 @@ def create_order(request):
 
 
 
-        b = ModelCreateOrder.objects.update_or_create(author = request.user , content = data)
+        ModelCreateOrder.objects.create(author = request.user , content = data)
 
 
         # if form.is_valid():
@@ -547,15 +547,15 @@ def my_orders(request):
                     if float(values[field])>0:
                         # try:
                             # print(field)
-                            value = values[field]
+                            value = float(values[field])
 
                             data = {}
 
                             obj = raw_material.objects.filter(name = field).first()
                             if obj.unit != 'number':
-                                values[field] = '{} {}'.format(round(values[field],3),translate(obj.unit))
+                                values[field] = '{} {}'.format(round(value,3),translate(obj.unit))
                             else:
-                                values[field] = '{} {}'.format(int(values[field]),translate(obj.unit))
+                                values[field] = '{} {}'.format(int(value),translate(obj.unit))
 
 
                      
@@ -564,7 +564,7 @@ def my_orders(request):
                             quantity =float(Decimal(material.total_quantity))
                             
                             exist=True
-                            if quantity<round(value,3):
+                            if quantity<round(float(value),3):
                                 exist = False
 
 
@@ -586,8 +586,7 @@ def my_orders(request):
                         # except:
                         #     print('eror')
                 except:
-                    pass
-         
+                    print('Error in my_order : ',values[field])
 
 
     return render(request, 'users/my_orders.html', {'orders': orders,'editable':editable})
@@ -1057,7 +1056,10 @@ def show_food_material(request,id):
         ).order_by('describe')
 
 
-
+        for mother_material in mother_materials:
+            submaterials = mother_material.mother_material.all()
+            for submaterial in submaterials :
+                print(submaterial)
 
 
 
@@ -1086,8 +1088,8 @@ def night_food_order(request):
             if use_remaining:
                 RemainingMaterialsUsage.objects.create(user=request.user)
 
-        else:
-            return
+        # else:
+        #     return
 
 
         materials_quantity = get_material_quantity(show_all=True)
@@ -1134,7 +1136,7 @@ def night_food_order(request):
                     required_items[rw] =round(value - quantity,3)
 
 
-        ret , status = ModelCreateOrder.objects.update_or_create(author = request.user , content = raw_material, night_order = data )
+        status = ModelCreateOrder.objects.create(author = request.user , content = raw_material, night_order = data )
 
         if status:
             messages.success(request,'New Forum Successfully Added')
@@ -1288,7 +1290,8 @@ def calculateProducibleMeals():
 
     for food in foods:
         recepi = food.data  # Recipe for the food (ingredients and their required quantities)
-     
+        print('Food:', food.name)
+        
         max_food_quantity = float('inf')  # Start with infinity, then find the limiting material
 
         for item, required_qty in recepi.items():  # Iterate through each material in the recipe
@@ -1315,6 +1318,7 @@ def calculateProducibleMeals():
     # Print the producible foods and the quantity
     # for food, quantity in producible_foods:
     #     print(f'You can make {quantity} of {food.name}')
+    print(producible_foods)
 
     return producible_foods
 
@@ -1399,8 +1403,7 @@ def add_store(request):
 
 
 
-    
-        profile = request.user.profile
+        profile = Profile.objects.get(id = request.user.id)
 
         ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1894,91 +1897,148 @@ def get_mother_material_quantity(material_name = 'all',show_all=False,selected_w
 
 
 
-
-
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from datetime import timedelta
 
 def log_view_store(request):
-    logs = InventoryLog.objects.all().order_by('date').reverse()
-    
+    # Base queryset (use select_related to cut template-time queries)
+    logs = (
+        InventoryLog.objects
+        .select_related(
+            'inventory',
+            'inventory__warehouse',
+            'inventory__inventory_raw_material',
+            'user',                 # adjust to your relation (Profile / FK name)
+            # 'user__user',         # uncomment if your Profile links to auth.User as "user"
+        )
+        .order_by('-date')
+    )
 
-    # Get users, raw materials, and warehouses for filters
-    users = Profile.objects.all()
+    # ---- Datasets for filters
+    users = User.objects.all()
     raw_materials = RawMaterial.objects.all()
     warehouses = Warehouse.objects.all()
 
-    receipt_number = request.GET.get('receipt_number')
-
-    
+    # ---- Filters
+    # Receipt number (only if it's a clean int)
+    receipt_number = (request.GET.get('receipt_number') or '').strip()
     if receipt_number:
         try:
-            receipt_number = int(receipt_number)
-        except:
+            logs = logs.filter(receipt_Number=int(receipt_number))
+        except (TypeError, ValueError):
             pass
-        logs = logs.filter(receipt_Number=receipt_number)
 
-
-    # Filtering based on request parameters
+    # User (single select with "select_all" support)
     user = request.GET.get('user')
-    if user and user!='select_all':
-        logs = logs.filter(user__id=user)
+    if user and user != 'select_all':
+        try:
+            user_obj = User.objects.filter(id=int(user)).first()
+            if user_obj:
+                # Adjust this line to your actual relation from log to user/profile
+                logs = logs.filter(user=user_obj.profile)
+        except (TypeError, ValueError, AttributeError):
+            # Fallback: ignore if mapping differs
+            pass
 
-    change_type = request.GET.get('change_type')
+    # Change type
+    change_type = (request.GET.get('change_type') or '').strip()
     if change_type:
         logs = logs.filter(change_type=change_type)
 
+    # Warehouse (single select with "select_all" support)
     warehouse = request.GET.get('warehouse')
-    if warehouse and warehouse !='select_all':
+    if warehouse and warehouse != 'select_all':
         logs = logs.filter(inventory__warehouse__id=warehouse)
 
-    raw_material = request.GET.get('raw_materials')
-    a = request.GET.get('raw_materials')
+    # Raw materials (MULTI-select via checkboxes)
+    # If you also show a "select_all" checkbox in the dropdown, we ignore it here.
+    raw_material_ids = request.GET.getlist('raw_materials')
+    raw_material_ids = [x for x in raw_material_ids if x and x != 'select_all']
+    if raw_material_ids:
+        logs = logs.filter(inventory__inventory_raw_material__id__in=raw_material_ids).distinct()
 
-    if raw_material:
-        logs = logs.filter(inventory__inventory_raw_material__id=raw_material)
+    # Dates (Jalali strings -> Gregorian datetimes)
+    start_date_str = (request.GET.get('date_from') or '').strip()
+    end_date_str   = (request.GET.get('date_to')   or '').strip()
 
+    if start_date_str:
+        start_dt = convert_jalali_to_gregorian(start_date_str)  # implement this util
+        if start_dt:
+            logs = logs.filter(date__gte=start_dt)
 
+    if end_date_str:
+        end_dt_str = convert_jalali_to_gregorian(end_date_str)  # e.g. '2025-08-15'
+        try:
+            end_dt = datetime.strptime(end_dt_str, '%Y-%m-%d')  # adjust format if needed
+            end_dt_inclusive = end_dt + timedelta(hours=23, minutes=59, seconds=59, microseconds=999999)
+            logs = logs.filter(date__lte=end_dt_inclusive)
+        except ValueError:
+            pass
+    # ---- Pagination
+    per_page_param = (request.GET.get('per_page') or '').strip()
+    default_page_size = 20
 
-    # date_from = request.GET.get('date_from')
-    # date_to = request.GET.get('date_to')
-    # if date_from and date_to:
-    #     date_from = convert_georgian2jalali(date_from)
-    #     date_to = convert_georgian2jalali(date_to)
-    #     logs = logs.filter(date__range=[date_from, date_to])
+    if per_page_param == 'all':
+        page_size = max(1, logs.count())
+        page_number = 1  # force first page
+    else:
+        try:
+            page_size = int(per_page_param) if per_page_param else default_page_size
+            if page_size <= 0: page_size = default_page_size
+        except ValueError:
+            page_size = default_page_size
+        page_number = request.GET.get('page')
 
-    # Render the template with logs and filter data
-    
+    paginator = Paginator(logs, page_size)
+    logs_page = paginator.get_page(page_number)
 
+    # ---- Defaults back to template
     default_user = request.GET.get('user', None)
-
-    # user = Profile.objects.get(id = default_user)
-    # default_user = user.user.username
     default_change_type = request.GET.get('change_type', None)
     default_date_from = request.GET.get('date_from', None)
     default_date_to = request.GET.get('date_to', None)
     default_raw_materials = request.GET.getlist('raw_materials', [])
     default_warehouse = request.GET.get('warehouse', None)
 
+    # Parse ids if possible (for preselect)
     try:
         default_user = int(default_user)
-        default_warehouse = int(default_warehouse)
-    except:
+    except (TypeError, ValueError):
         pass
-    # Context to pass to template
+    try:
+        default_warehouse = int(default_warehouse)
+    except (TypeError, ValueError):
+        pass
+
+    # Build "show all" querystring
+    qs = request.GET.copy()
+    qs.pop('page', None)          # remove pagination page
+    qs['per_page'] = 'all'        # force show all
+    show_all_query = qs.urlencode()
+
+
+
+
     context = {
-        'logs': logs,
+        'logs': logs_page,
         'users': users,
-        'warehouses':warehouses,
-        'raw_materials':  raw_materials,
+        'warehouses': warehouses,
+        'raw_materials': raw_materials,
+
         'default_user': default_user,
         'default_change_type': default_change_type,
         'default_date_from': default_date_from,
         'default_date_to': default_date_to,
         'default_raw_materials': default_raw_materials,
-        'default_warehouse': default_warehouse
+        'default_warehouse': default_warehouse,
+        
+        'show_all_query': show_all_query,   # ✅ here
+
+        
     }
+    return render(request, 'users/store_log.html', context)
 
-
-    return render(request, 'users/store_log.html',context)
 
 
 def convert_georgian2jalali(jdate):

@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
-from users.models import RestaurantBranch,create_order,NightOrderRemainder,mother_food,Profile,raw_material
+from users.models import Inventory, RestaurantBranch, Warehouse,create_order,NightOrderRemainder,mother_food,Profile,raw_material
 # Create your views here.
 from .models import OrderStep,MaterialUsage
 import ast
@@ -8,10 +8,33 @@ from decimal import Decimal
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Prefetch, F, DecimalField, Q  # Import DecimalField
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from decimal import Decimal
+
+
+CENTER_KITCHEN = 'مرکزی'
+CENTER_KITCHEN_OBJ = Warehouse.objects.filter(name=CENTER_KITCHEN).first()
+
+TEMP_FOOD_KITCHEN = 'خاقانی'
+TEMP_FOOD_KITCHEN_OBJ = Warehouse.objects.filter(name=TEMP_FOOD_KITCHEN).first()
+
+
+
+
+
+
+def get_total_quantity(material,warehouse=None):
+    if warehouse is None:
+        total = Inventory.objects.filter(inventory_raw_material=material).aggregate(Sum('quantity'))['quantity__sum']
+        return total or 0  # اگر مقدار None بود، 0 برگردانید
+    else:
+
+        total = Inventory.objects.filter(inventory_raw_material=material,warehouse=warehouse).aggregate(Sum('quantity'))['quantity__sum']
+        return total or 0  # اگر مقدار None بود، 0 برگردانید
+
 
 
 @login_required
@@ -27,9 +50,10 @@ def show_flow(request,order_id):
 
 
 def convert_raw_material2object(materials):
-
     result = {}
     materials_dict = ast.literal_eval(materials)
+    materials_dict.pop('additional_details',None)
+
     # Reverse keys and values
     reversed_dmaterials_dictict = {v: k for k, v in materials_dict.items()}
     for material in list(materials_dict.keys()):
@@ -67,19 +91,19 @@ def check_order_confirmed(order , stepNumber:int):
 def get_allowed_confirm_users(stepNumber:int):
 
     if stepNumber==1:
-        allowed_roles = ['manager', 'fishzan']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
         return allowed_roles
 
     if stepNumber==2:
-        allowed_roles = ['manager', 'fishzan']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','prepration officer','Programmer']  # Adjust based on your logic
         return allowed_roles
 
     if stepNumber==3:
-        allowed_roles = ['manager', 'fishzan']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
         return allowed_roles
   
     if stepNumber==4:
-        allowed_roles = ['manager', 'fishzan']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
         return allowed_roles  
     
 @login_required
@@ -113,7 +137,7 @@ def section1_view(request,order_id):
                 "unit": material_units[i],
                 "quantity": material_quantities[i]
             })
-
+            # print(material_names[i])
             material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
             
             MaterialUsage.objects.create(
@@ -121,6 +145,8 @@ def section1_view(request,order_id):
                 material=material,
                 quantity=material_quantities[i]
             )
+
+
 
     
 
@@ -132,7 +158,7 @@ def section1_view(request,order_id):
 
         # ret = create_order.objects.filter(id=order_id).first()
         ret = create_order.objects.filter(id=order_id).first()
-        print(ret)
+        # print(ret)
         raw_materials_obj = convert_raw_material2object(ret.content)
         user_profile = Profile.objects.get(user=request.user)
         user_role = user_profile.job_position.name
@@ -155,79 +181,99 @@ def section1_view(request,order_id):
 
 
 
+from django.db import transaction
 
 @login_required
-def section2_view(request,order_id):
-    # should add select ware house that exit and add exist from warehouse
+def section2_view(request, order_id):
     context = {'order_id': order_id}
     step_number = 2
 
     if request.method == 'POST':
+        material_names = request.POST.getlist("materials_names[]")
+        material_sent = request.POST.getlist("materials_sent[]")
+
+        ret = create_order.objects.filter(id=order_id).first()
+        user_profile = Profile.objects.get(user=request.user)
+
+
 
         try:
-            
-            material_names = request.POST.getlist("materials_names[]")
-            material_sent = request.POST.getlist("materials_sent[]")
-            
-            ret = create_order.objects.filter(id=order_id).first()
+            with transaction.atomic():  # فقط همین یک بلاک کافیست
 
-            user_profile = Profile.objects.get(user=request.user)
-
-            order_step_obj, created = OrderStep.objects.get_or_create(
-                step_number=step_number, 
-                order=ret,  # Ensure 'ret' is the correct order instance
-                confirmed_by = user_profile
-            )
-            materials_data = []
-            for i in range(len(material_names)):
-                material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
-                MaterialUsage.objects.create(
-                    step=order_step_obj,
-                    material=material,
-                    quantity=Decimal(float(material_sent[i]))
+                order_step_obj, created = OrderStep.objects.get_or_create(
+                    step_number=step_number,
+                    order=ret,
+                    confirmed_by=user_profile
                 )
 
 
-            messages.success(request, "ثبت خروج با موفقیت انجام شد.")  # پیام موفقیت
-            return redirect("section2_url", order_id=order_id)  # هدایت به صفحه دیگر
+                for i in range(len(material_names)):
+                    material = get_object_or_404(raw_material, name=material_names[i])
+                    quntity_material = get_total_quantity(material=material, warehouse=CENTER_KITCHEN_OBJ)
 
-        except:
-            messages.error(request,'خطا در ذخیره اطلاعات')
-            return redirect("section2_url", order_id=order_id)  # هدایت به صفحه دیگر
+                    inventory, _ = Inventory.objects.get_or_create(
+                        inventory_raw_material=material,
+                        warehouse=CENTER_KITCHEN_OBJ
+                    )
+
+                    value = Decimal(round(float(material_sent[i]), 5))
+                    if value > 0:
+                        if quntity_material is None:
+                            raise ValueError(f"ماده {material.name} در انبار مرکزی وجود ندارد")
+
+                        if quntity_material < value:
+                            raise ValueError(
+                                f"ماده {material.name} به تعداد درخواست در انبار موجود نیست. "
+                                f"(موجودی: {quntity_material})"
+                            )
+
+                        # کم کردن موجودی
+                        inventory.remove_stock(amount=value, user=request.user.profile)
+
+                    MaterialUsage.objects.get_or_create(
+                        step=order_step_obj,
+                        material=material,
+                        quantity=value
+                    )
 
 
+
+
+        except ValueError as e:
+            # اینجا دیگه نیازی به set_rollback نیست
+            return render(request, "not_confirmed.html", {
+                "message": str(e),
+                "order_id": order_id
+            })
+
+        messages.success(request, "ثبت خروج با موفقیت انجام شد.")
+        return redirect("section2_url", order_id=order_id)
 
     else:
+        # بخش GET تغییر نکرده
         ret = create_order.objects.filter(id=order_id).first()
         raw_materials_obj = convert_raw_material2object(ret.content)
         user_profile = Profile.objects.get(user=request.user)
         user_role = user_profile.job_position.name
         allowed_roles = get_allowed_confirm_users(stepNumber=step_number)
-        # Check if the user has access to submit this step
         can_submit = user_role in allowed_roles
-        is_confirmed = check_order_confirmed(order=ret,stepNumber=step_number)
+        is_confirmed = check_order_confirmed(order=ret, stepNumber=step_number)
 
         if is_confirmed:
-            order_step_obj = OrderStep.objects.filter(order = ret , step_number=step_number).first()
-
+            order_step_obj = OrderStep.objects.filter(order=ret, step_number=step_number).first()
             for material in raw_materials_obj.values():
-
-                obj = MaterialUsage.objects.filter(step = order_step_obj,material=material).first()
+                obj = MaterialUsage.objects.filter(step=order_step_obj, material=material).first()
                 if obj is not None:
                     material.step2_quantity = obj.quantity
-
 
         return render(request, 'section2.html', {
             'material_usages': raw_materials_obj,
             'user_role': user_role,
             'can_submit': can_submit,
             'is_confirmed': is_confirmed,
-            'order_id':order_id,
-            'step_number' : step_number
-
+            'order_id': order_id,
+            'step_number': step_number
         })
-
-
 
 
 @login_required
@@ -237,33 +283,52 @@ def section3_view(request,order_id):
 
     if request.method == 'POST':
         try:
-            material_names = request.POST.getlist("materials_names[]")
-            material_sent = request.POST.getlist("materials_sent[]")
-            
-            ret = create_order.objects.filter(id=order_id).first()
+            with transaction.atomic():  # فقط همین یک بلاک کافیست
+                material_names = request.POST.getlist("materials_names[]")
+                material_sent = request.POST.getlist("materials_sent[]")
+                
+                ret = create_order.objects.filter(id=order_id).first()
 
-            user_profile = Profile.objects.get(user=request.user)
+                user_profile = Profile.objects.get(user=request.user)
 
-            order_step_obj, created = OrderStep.objects.get_or_create(
-                step_number=step_number, 
-                order=ret,  # Ensure 'ret' is the correct order instance
-                confirmed_by = user_profile
-            )
-            materials_data = []
-            for i in range(len(material_names)):
-                material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
-                MaterialUsage.objects.create(
-                    step=order_step_obj,
-                    material=material,
-                    quantity=Decimal(float(material_sent[i]))
+                order_step_obj, created = OrderStep.objects.get_or_create(
+                    step_number=step_number, 
+                    order=ret,  # Ensure 'ret' is the correct order instance
+                    confirmed_by = user_profile
                 )
+                materials_data = []
+                for i in range(len(material_names)):
+                    material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
+                    
+                    value = Decimal(round(float(material_sent[i]),5))
 
-            messages.success(request, "ثبت خروج با موفقیت انجام شد.")  # پیام موفقیت
-            return redirect("section3_url", order_id=order_id)  # هدایت به صفحه دیگر
+                    if value>0:
 
-        except:
-            messages.error(request,'خطا در ذخیره اطلاعات')
-            return redirect("section3_url", order_id=order_id)  # هدایت به صفحه دیگر
+                        food_inventory, _ = Inventory.objects.get_or_create(
+                            inventory_raw_material=material,
+                            warehouse=TEMP_FOOD_KITCHEN_OBJ
+                        )
+
+                        status, message = food_inventory.add_stock(
+                            amount=value, user=request.user.profile, receipt_number='7000'
+                        )
+                        # print('status',status,'meesage',message)
+                        
+                    MaterialUsage.objects.create(
+                        step=order_step_obj,
+                        material=material,
+                        quantity=value
+                    )
+
+                messages.success(request, "ثبت خروج با موفقیت انجام شد.")  # پیام موفقیت
+                return redirect("section3_url", order_id=order_id)  # هدایت به صفحه دیگر
+
+        except ValueError as e:
+            # اینجا دیگه نیازی به set_rollback نیست
+            return render(request, "not_confirmed.html", {
+                "message": str(e),
+                "order_id": order_id
+            })
 
 
 
@@ -294,10 +359,17 @@ def section3_view(request,order_id):
 
             for material in raw_materials_obj.values():
                 obj = MaterialUsage.objects.filter(step = order_step_2_obj,material=material).first()
-                material.step2_quantity = obj.quantity
-                if is_confirmed_step3:
-                    obj = MaterialUsage.objects.filter(step = order_step_3_obj,material=material).first()
-                    material.step3_quantity = obj.quantity
+                if obj is not None:
+                    material.step2_quantity = obj.quantity
+                    if is_confirmed_step3:
+                        obj = MaterialUsage.objects.filter(step = order_step_3_obj,material=material).first()
+                        material.step3_quantity = obj.quantity
+                else:
+                    return render(request , 'not_confirmed.html' ,{
+                        'message' : '        ارسال از اماده سازی به  درستی تکمیل نشده است',
+                    'order_id':order_id
+
+                    })
 
 
 
@@ -327,33 +399,38 @@ def section4_view(request , order_id):
 
 
         try:
-            material_names = request.POST.getlist("materials_names[]")
-            material_sent = request.POST.getlist("materials_sent[]")
-            
-            ret = create_order.objects.filter(id=order_id).first()
+            with transaction.atomic():  # فقط همین یک بلاک کافیست
+                material_names = request.POST.getlist("materials_names[]")
+                material_sent = request.POST.getlist("materials_sent[]")
+                
+                ret = create_order.objects.filter(id=order_id).first()
 
-            user_profile = Profile.objects.get(user=request.user)
+                user_profile = Profile.objects.get(user=request.user)
 
-            order_step_obj, created = OrderStep.objects.get_or_create(
-                step_number=step_number, 
-                order=ret,  # Ensure 'ret' is the correct order instance
-                confirmed_by = user_profile
-            )
-
-            for i in range(len(material_names)):
-                material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
-                MaterialUsage.objects.create(
-                    step=order_step_obj,
-                    material=material,
-                    quantity=Decimal(float(material_sent[i]))
+                order_step_obj, created = OrderStep.objects.get_or_create(
+                    step_number=step_number, 
+                    order=ret,  # Ensure 'ret' is the correct order instance
+                    confirmed_by = user_profile
                 )
 
-            messages.success(request, "ثبت مانده با موفقیت انجام شد.")  # پیام موفقیت
-            return redirect("section4_url", order_id=order_id)  # هدایت به صفحه دیگر
+                for i in range(len(material_names)):
+                    material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
+                    MaterialUsage.objects.create(
+                        step=order_step_obj,
+                        material=material,
+                        quantity=Decimal(float(material_sent[i]))
+                    )
 
-        except:
-            messages.error(request,'خطا در ذخیره اطلاعات')
-            return redirect("section4_url", order_id=order_id)  # هدایت به صفحه دیگر
+                messages.success(request, "ثبت مانده با موفقیت انجام شد.")  # پیام موفقیت
+                return redirect("section4_url", order_id=order_id)  # هدایت به صفحه دیگر
+
+
+        except ValueError as e:
+            # اینجا دیگه نیازی به set_rollback نیست
+            return render(request, "not_confirmed.html", {
+                "message": str(e),
+                "order_id": order_id
+            })
 
 
     else:
@@ -507,7 +584,8 @@ def edit_request(request, order_id,step_number):
             if obj is not None:
                 material.step_quantity = obj.quantity
             else:
-                print(material)
+                print('Error in material edit req')
+                # print(obj)
 
         # is_confirmed = check_order_confirmed(order=ret,stepNumber=1)
         return render(request, 'edit.html', {

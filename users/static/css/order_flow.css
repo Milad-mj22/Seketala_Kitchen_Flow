@@ -25,20 +25,3 @@
 
 
 
-
-
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .user-info {
-        flex-direction: column;
-        text-align: center;
-    }
-    .user-info .user-details {
-        justify-content: center;
-    }
-    .user-info .avatar {
-        margin-left: 0;
-        margin-bottom: 10px;
-    }
-}

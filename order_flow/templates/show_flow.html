@@ -15,17 +15,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پروسه پنج مرحله‌ای</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            direction: rtl;
-        }
+
         /* چینش کلیدها به صورت راست به چپ */
         .btn-container {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
-            margin-top: 20px; /* اضافه کردن فاصله از هدر سایت */
+
             direction: rtl;
         }
         .btn-container button {
@@ -60,6 +56,31 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+
+
+
+    /* Scrollable table body */
+    .scrollable-table {
+        max-height: 600px; /* ~20 rows depending on row height */
+        overflow-y: auto;
+        display: block;
+    }
+
+    .scrollable-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .scrollable-table thead th {
+        position: sticky;
+        top: 0;
+        background: #212529; /* dark header */
+        color: #fff;
+        z-index: 2;
+    }
+
+
+
   
         @media (max-width: 768px) {
     .btn-container {
