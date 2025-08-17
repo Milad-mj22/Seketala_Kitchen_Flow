@@ -3185,3 +3185,65 @@ def raw_material_delete(request, pk):
         item.delete()
         return redirect('raw_material_list')
     return render(request, 'materials/mother_material_confirm_delete.html', {'object': item, 'title': 'حذف ماده اولیه'})
+
+
+
+
+
+import random, time
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
+from django.contrib.auth import get_user_model, login
+from django.utils import timezone
+
+User = get_user_model()
+
+def send_sms(phone, text):
+    # TODO: integrate your SMS gateway here
+    print(f"[SMS to {phone}] {text}")
+
+def cache_key(phone): return f"otp:{phone}"
+
+@require_POST
+def otp_send(request):
+    import json
+    data = json.loads(request.body or '{}')
+    phone = (data.get('phone') or '').strip()
+    if not phone: return JsonResponse({'detail':'شماره لازم است.'}, status=400)
+
+    # basic throttle: 1 req per 60s
+    key = cache_key(phone)
+    rec = cache.get(key)
+    now = time.time()
+    if rec and rec.get('next_at',0) > now:
+        retry_in = int(rec['next_at']-now)
+        return JsonResponse({'detail':'کمی صبر کنید.', 'retry_in': retry_in}, status=429)
+
+    code = f"{random.randint(0,999999):06d}"
+    cache.set(key, {'code':code, 'exp': now+180, 'next_at': now+60}, timeout=300)
+
+    send_sms(phone, f"کد ورود شما: {code}")
+    return JsonResponse({'ok':True, 'retry_in':60})
+
+@require_POST
+def otp_verify(request):
+    import json
+    data = json.loads(request.body or '{}')
+    phone = (data.get('phone') or '').strip()
+    otp   = (data.get('otp') or '').strip()
+    if not phone or not otp: return JsonResponse({'detail':'اطلاعات ناکامل است.'}, status=400)
+
+    rec = cache.get(cache_key(phone))
+    now = time.time()
+    if not rec or now > rec['exp']: return JsonResponse({'detail':'کد منقضی شده است.'}, status=400)
+    if otp != rec['code']: return JsonResponse({'detail':'کد نادرست است.'}, status=400)
+
+    # get or create a customer user by phone
+    user, _ = User.objects.get_or_create(username=f"cust_{phone}", defaults={'is_active':True})
+    # optionally store phone in a field: user.phone = phone; user.save(update_fields=['phone'])
+
+    login(request, user)
+    cache.delete(cache_key(phone))
+    return JsonResponse({'ok':True, 'next': '/customer/dashboard/'})
