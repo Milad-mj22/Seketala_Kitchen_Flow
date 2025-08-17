@@ -1056,11 +1056,6 @@ def show_food_material(request,id):
         ).order_by('describe')
 
 
-        for mother_material in mother_materials:
-            submaterials = mother_material.mother_material.all()
-            for submaterial in submaterials :
-                print(submaterial)
-
 
 
     
@@ -1290,8 +1285,7 @@ def calculateProducibleMeals():
 
     for food in foods:
         recepi = food.data  # Recipe for the food (ingredients and their required quantities)
-        print('Food:', food.name)
-        
+
         max_food_quantity = float('inf')  # Start with infinity, then find the limiting material
 
         for item, required_qty in recepi.items():  # Iterate through each material in the recipe
@@ -2189,8 +2183,6 @@ def histoty_entry(request,id):
 
 def update_prices(request,city,res_name):
 
-    print('city:',city)
-    print('res_name:',res_name)
 
 
 
