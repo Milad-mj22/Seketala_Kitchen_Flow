@@ -1174,11 +1174,11 @@ def export_group_excel(request, group_id):
 
 
 
-import pythoncom
 
 def convert_excel_to_pdf(excel_path, pdf_path):
-    pythoncom.CoInitialize()  # 👈 مهم
     try:
+        pythoncom.CoInitialize()  # 👈 مهم
+
         excel = win32com.client.Dispatch("Excel.Application")
         try:
             excel.Visible = False
@@ -1189,9 +1189,10 @@ def convert_excel_to_pdf(excel_path, pdf_path):
         wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
         wb.Close(False)
         excel.Quit()
-    finally:
         pythoncom.CoUninitialize()
 
+    except:
+        print('Error Convert Excel to pdf')
 
 def convert_str_price2float(price:str):
 
