@@ -2,15 +2,15 @@ from sms_ir import SmsIr
 
 
 api_key = "NFwDOyzDoUCVBxB2CSlO374WlXOAeaKGST1ubHFziSEcLbhf"
-linenumber = "30002108004226"
+linenumber = "300790"
 
-number = "09365982102"
+number = "09130006344"
 
 message = "سلام"
 
 template_id = "859705"
 parameters = [
-    {"name": "CODE", "value": "1234"}
+    {"name": "CODE", "value": "1378"}
 ]
 sms_ir = SmsIr(api_key,linenumber,)
 
