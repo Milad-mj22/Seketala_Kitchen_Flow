@@ -81,3 +81,11 @@ def to_jalali(value):
     
     return ''
 
+
+
+@register.filter
+def get_item(d, key):
+    try:
+        return d.get(key)
+    except Exception:
+        return None
