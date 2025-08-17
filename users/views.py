@@ -112,22 +112,14 @@ def logout_view(request):
     return render(request, 'users/logout.html')
 
 
-
 def home(request):
-    # Convert the VAPID public key to Base64 URL format
-    # def to_base64url(b64):
-    #     return base64.urlsafe_b64encode(base64.b64decode(b64)).decode("utf-8").rstrip("=")
+    if not request.user.is_authenticated:
+        return redirect('login')   # اسم urlname صفحه لاگینت رو بزن (مثلاً 'login')
 
-    # # vapid_public_key = to_base64url(settings.VAPID_PUBLIC_KEY)
-    # vapid_public_key = settings.VAPID_PUBLIC_KEY
-    # context = {
-    #     "vapid_public_key": vapid_public_key  # Replace with your actual VAPID public key
-    # }
-
-    from user_management import settings
-
-    return render(request, 'users/home.html',{'company_name':Constants.NAME , 'vapid_public_key':settings.VAPID_PUBLIC_KEY})
-
+    return render(request, 'users/home.html', {
+        'company_name': Constants.NAME,
+        'vapid_public_key': settings.VAPID_PUBLIC_KEY
+    })
 
 class RegisterView(View):
 
