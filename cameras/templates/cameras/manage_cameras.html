@@ -1,0 +1,40 @@
+{% extends 'users/base.html' %}
+
+
+
+{% block content %}
+<div class="container">
+    <h1>Manage Cameras</h1>
+    <a href="{% url 'add_camera' %}" class="btn btn-primary mb-3">Add Camera</a>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>IP Address</th>
+                    <th>Port</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for camera in cameras %}
+                    <tr>
+                        <td>{{ camera.name }}</td>
+                        <td>{{ camera.ip_address }}</td>
+                        <td>{{ camera.port }}</td>
+                        <td>{{ camera.location }}</td>
+                        <td>
+                            <a href="{% url 'edit_camera' camera.id %}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{% url 'delete_camera' camera.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

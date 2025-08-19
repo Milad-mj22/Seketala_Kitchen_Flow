@@ -1,0 +1,337 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% load static %}
+{% load widget_tweaks %}
+
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+
+<style>
+/* Modern Styles for Camera Management Page */
+
+/* Global Styles */
+:root {
+    --brand-yellow: #F0C540;
+    --brand-gray: #9AA0A6;
+    --bg-dark: #1C1E28;
+    --bg-light: #f6f7fb;
+    --accent-color: #ff6f61;
+    --text-light: #f0f1f6;
+    --text-dark: #333;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Body Styling */
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Vazir', sans-serif;
+    margin: 0;
+}
+
+/* Full Screen Centering */
+.scene {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border-radius: 20px;
+    padding: 40px 60px;
+    box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* Title Styling */
+h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Input Styling */
+.card .input-group {
+    margin-bottom: 20px;
+}
+
+.card .input-group label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-dark);
+}
+
+.card .input-group input {
+    background-color: #343a40;
+    border: 1px solid #444c56;
+    color: var(--text-light);
+    border-radius: 10px;
+    padding: 15px;
+    width: 100%;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.card .input-group input:focus {
+    border-color: var(--brand-yellow);
+    outline: none;
+}
+
+/* Buttons */
+.btn-custom {
+    background: linear-gradient(45deg, var(--accent-color), #ffb703);
+    color: var(--text-dark);
+    font-weight: 700;
+    padding: 15px;
+    border-radius: 25px;
+    width: 100%;
+    font-size: 1.2rem;
+    border: none;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-custom:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(45deg, #ffb703, var(--accent-color));
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Styles */
+.modal-dialog {
+    max-width: 800px;
+}
+
+.modal-content {
+    background-color: var(--bg-dark);
+    border-radius: 10px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-body {
+    padding: 0;
+}
+
+/* Back Button */
+.btn-back {
+    background: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    border: 2px solid var(--accent-color);
+    padding: 10px 20px;
+    border-radius: 20px;
+    width: 100%;
+    font-size: 1rem;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background-color: var(--accent-color);
+    color: #fff;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card {
+        padding: 20px;
+    }
+
+    .btn-custom {
+        padding: 12px;
+        font-size: 1rem;
+    }
+}
+</style>
+
+<div class="scene">
+    <div class="haze"></div>
+
+    <div class="card">
+        <h1>{{ action }} Camera</h1>
+
+        <!-- Camera Details (not using a form) -->
+        <div class="input-group">
+            <label for="camera-name">Camera Name</label>
+                  {{ form.name }}
+        </div>
+<div class="input-group">
+    <label for="id_ip">IP Address</label>
+    <input type="text" id="id_ip" name="ip" value="{{ form.ip.value|default_if_none:'' }}" class="form-control">
+</div>
+        <div class="input-group">
+            <label for="camera-port">Port</label>
+                        {{ form.port }}
+        </div>
+        <div class="input-group">
+            <label for="camera-username">Username</label>
+                       {{ form.username }}
+        </div>
+        <div class="input-group">
+            <label for="camera-password">Password</label>
+                     {{ form.password }}
+        </div>
+
+        <!-- Check Connectivity Button -->
+        <button type="button" class="btn-custom" id="checkConnectivityBtn">Check Connectivity</button>
+
+        <!-- Add Camera Button -->
+        <button type="submit" class="btn-custom" id="addCameraBtn">{{ action }} Camera</button>
+
+
+        <!-- Back Button -->
+        <a href="{% url 'manage_cameras' %}" class="btn-back">
+            <i class="bi bi-arrow-left-circle me-2"></i> Back to Camera Management
+        </a>
+    </div>
+</div>
+
+<!-- Modal for Connectivity Results or Live Feed -->
+<div class="modal fade" id="connectivityModal" tabindex="-1" aria-labelledby="connectivityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="connectivityModalLabel">Connectivity Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="connectivityResult">Checking...</p>
+                <!-- Optionally, add a video element to show live feed -->
+                <video id="liveVideo" class="d-none w-100" controls autoplay>
+                    <source src="" id="liveVideoSource" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Ensure JavaScript is properly loaded and event listeners are working
+
+// Add event listener for Check Connectivity button
+document.getElementById("checkConnectivityBtn").addEventListener("click", function() {
+    const ip = document.getElementById("camera-ip").value;
+    const port = document.getElementById("camera-port").value;
+    const username = document.getElementById("camera-username").value;
+    const password = document.getElementById("camera-password").value;
+
+    // Log values to ensure inputs are being fetched correctly
+    console.log("Checking connectivity with", ip, port, username, password);
+
+    // Simulate connectivity check (Replace with actual logic)
+    fetch(`/cameras/check-connectivity/?ip=${ip}&port=${port}&username=${username}&password=${password}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Connectivity Check Result:", data);
+
+            const modal = new bootstrap.Modal(document.getElementById('connectivityModal'));
+            const resultText = document.getElementById("connectivityResult");
+            const liveVideo = document.getElementById("liveVideo");
+
+            if (data.status === "connected") {
+                resultText.textContent = "Camera is connected successfully!";
+                liveVideo.classList.remove("d-none"); // Show video
+                document.getElementById("liveVideoSource").src = data.live_feed_url;
+                liveVideo.load();
+            } else {
+                resultText.textContent = "Failed to connect to the camera.";
+                liveVideo.classList.add("d-none");
+            }
+
+            modal.show(); // Show modal
+        })
+        .catch(error => {
+            console.error("Error occurred:", error);
+            const modal = new bootstrap.Modal(document.getElementById('connectivityModal'));
+            const resultText = document.getElementById("connectivityResult");
+            resultText.textContent = "Error occurred while checking connectivity.";
+            modal.show();
+        });
+});
+
+// Add event listener for Add Camera button (for demonstration purposes)
+document.getElementById("addCameraBtn").addEventListener("click", function() {
+    // Get the input values
+    const cameraName = document.getElementById("camera-name").value;
+    const cameraIp = document.getElementById("camera-ip").value;
+    const cameraPort = document.getElementById("camera-port").value;
+    const cameraUsername = document.getElementById("camera-username").value;
+    const cameraPassword = document.getElementById("camera-password").value;
+
+    // Log the values to ensure they are being retrieved correctly
+    console.log("Adding camera:", cameraName, cameraIp, cameraPort, cameraUsername, cameraPassword);
+
+    // Validate inputs
+    if (!cameraName || !cameraIp || !cameraPort || !cameraUsername || !cameraPassword) {
+        alert("Please fill in all the fields.");
+        return;
+    }
+
+    // Prepare the data for submission
+    const cameraData = {
+        name: cameraName,
+        ip: cameraIp,
+        port: cameraPort,
+        username: cameraUsername,
+        password: cameraPassword
+    };
+
+    // Send the data to the server using AJAX (fetch)
+    fetch('/cameras/add/', {  // Update this URL to match your Django URL pattern
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // Include CSRF token for security
+        },
+        body: JSON.stringify(cameraData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(`Camera "${cameraName}" added successfully!`);
+            // Optionally, redirect to manage cameras page or refresh
+            window.location.href = '/manage-cameras/';  // Replace with your actual URL
+        } else {
+            alert("Failed to add camera.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("There was an error adding the camera.");
+    });
+});
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    const value = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return value ? value.pop() : '';
+}
+
+</script>
+
+
+{% endblock %}

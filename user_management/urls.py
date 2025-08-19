@@ -41,6 +41,7 @@ urlpatterns = [
      path('mines/', include('mines.urls')),
      path('dashboard/', include('dashboard.urls')),
      path('utils/', include('utils.urls')),
+     path('cameras/', include('cameras.urls')),
 
      path('', include('users.urls')),
 

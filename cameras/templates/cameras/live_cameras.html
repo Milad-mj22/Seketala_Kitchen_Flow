@@ -1,0 +1,12 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ camera.name }} - Live Feed</h1>
+    <div>
+        <video id="liveVideo" autoplay>
+            <source src="{{ camera.live_feed_url }}" type="video/mp4">
+        </video>
+    </div>
+</div>
+{% endblock %}
