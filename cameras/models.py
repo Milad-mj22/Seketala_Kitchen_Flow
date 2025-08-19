@@ -1,26 +1,42 @@
 from django.db import models
+from cameras.VidGear import UrlGenerator
 
-# Create your models here.
+class AIFeatureName(models.Model):
+    FEATURE_TYPES = [
+        ('object_detection', 'Object Detection'),
+        ('face_recognition', 'Face Recognition'),
+        ('mask_detection', 'Mask Detection'),
+        ('face_detection', 'Face Detection'),
+        ('other', 'Other'),
+    ]
+
+    name = models.CharField(max_length=100, choices=FEATURE_TYPES, unique=True)
+    description = models.TextField(blank=True, null=True)  # توضیح قابلیت
+
+    def __str__(self):
+        return self.get_name_display()
+    
+
+
 class Camera(models.Model):
-    name = models.CharField(max_length=255)  # Name of the camera
-    ip_address = models.GenericIPAddressField()  # IP address of the camera
-    port = models.PositiveIntegerField()  # Port for the camera connection
-    username = models.CharField(max_length=255)  # Username for camera access
-    password = models.CharField(max_length=255)  # Password for camera access
-    is_active = models.BooleanField(default=True)  # Whether the camera is active or not
-    last_connected = models.DateTimeField(auto_now=True)  # Timestamp of last connection
-    # Optionally, you can add other fields like camera type, description, or location
-    location = models.CharField(max_length=255, blank=True, null=True)  # Location of the camera
-    description = models.TextField(blank=True, null=True)  # Camera description
+    name = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField()
+    port = models.PositiveIntegerField()
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    last_connected = models.DateTimeField(auto_now=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+    # Many-to-Many relationship to AI features
+    ai_features = models.ManyToManyField(AIFeatureName, blank=True, related_name='cameras')
 
     def __str__(self):
         return self.name
 
     def get_live_feed_url(self):
-        # Assuming the live feed is accessed via a specific URL pattern or IP stream.
-        # Modify this as per your camera's configuration.
-        return f"http://{self.ip_address}:{self.port}/live"
-    
+        return UrlGenerator(self.ip_address,self.port,self.username,self.password)
 
 
 from django.db import models

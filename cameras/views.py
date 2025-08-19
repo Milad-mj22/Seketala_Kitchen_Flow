@@ -16,19 +16,23 @@ def manage_cameras(request):
 
 
 
-
-
-
 def add_camera(request):
     if request.method == 'POST':
-        form = CameraForm(request.POST)
+        form = CameraForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Camera added successfully.')
             return redirect('manage_cameras')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = CameraForm()
-    return render(request, 'cameras/add_edit_camera.html', {'form': form, 'action': 'Add'})
+
+    return render(request, 'cameras/add_edit_camera.html', {
+        'form': form,
+        'action': 'Add' if form.instance._state.adding else 'Edit'
+    })
+
 
 def edit_camera(request, camera_id):
     camera = get_object_or_404(Camera, id=camera_id)
@@ -78,6 +82,14 @@ def check_connectivity(request):
     except requests.exceptions.RequestException:
         return JsonResponse({"status": "failed"})
 
+
+
+from django.shortcuts import render
+from .models import Camera
+
+def live_cameras(request):
+    cameras = Camera.objects.filter(is_active=True)
+    return render(request, "cameras/live_cameras.html", {"cameras": cameras})
 
 
 
