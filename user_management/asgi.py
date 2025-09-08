@@ -22,6 +22,7 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from menu.ws_urls import ws_menu_urlpatterns
 from api.ws_urls import ws_api_urlpatterns
+from cameras.ws_urls import ws_camera_urlpatterns
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "user_management.settings")
@@ -29,6 +30,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "user_management.settings")
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": URLRouter(
-        ws_menu_urlpatterns + ws_api_urlpatterns  # Combine URL patterns from both apps
+        ws_menu_urlpatterns + ws_api_urlpatterns + ws_camera_urlpatterns # Combine URL patterns from both apps
     ),
 })
+
