@@ -1754,8 +1754,14 @@ def show_store(request):
 
             first_key, selected_warehouses = list(data.items())[0]
 
-            if selected_warehouses !='all':
-                selected_warehouses = int(selected_warehouses)
+            if selected_warehouses !='all' or selected_warehouses !='true':
+                    if str(selected_warehouses).isdigit():
+                        selected_warehouses = int(selected_warehouses)
+                    else:
+                        if str(selected_warehouses) !='all':
+                            messages.error(request, "باید یک انبار انتخاب کنید")
+                            return redirect(request.path)   # stop and go back
+                    
 
             raw_materials_with_quantity = get_material_quantity(show_all=show_all,selected_warehouses=selected_warehouses)
 

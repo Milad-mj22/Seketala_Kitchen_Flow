@@ -12,7 +12,7 @@ from .utils import detect_gender, fix_persian_text
 import pandas as pd
 from django.shortcuts import render
 from .forms import CSVUploadForm
-from users.models import Buyer, MaterialComposition , mother_material , raw_material , mode_raw_materials
+from users.models import Buyer, Inventory, MaterialComposition, Warehouse , mother_material , raw_material , mode_raw_materials
 
 
 
@@ -333,3 +333,125 @@ def import_composition_materials_csv(request):
         form = CSVUploadForm()
 
     return render(request, 'import_csv_material_copmosition.html', {'form': form})
+
+
+
+
+
+
+from decimal import Decimal, InvalidOperation
+from django.contrib import messages
+from django.db import transaction
+from django.db.models import Sum, F
+from django.shortcuts import get_object_or_404, redirect, render
+
+
+from users.models import mother_material as Mother_material  # your current import
+
+
+def _to_decimal(value, default=Decimal("0")):
+    if value is None:
+        return default
+    try:
+        return Decimal(str(float(value)))
+    except (ValueError, TypeError, InvalidOperation):
+        return default
+
+def manage_inventory(request):
+    warehouses = Warehouse.objects.all().order_by("name")
+    mother_materials = Mother_material.objects.all().order_by("name")
+
+    # selected warehouse
+    selected_warehouse_id = request.POST.get("warehouse") or request.GET.get("warehouse")
+    if not selected_warehouse_id and warehouses.exists():
+        selected_warehouse_id = str(warehouses.first().id)
+
+    warehouse = None
+    if selected_warehouse_id:
+        warehouse = get_object_or_404(Warehouse, id=selected_warehouse_id)
+
+    # current stock per mother material (for the selected warehouse)
+    mother_stock = {}
+    if warehouse:
+        agg = (
+            Inventory.objects.filter(warehouse=warehouse)
+            .values(mother_id=F("inventory_raw_material__mother_id"))
+            .annotate(total=Sum("quantity"))
+        )
+        mother_stock = {row["mother_id"]: row["total"] or Decimal("0") for row in agg}
+
+    # children lists & counts (for collapse section)
+    children = raw_material.objects.filter(mother__in=mother_materials).only("id", "name", "mother_id").order_by("name")
+    # group children by mother id
+    children_by_mother = {}
+    for ch in children:
+        children_by_mother.setdefault(ch.mother_id, []).append(ch)
+
+    # counts
+    child_counts = {mid: len(lst) for mid, lst in children_by_mother.items()}
+
+    # current stock per child (to show inside collapse)
+    child_stock = {}
+    if warehouse:
+        child_agg = (
+            Inventory.objects.filter(warehouse=warehouse)
+            .values(rm_id=F("inventory_raw_material_id"))
+            .annotate(total=Sum("quantity"))
+        )
+        child_stock = {row["rm_id"]: row["total"] or Decimal("0") for row in child_agg}
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "add_items":
+            if not warehouse:
+                messages.error(request, "ابتدا یک انبار انتخاب کنید.")
+                return redirect("manage_inventory")
+
+            try:
+                with transaction.atomic():
+                    for mm in mother_materials:
+                        qty_raw = request.POST.get(f"qty_{mm.id}")
+                        qty_each_child = _to_decimal(qty_raw, Decimal("0"))
+                        if qty_each_child > 0:
+                            # add same qty to EACH child under this mother
+                            for material in children_by_mother.get(mm.id, []):
+                                inv, _ = Inventory.objects.get_or_create(
+                                    inventory_raw_material=material,
+                                    warehouse=warehouse
+                                )
+                                inv.add_stock(
+                                    qty_each_child,
+                                    request.user.profile,
+                                    receipt_number=-10
+                                )
+                messages.success(request, "موجودی‌ها با موفقیت اضافه شدند.")
+            except Exception as e:
+                messages.error(request, f"خطا: {e}")
+
+        elif action == "reset_zero":
+            if not warehouse:
+                messages.error(request, "ابتدا یک انبار انتخاب کنید.")
+                return redirect("manage_inventory")
+
+            try:
+                with transaction.atomic():
+                    inventories = Inventory.objects.select_for_update().filter(warehouse=warehouse)
+                    for inv in inventories:
+                        if inv.quantity and inv.quantity > 0:
+                            inv.remove_stock(inv.quantity, request.user.profile)
+                messages.success(request, "موجودی‌های انبار انتخاب‌شده با موفقیت صفر شد.")
+            except Exception as e:
+                messages.error(request, f"خطا در صفر کردن موجودی: {e}")
+
+        return redirect(f"{request.path}?warehouse={selected_warehouse_id}")
+
+    return render(request, "manage_inventory.html", {
+        "warehouses": warehouses,
+        "mother_materials": mother_materials,
+        "mother_stock": mother_stock,
+        "selected_warehouse_id": selected_warehouse_id,
+        "children_by_mother": children_by_mother,
+        "child_counts": child_counts,
+        "child_stock": child_stock,
+    })

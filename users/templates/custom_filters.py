@@ -8,3 +8,11 @@ def to_float(value):
         return float(value)
     except (ValueError, TypeError):
         return 0.0
+
+
+@register.filter
+def get_item(d, key):
+    try:
+        return d.get(key)
+    except Exception:
+        return None
