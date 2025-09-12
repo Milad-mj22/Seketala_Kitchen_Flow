@@ -1,14 +1,14 @@
 
 from __future__ import annotations
 import cv2
-from insightface.app import FaceAnalysis
-from insightface.app.common import Face
-from insightface.data import get_image as ins_get_image
-import torch
-import onnxruntime as ort
+# from insightface.app import FaceAnalysis
+# from insightface.app.common import Face
+# from insightface.data import get_image as ins_get_image
+# import torch
+# import onnxruntime as ort
 
-import time
-import numpy as np
+# import time
+# import numpy as np
 
 # from cameras.ai.Face.faceDB import FaceDB
 # from cameras.models import Embedding
