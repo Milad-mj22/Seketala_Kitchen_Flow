@@ -16,9 +16,9 @@ from users.utils.utils import send_push_notification
 from .decorators import job_required
 from users.utils.CalulatedDistance import calculate_distance
 
-from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, JobForm, MotherMaterialForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
+from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, CategoryForm, JobForm, MotherMaterialForm, RawMaterialCategoryForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -441,11 +441,32 @@ def create_order(request):
 
 
 
-        mother_materials = MotherMaterial.objects.prefetch_related('mother_material').order_by('describe').all()
+        # mother_materials = MotherMaterial.objects.prefetch_related('mother_material').order_by('describe').all()
  
-        return render(request, 'users/create_order.html', {'mother_materials': mother_materials})
+        # return render(request, 'users/create_order.html', {'mother_materials': mother_materials})
     
 
+
+        user = request.user
+        # Get all categories the user can see
+        user_categories = user.profile.categories.all()  # assumes Profile model with ManyToMany to MaterialCategory
+
+        # Get all mother materials
+        mother_materials = MotherMaterial.objects.prefetch_related('mother_material').order_by('describe').all()
+
+        # Prepare a list of mother_materials with filtered raw materials
+        filtered_mother_materials = []
+        for mother in mother_materials:
+            # Filter raw materials by user's categories
+            allowed_materials = mother.mother_material.filter(category__in=user_categories)
+            if allowed_materials.exists():
+                # Attach filtered queryset to a temporary attribute
+                mother.allowed_materials = allowed_materials
+                filtered_mother_materials.append(mother)
+
+        return render(request, 'users/create_order.html', {
+            'mother_materials': filtered_mother_materials,
+        })
 
 
 
@@ -3237,3 +3258,45 @@ def otp_verify(request):
     login(request, user)
     cache.delete(cache_key(phone))
     return JsonResponse({'ok':True, 'next': '/customer/dashboard/'})
+
+
+
+
+def categories_list(request):
+    categories = MaterialCategory.objects.all()
+
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("categories_list")
+    else:
+        form = CategoryForm()
+
+    return render(request, "materials/categories_list.html", {
+        "categories": categories,
+        "form": form,
+    })
+
+
+def category_detail(request, category_id):
+    category = get_object_or_404(MaterialCategory, id=category_id)
+    materials = category.materials.all()
+    return render(request, "materials/category_detail.html", {
+        "category": category,
+        "materials": materials
+    })
+
+def add_material_to_category(request, category_id):
+    category = get_object_or_404(MaterialCategory, id=category_id)
+    all_materials = raw_material.objects.all()
+
+    if request.method == "POST":
+        selected_ids = request.POST.getlist("materials")
+        raw_material.objects.filter(id__in=selected_ids).update(category=category)
+        return redirect("category_detail", category_id=category.id)
+
+    return render(request, "materials/add_material.html", {
+        "category": category,
+        "materials": all_materials,
+    })

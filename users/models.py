@@ -83,7 +83,18 @@ class DailyReports(models.Model):
 
     def __str__(self):
         return f'{self.user.username} -  ({self.date})'   #{self.title}
+    
 
+
+class MaterialCategory(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+
+    # اگر بخوای هر کاربر فقط بعضی دسته‌ها رو ببینه
+    users = models.ManyToManyField(User, related_name="material_categories", blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 
@@ -105,6 +116,8 @@ class Profile(models.Model):
     push_endpoint = models.TextField(blank=True, null=True)
     push_p256dh = models.TextField(blank=True, null=True)
     push_auth = models.TextField(blank=True, null=True)
+
+    categories = models.ManyToManyField(MaterialCategory, blank=True, related_name="users_category")
 
 
 
@@ -263,6 +276,10 @@ class PhoneBook(models.Model):
 
 
 
+
+
+
+
 class mode_raw_materials(models.Model):
 
     name =  models.CharField(max_length=200)
@@ -334,6 +351,12 @@ class raw_material(models.Model):
     mother = models.ForeignKey(mother_material, on_delete= models.CASCADE,related_name='mother_material',blank=True,null=True)
     mode = models.ForeignKey(mode_raw_materials,default=None, on_delete= models.CASCADE,related_name='mode_raw_materials',blank=True,null=True)
 
+
+    # اضافه کردن دسته‌بندی
+    category = models.ForeignKey(
+        MaterialCategory, on_delete=models.CASCADE,
+        related_name="materials", blank=True, null=True
+    )
 
 
     def __str__(self):
