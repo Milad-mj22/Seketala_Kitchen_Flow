@@ -10,15 +10,15 @@ import onnxruntime as ort
 import time
 import numpy as np
 
-from cameras.ai.Face.faceDB import FaceDB
-from cameras.models import Embedding
-from cameras.models import Person
+# from cameras.ai.Face.faceDB import FaceDB
+# from cameras.models import Embedding
+# from cameras.models import Person
 
 
-cap = cv2.VideoCapture(0) 
+# cap = cv2.VideoCapture(0) 
 
-face_db = FaceDB('face_db_s.db')
-face_db.load_embeddings()
+# face_db = FaceDB('face_db_s.db')
+# face_db.load_embeddings()
 
 
 
