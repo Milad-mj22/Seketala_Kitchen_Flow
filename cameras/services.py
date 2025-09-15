@@ -3,6 +3,8 @@ import cv2
 from threading import Thread, Lock
 from onvif import ONVIFCamera
 
+from cameras.ai import AiManager
+
 class CameraStream:
     def __init__(self, camera_id, rtsp_url):
         self.camera_id = camera_id
@@ -31,6 +33,9 @@ class CameraStream:
 
 class CameraManager:
     _instances = {}
+
+    def __init__(self):
+        self.ai_modules = AiManager()
 
     @classmethod
     def get_camera(cls, camera_id, rtsp_url=None):

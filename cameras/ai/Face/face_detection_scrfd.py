@@ -51,6 +51,8 @@ while True:
         break
     
     t = time.time()
+
+def procceess(frame):
     
     faces = app.get(frame)
 

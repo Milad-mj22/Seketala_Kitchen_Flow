@@ -3,6 +3,27 @@
 {% block content %}
 
 {% load static %}
+
+
+<style>
+
+
+.Send_btn {
+    position: fixed;
+    bottom: 20px;              /* فاصله از پایین صفحه */
+    left: 50%;                 /* مرکز صفحه */
+    transform: translateX(-50%); /* جبران عرض دکمه برای مرکز شدن */
+    width: 70%;                /* عرض دلخواه */
+    padding: 10px;
+    background-color: transparent; /* پس‌زمینه شفاف */
+    text-align: center;
+    z-index: 9999;
+    border: none;              /* اگر می‌خواید بدون حاشیه باشد */
+}
+
+</style>
+
+
 <link rel="stylesheet" type="text/css" href="{% static 'css/store.css' %}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script> <!-- Font Awesome for icons -->
 <html lang="fa" dir="rtl"></html>
@@ -114,7 +135,7 @@
                         {{ mother_material.describe }} : {{ mother_material.name }}
                     </a>
                     <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
-                        {% for field in mother_material.mother_material.all %}
+                        {% for field in mother_material.allowed_materials.all %}
                             <div class="col">
                                 <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0">
                                     <div class="card-body">
@@ -147,8 +168,11 @@
             <textarea id="additional_details" name="additional_details" class="additional-details form-control" rows="4" placeholder="متن را وارد کنید ..."></textarea>
         </div>
 
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary btn-block">ارسال</button>
+
+
+        <!-- دکمه ارسال ثابت -->
+        <div class="Send_btn">
+            <button type="submit" class="btn btn-primary btn-lg">ارسال</button>
         </div>
 
 

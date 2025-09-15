@@ -539,3 +539,21 @@ class RawMaterialForm(forms.ModelForm):
             'mother': 'ماده اولیه مادر',
             'mode': 'حالت',
         }
+
+
+
+
+
+from django import forms
+from .models import MaterialCategory, raw_material
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = MaterialCategory
+        fields = ["name", "description"]
+
+
+class RawMaterialCategoryForm(forms.ModelForm):
+    class Meta:
+        model = raw_material
+        fields = ["name", "describe", "unit", "image"]

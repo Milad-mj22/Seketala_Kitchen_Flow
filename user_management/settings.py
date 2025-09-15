@@ -39,16 +39,28 @@ DEBUG = True
 
 
 
-
 MEDIA_URL = '/media/'  # URL for accessing media files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Directory where uploaded files are stored
 
+STATIC_URL = '/static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # در سرور
+STATIC_ROOT = r'C:\Users\Administrator\Desktop\Kitchen_Flow\staticfiles'
 
-ALLOWED_HOSTS = ['37.191.77.130','192.168.1.107','172.20.10.4','127.0.0.1','0.0.0.0','192.168.1.30','94.183.166.188','192.168.1.211','37.255.213.180',"seketalamanager.ir", "www.seketalamanager.ir", "*", '32ed-104-28-162-133.ngrok-free.app']  # <--- your ngrok hostname here]
+
+
+
+ALLOWED_HOSTS = ['37.191.77.130','192.168.1.107','172.20.10.4','127.0.0.1','0.0.0.0','192.168.1.30','94.183.166.188','192.168.1.211','37.255.213.180',"seketalamanager.ir", "www.seketalamanager.ir", "*"]
+
+
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True  # Optional, only if not forcing from server
 
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://32ed-104-28-162-133.ngrok-free.app'
+    "https://seketalamanager.ir",
+    "https://www.seketalamanager.ir",
 ]
 
 
@@ -82,7 +94,7 @@ INSTALLED_APPS = [
     'mines',
     'dashboard',
     'utils',
-    'cameras',
+    'cameras'
 
 ]
 
@@ -263,3 +275,36 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TASK_SERIALIZER = 'json'
+
+# user_management/settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'django_error.log'),
+            'formatter': 'verbose',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+
+
