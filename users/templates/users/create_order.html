@@ -2,58 +2,28 @@
 {% block title %} Home Page {% endblock title %}
 {% block content %}
 
+{% load static %}
+
 
 <style>
 
-img {
-    width: 100%;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-}
 
-/* دکمه ارسال ثابت */
 .Send_btn {
     position: fixed;
-    bottom: 10px;                
-    left: 50%;                    
-    transform: translateX(-50%);  
-    width: 70%;                   
+    bottom: 20px;              /* فاصله از پایین صفحه */
+    left: 50%;                 /* مرکز صفحه */
+    transform: translateX(-50%); /* جبران عرض دکمه برای مرکز شدن */
+    width: 70%;                /* عرض دلخواه */
     padding: 10px;
-    background-color: transparent; 
+    background-color: transparent; /* پس‌زمینه شفاف */
     text-align: center;
     z-index: 9999;
-    border: none;                 
+    border: none;              /* اگر می‌خواید بدون حاشیه باشد */
 }
-
-/* واکنش‌گرایی برای موبایل */
-@media (max-width: 768px) {
-    .Send_btn {
-        width: 90%;           /* عرض بیشتر روی موبایل */
-        padding: 12px;        
-    }
-
-    .card img {
-        max-width: 80px;      /* کوچک‌تر کردن تصاویر کارت‌ها روی موبایل */
-        max-height: 80px;
-        margin-left: 5px;
-        margin-right: 5px;
-    }
-
-    .input-wrapper {
-        flex-direction: column; /* چیدمان ورودی‌ها در موبایل عمودی شود */
-        gap: 5px;
-    }
-
-    .d-flex {
-        flex-direction: column; /* اگر دکمه‌ها کنار هم بودند، زیر هم قرار بگیرند */
-    }
-}
-
 
 </style>
 
-{% load static %}
+
 <link rel="stylesheet" type="text/css" href="{% static 'css/store.css' %}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script> <!-- Font Awesome for icons -->
 <html lang="fa" dir="rtl"></html>
@@ -160,23 +130,12 @@ img {
 
         <div>
             {% for mother_material in mother_materials %}
-    <div class="card p-2 mb-3">
-        <a href="javascript:void(0);" onclick="toggleSubmaterials('submaterials-{{ mother_material.id }}')" style="text-decoration: none; color: inherit;">
-
-            <div class="d-flex align-items-center">
-                {% if mother_material.image %}
-                <div>
-                    <img src="{{ mother_material.image.url }}" alt="{{ mother_material.name }}" style="max-width: 100px; max-height: 100px;  margin-left: 10px;margin-right: 10px;">
-                </div>
-                {% endif %}
-                <div>
-                        <strong>{{ mother_material.describe }}</strong> : {{ mother_material.name }}
-                    </div>
-            </div>
-
-        <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
-                        {% for field in mother_material.allowed_materials %}
-
+                <div class="card">
+                    <a href="javascript:void(0);" onclick="toggleSubmaterials('submaterials-{{ mother_material.id }}')">
+                        {{ mother_material.describe }} : {{ mother_material.name }}
+                    </a>
+                    <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
+                        {% for field in mother_material.allowed_materials.all %}
                             <div class="col">
                                 <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0">
                                     <div class="card-body">
@@ -208,7 +167,6 @@ img {
             <label for="additional_details" class="form-label" style="direction: rtl; text-align: right;">توضیحات اضافه در صورت نیاز</label>
             <textarea id="additional_details" name="additional_details" class="additional-details form-control" rows="4" placeholder="متن را وارد کنید ..."></textarea>
         </div>
-        
 
 
 
@@ -216,7 +174,6 @@ img {
         <div class="Send_btn">
             <button type="submit" class="btn btn-primary btn-lg">ارسال</button>
         </div>
-
 
 
     </form>
