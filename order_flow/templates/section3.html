@@ -144,27 +144,26 @@
                 </thead>
                 <tbody>
                     {% for usage in material_usages.items %}
-                    <tr>
-                        <td>{{ usage.0 }}</td>
-                        <td>{{ usage.1.quantity_used|floatformat:"-4"  }}</td>
-                        <td>{{ usage.1.step2_quantity |floatformat:"-4" }}</td>
-                            {% if not is_confirmed %}
-                            <td>
-                                <input type="number" name="materials_sent[]"
-                                       value="{{ usage.1.step2_quantity|floatformat:"-4"  }}" 
-                                       class="text-center"
-                                       step="any">
-                            
-                                <input type="hidden" name="materials_names[]" value="{{ usage.0 }}">
-                            </td>
-                            {% else %}
-                            <td>{{ usage.1.step3_quantity|floatformat:"-4"  }}</td>
-                            {% endif %}
+                        {% if usage.1.quantity_used > 0 %}
+                            <tr>
+                                <td>{{ usage.0 }}</td>
+                                <td>{{ usage.1.quantity_used|floatformat:"-4"  }}</td>
+                                <td>{{ usage.1.step2_quantity |floatformat:"-4" }}</td>
+                                    {% if not is_confirmed %}
+                                    <td>
+                                        <input type="number" name="materials_sent[]"
+                                            value="{{ usage.1.step2_quantity|floatformat:"-4"  }}" 
+                                            class="text-center"
+                                            step="any">
+                                    
+                                        <input type="hidden" name="materials_names[]" value="{{ usage.0 }}">
+                                    </td>
+                                    {% else %}
+                                    <td>{{ usage.1.step3_quantity|floatformat:"-4"  }}</td>
+                                    {% endif %}
 
-
-
-                     
-                    </tr>
+                            </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

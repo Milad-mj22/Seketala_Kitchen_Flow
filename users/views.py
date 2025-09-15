@@ -35,7 +35,7 @@ from .models import EntryExitLog
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.csrf import csrf_protect
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone , timedelta
 
 import jdatetime
 from snapp_discount.getPrice import get_price
@@ -482,6 +482,8 @@ def create_order(request):
 
 @login_required
 def my_orders(request):
+    from django.utils.timezone import now  # better than datetime.now() in Django
+
     orders = ModelCreateOrder.objects.order_by('updated_at')
     # orders = orders.order_by('-updated_at').reverse()
     orders = orders.reverse()
@@ -501,15 +503,16 @@ def my_orders(request):
         except:
             print('Error : my_orders night order ERORrrrrrrrrrrr')
 
-        diff =  datetime.now() - order.created_at 
-        sec = diff.total_seconds()  
-        
-        if sec < 28800:
-            order.created_at = True
-        else:
-            order.created_at = False
-            # editable.append(False)
+        # --- EDITABLE LOGIC ---
+        created_date = order.created_at
+        tomorrow = (created_date + timedelta(days=1)).replace(
+            hour=4, minute=0, second=0, microsecond=0
+        )
 
+        if now() < tomorrow:
+            order.created_at = True   # editable
+        else:
+            order.created_at = False  # not editable
 
 
         date = order.updated_at
@@ -1325,7 +1328,6 @@ def calculateProducibleMeals():
     # Print the producible foods and the quantity
     # for food, quantity in producible_foods:
     #     print(f'You can make {quantity} of {food.name}')
-    print(producible_foods)
 
     return producible_foods
 
