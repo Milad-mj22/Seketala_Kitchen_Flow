@@ -91,19 +91,19 @@ def check_order_confirmed(order , stepNumber:int):
 def get_allowed_confirm_users(stepNumber:int):
 
     if stepNumber==1:
-        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
         return allowed_roles
 
     if stepNumber==2:
-        allowed_roles = ['manager', 'fishzan','prepration officer','Programmer']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','prepration officer','Programmer','CEO']  # Adjust based on your logic
         return allowed_roles
 
     if stepNumber==3:
-        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
         return allowed_roles
   
     if stepNumber==4:
-        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer']  # Adjust based on your logic
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
         return allowed_roles  
     
 @login_required

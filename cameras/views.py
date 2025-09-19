@@ -104,6 +104,7 @@ def detect_person(request):
     detected_persons = Profile.objects.all()  # Example, replace with actual detection
     return render(request, 'cameras/detect_person.html', {'detected_persons': detected_persons})
 
+
 def assign_person_to_user(request, person_id):
     # Assign detected person to a specific user
     person = DetectedPersons.objects.get(id=person_id)
