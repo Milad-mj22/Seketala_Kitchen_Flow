@@ -131,7 +131,6 @@
                     </thead>
                     <tbody>
                     {% for usage in material_usages.items %}
-                        {% if usage.1.quantity_used > 0 %}
                         <tr>
                             <td>{{ usage.0 }}</td>
                             <td>{{ usage.1.unit }}</td>
@@ -142,7 +141,6 @@
                             <input type="hidden" name="materials_quantities[]" value="{{ usage.1.quantity_used }}">
 
                         </tr>
-                        {% endif %}
 
                     {% endfor %}
 
