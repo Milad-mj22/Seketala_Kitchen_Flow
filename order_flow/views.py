@@ -57,6 +57,7 @@ def convert_raw_material2object(materials):
     # Reverse keys and values
     reversed_dmaterials_dictict = {v: k for k, v in materials_dict.items()}
     for material in list(materials_dict.keys()):
+        
 
         obj = raw_material.objects.filter(name=material).first()
 
@@ -64,10 +65,18 @@ def convert_raw_material2object(materials):
 
 
         if material in result.keys():
+            try:
+                v = float(result[material].quantity_used)
+            except:
+                v = 0
 
-            obj.quantity_used = float(result[material].quantity_used) + float(materials_dict[material])
+            obj.quantity_used = v + float(materials_dict[material])
         else:
-            obj.quantity_used = float(materials_dict[material])
+            try:
+                v = float(materials_dict[material])
+            except:
+                v = 0
+            obj.quantity_used = v
 
         obj.quantity_used = round(obj.quantity_used,4)
 
