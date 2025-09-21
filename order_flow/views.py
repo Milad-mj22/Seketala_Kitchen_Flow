@@ -75,6 +75,7 @@ def convert_raw_material2object(materials):
             try:
                 v = float(materials_dict[material])
             except:
+               
                 v = 0
             obj.quantity_used = v
 
