@@ -143,7 +143,6 @@
                 </thead>
                 <tbody>
                     {% for usage in material_usages.items %}
-                     {% if usage.1.quantity_used > 0 %}
                     <tr>
                         <td>{{ usage.0 }}</td>
                         <td>{{ usage.1.quantity_used |floatformat:"-4" }}</td>
@@ -166,7 +165,6 @@
 
                      
                     </tr>
-                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

@@ -71,9 +71,8 @@ def convert_raw_material2object(materials):
 
         obj.quantity_used = round(obj.quantity_used,4)
 
-
-
-        result[material] = obj
+        if obj.quantity_used >0.0 :
+            result[material] = obj
     
     return result
 
@@ -95,6 +94,7 @@ def get_allowed_confirm_users(stepNumber:int):
         return allowed_roles
 
     if stepNumber==2:
+
         allowed_roles = ['manager', 'fishzan','prepration officer','Programmer','CEO']  # Adjust based on your logic
         return allowed_roles
 
@@ -104,6 +104,17 @@ def get_allowed_confirm_users(stepNumber:int):
   
     if stepNumber==4:
         allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
+
+        allowed_roles = ['manager', 'fishzan','prepration officer','Programmer','CEO']   # Adjust based on your logic
+        return allowed_roles
+
+    if stepNumber==3:
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']   # Adjust based on your logic
+        return allowed_roles
+  
+    if stepNumber==4:
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']   # Adjust based on your logic
+
         return allowed_roles  
     
 @login_required
@@ -240,6 +251,7 @@ def section2_view(request, order_id):
 
 
         except ValueError as e:
+            print(e)
             # اینجا دیگه نیازی به set_rollback نیست
             return render(request, "not_confirmed.html", {
                 "message": str(e),
