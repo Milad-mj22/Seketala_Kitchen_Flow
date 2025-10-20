@@ -1,2 +1,2 @@
 class Constants:
-    NAME = 'سکه طلا'
+    NAME = 'Demo'
