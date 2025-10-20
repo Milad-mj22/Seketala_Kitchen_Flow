@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>کمان | سامانه هوشمند فست فود</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Vazirmatn', sans-serif;
+      background: radial-gradient(circle at top left, #2b004f, #0a0015);
+      color: #fff;
+      overflow-x: hidden;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px 80px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo img {
+      width: 60px;
+      filter: drop-shadow(0 0 8px #ff00c8);
+    }
+    .logo span {
+      font-size: 28px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #ff00c8, #7a00ff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .hero {
+      text-align: center;
+      padding: 120px 20px;
+      background: url('banner.png') no-repeat center/cover;
+      position: relative;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+    }
+    .hero h1 {
+      font-size: 52px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ff00c8, #7a00ff);
+      -webkit-background-clip: text;
+      color: transparent;
+      position: relative;
+      z-index: 2;
+    }
+    .hero p {
+      font-size: 22px;
+      color: #ddd;
+      position: relative;
+      z-index: 2;
+      margin-top: 20px;
+    }
+    .features {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 40px;
+      padding: 80px 60px;
+      background: #110022;
+    }
+    .feature {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      width: 250px;
+      box-shadow: 0 0 20px rgba(120, 0, 255, 0.2);
+      transition: 0.3s ease;
+    }
+    .feature:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 0 25px rgba(255, 0, 200, 0.4);
+    }
+    .feature img {
+      width: 60px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 8px #ff00c8);
+    }
+    .feature h3 {
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    footer {
+      text-align: center;
+      padding: 40px;
+      font-size: 14px;
+      color: #bbb;
+      background: #0a0015;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="kaman-logo.png" alt="Kaman Logo">
+      <span>کمان</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>با یک تیر چند نشان بزن!</h1>
+    <p>کمان؛ سامانه هوشمند مدیریت انبار، سفارش، فروش و اتوماسیون فست‌فود</p>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <img src="warehouse-icon.png" alt="Warehouse">
+      <h3>مدیریت انبار</h3>
+      <p>کنترل دقیق موجودی، کاهش خطا و گزارش‌های لحظه‌ای</p>
+    </div>
+    <div class="feature">
+      <img src="order-icon.png" alt="Order">
+      <h3>سفارش‌گیری سریع</h3>
+      <p>ثبت سفارش‌ها با هوش مصنوعی و یکپارچه با صندوق فروش</p>
+    </div>
+    <div class="feature">
+      <img src="ai-icon.png" alt="AI">
+      <h3>هوش مصنوعی</h3>
+      <p>تحلیل فروش و پیشنهادات هوشمند برای افزایش سود</p>
+    </div>
+    <div class="feature">
+      <img src="robot-icon.png" alt="Automation">
+      <h3>اتوماسیون آشپزخانه</h3>
+      <p>ارتباط هوشمند بین سفارش‌ها و تجهیزات آشپزخانه</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 کمان - تمامی حقوق محفوظ است.</p>
+  </footer>
+</body>
+</html>
