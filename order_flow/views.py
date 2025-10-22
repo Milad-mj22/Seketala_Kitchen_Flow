@@ -57,6 +57,7 @@ def convert_raw_material2object(materials):
     # Reverse keys and values
     reversed_dmaterials_dictict = {v: k for k, v in materials_dict.items()}
     for material in list(materials_dict.keys()):
+        
 
         obj = raw_material.objects.filter(name=material).first()
 
@@ -64,10 +65,19 @@ def convert_raw_material2object(materials):
 
 
         if material in result.keys():
+            try:
+                v = float(result[material].quantity_used)
+            except:
+                v = 0
 
-            obj.quantity_used = float(result[material].quantity_used) + float(materials_dict[material])
+            obj.quantity_used = v + float(materials_dict[material])
         else:
-            obj.quantity_used = float(materials_dict[material])
+            try:
+                v = float(materials_dict[material])
+            except:
+               
+                v = 0
+            obj.quantity_used = v
 
         obj.quantity_used = round(obj.quantity_used,4)
 
@@ -94,6 +104,17 @@ def get_allowed_confirm_users(stepNumber:int):
         return allowed_roles
 
     if stepNumber==2:
+
+        allowed_roles = ['manager', 'fishzan','prepration officer','Programmer','CEO']  # Adjust based on your logic
+        return allowed_roles
+
+    if stepNumber==3:
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
+        return allowed_roles
+  
+    if stepNumber==4:
+        allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']  # Adjust based on your logic
+
         allowed_roles = ['manager', 'fishzan','prepration officer','Programmer','CEO']   # Adjust based on your logic
         return allowed_roles
 
@@ -103,6 +124,7 @@ def get_allowed_confirm_users(stepNumber:int):
   
     if stepNumber==4:
         allowed_roles = ['manager', 'fishzan','Kitchen Officer','Programmer','CEO']   # Adjust based on your logic
+
         return allowed_roles  
     
 @login_required
