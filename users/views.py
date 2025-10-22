@@ -3300,3 +3300,10 @@ def add_material_to_category(request, category_id):
         "category": category,
         "materials": all_materials,
     })
+
+
+
+
+
+def custom_page_not_found(request, exception):
+    return render(request, '404.html', status=404)

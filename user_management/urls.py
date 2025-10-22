@@ -10,6 +10,10 @@ from users.views import CustomLoginView, ResetPasswordView, ChangePasswordView
 
 from users.forms import LoginForm
 
+from django.conf.urls import handler404
+
+handler404 = 'users.views.custom_page_not_found'
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
