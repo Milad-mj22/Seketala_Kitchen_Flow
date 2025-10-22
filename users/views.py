@@ -89,7 +89,7 @@ def clean_buyer_names(buyers):
             buyer.first_name = buyer.first_name.replace('�','')
             buyer.last_name = buyer.last_name.replace('�','')
             full_name = f"{buyer.first_name} {buyer.last_name or ''}"
-            buyer.short_name = full_name[:40] + ('…' if len(full_name) > 50 else '')
+            buyer.short_name = full_name[:20] + ('…' if len(full_name) > 50 else '')
     except:    
         return buyers
 
@@ -188,8 +188,8 @@ def send_push_notification(request):
 def send_test_notification(request):
     if request.method == "POST":
         try:
-            user_id =request.user.id
-            user = User.objects.get(id=user_id)
+
+            user = request.user
             profile = Profile.objects.get(user=user)# Get the latest subscription for testing
             if not profile or not profile.push_endpoint:
                 return JsonResponse({"error": "No valid subscription found"}, status=400)
@@ -378,7 +378,7 @@ def profile(request):
             # if request.user
             try:
 
-                user = Profile.objects.get(id = request.user.id)
+                user = request.user.profile
 
 
             except Exception as e:
@@ -650,7 +650,7 @@ def add_mother_material(request):
         form = PostFormAddMotherMaterial(request.POST)
         if form.is_valid():
             obj =form.save(commit=False)
-            obj.author = User.objects.get(pk=request.user.id)
+            obj.author = request.user
             form.save()
             messages.success(request,'New Forum Successfully Added')
             return redirect('/profile/my_orders')
@@ -840,7 +840,7 @@ def add_restaurant(request):
         form = PostFormAddRestaurant(request.POST)
         if form.is_valid():
             obj =form.save(commit=False)
-            obj.author = User.objects.get(pk=request.user.id)
+            obj.author = request.user
             form.save()
 
             # get_price()
@@ -955,7 +955,7 @@ def addfoodrawmaterial(request):
         if  FoodRawMaterial.objects.filter(name=food_name).first()==None:
 
 
-            user = User.objects.get(pk=request.user.id)
+            user = request.user
     
             values ={}
 
@@ -1034,7 +1034,6 @@ def show_food_material(request,id):
 
 
         data.pop('food_name','Not found location')
-        user = User.objects.get(pk=request.user.id)
 
         values ={}
 
@@ -1412,7 +1411,7 @@ def add_store(request):
 
 
 
-        profile = Profile.objects.get(id = request.user.id)
+        profile = request.user.profile
 
         ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1612,7 +1611,6 @@ def take_store(request):
         elif ware_house is None:
             return
 
-        profile = Profile.objects.get(id = request.user.id)
 
         selected_warehouse = Warehouse.objects.get(name = ware_house)
 
@@ -1716,7 +1714,7 @@ def confrim_take_store(request):
                 
 
 
-            profile = Profile.objects.get(id = request.user.id)
+            profile = request.user.profile
 
             ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -2140,7 +2138,7 @@ def register_entry(request, id):
 
     else:
             
-        user = get_object_or_404(User, id=request.user.id)  # Get the user by id
+        user = request.user # Get the user by id
         latest_log = get_latest_exit(user)
         return render(request, 'users/register_entry.html',{'last_status': latest_log })
 

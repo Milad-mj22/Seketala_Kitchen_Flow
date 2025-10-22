@@ -96,7 +96,8 @@ INSTALLED_APPS = [
     'dashboard',
     'utils',
     'cameras',
-    'Kaman'
+    'Kaman',
+    'TasksManager'
 
 ]
 

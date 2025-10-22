@@ -7,6 +7,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 import openpyxl
 
+from users.views import clean_buyer_names
+
 from .models import AttributeGroup, CoopAttribute, CoopAttributeValue, CoopDeleteRequest, Cutting_factory, CuttingAround, CuttingSaw, PreInvoice, PreInvoiceItem, PriceAttribute
 from django.http import HttpResponseForbidden
 from StoneFlow.models import coops , Step
@@ -1189,10 +1191,12 @@ def convert_excel_to_pdf(excel_path, pdf_path):
         wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
         wb.Close(False)
         excel.Quit()
-        pythoncom.CoUninitialize()
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        except:
+            print('Error in convert')
 
-    except:
-        print('Error Convert Excel to pdf')
 
 def convert_str_price2float(price:str):
 
@@ -1697,6 +1701,10 @@ def user_preinvoices(request):
     preinvoices = preinvoices.order_by("-created_at")
 
     customers = Buyer.objects.all()
+
+    customers = clean_buyer_names(customers)
+
+
 
     return render(request, "preInvoice/preinvoice_list.html", {
         "preinvoices": preinvoices,

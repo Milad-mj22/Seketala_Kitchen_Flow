@@ -34,10 +34,11 @@
 <!-- فیلترها -->
 <div class="card mb-4 shadow-sm border-0" style="border-radius: 16px;">
   <div class="card-body">
-    <form method="get" class="row gy-2 gx-3 align-items-center">
-      <div class="col-md-5">
+    <form method="get" class="d-flex flex-column gap-3" style="direction: rtl; text-align: right;">
+
+      <div>
         <label for="customer" class="form-label fw-bold text-primary">👤 انتخاب مشتری</label>
-        <select name="customer" id="customer" class="form-select select2">
+        <select name="customer" id="customer" class="form-select select2 text-end">
           <option value="">-- همه مشتری‌ها --</option>
           {% for customer in customers %}
             <option value="{{ customer.id }}" {% if customer.id|stringformat:"s" == selected_customer %}selected{% endif %}>
@@ -47,19 +48,21 @@
         </select>
       </div>
 
-      <div class="col-md-4">
+      <div>
         <label for="date" class="form-label fw-bold text-primary">📅 تاریخ صدور</label>
-        <input type="date" name="date" id="date" class="form-control" value="{{ selected_date }}">
+        <input type="date" name="date" id="date" class="form-control text-end" value="{{ selected_date }}" style="max-width: 300px;">
       </div>
 
-      <div class="col-md-3 d-flex align-items-end">
-        <button type="submit" class="btn btn-outline-primary w-100 fw-bold">
+      <div>
+        <button type="submit" class="btn btn-outline-primary w-100 fw-bold" style="margin-top: 20px;">
           🔎 اعمال فیلتر
         </button>
       </div>
+
     </form>
   </div>
 </div>
+
 
 
 

@@ -42,6 +42,8 @@ urlpatterns = [
      path('dashboard/', include('dashboard.urls')),
      path('utils/', include('utils.urls')),
      path('cameras/', include('cameras.urls')),
+     path('TasksManager/', include('TasksManager.urls')),
+
      path('Kaman/', include('Kaman.urls')),
 
      path('', include('users.urls')),
