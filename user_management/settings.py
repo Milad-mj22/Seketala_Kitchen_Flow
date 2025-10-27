@@ -94,7 +94,8 @@ INSTALLED_APPS = [
     'mines',
     'dashboard',
     'utils',
-    'cameras'
+    'cameras',
+    'DataAnalysis'
 
 ]
 
