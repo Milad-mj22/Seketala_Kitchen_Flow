@@ -561,7 +561,7 @@ def my_orders(request):
             if field!='additional_details'  :
                 try:
                     if float(values[field])>0:
-                        # try:
+                        try:
                             # print(field)
                             value = float(values[field])
 
@@ -599,10 +599,10 @@ def my_orders(request):
                             values[field] = data
                         
                         
-                        # except:
-                        #     print('eror')
+                        except:
+                            print('eror')
                 except:
-                    print('Error in my_order : ',values[field])
+                    print('Error in my_order : ')
 
 
     return render(request, 'users/my_orders.html', {'orders': orders,'editable':editable})
