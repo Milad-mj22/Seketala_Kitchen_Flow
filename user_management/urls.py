@@ -42,6 +42,7 @@ urlpatterns = [
      path('dashboard/', include('dashboard.urls')),
      path('utils/', include('utils.urls')),
      path('cameras/', include('cameras.urls')),
+     path('data_analysis/', include('DataAnalysis.urls')),
 
      path('', include('users.urls')),
 
