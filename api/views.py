@@ -142,3 +142,48 @@ def account_list(request):
         "start_date": start_date,
         "end_date": end_date,
     })
+
+
+
+
+
+# api/views.py
+import secrets
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+
+from .serializer import ExternalRegisterSerializer
+
+class ExternalRegisterView(APIView):
+
+    def post(self, request):
+        serializer = ExternalRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        phone = serializer.validated_data["phone"]
+        name = serializer.validated_data["name"]
+        company = serializer.validated_data.get("company", "")
+
+        # 1️⃣ ساخت رمز عبور تصادفی
+        password = secrets.token_hex(4)  # مثال: 'a93f12c9'
+
+        # 2️⃣ ساخت یوزر در سیستم دوم
+        user = User.objects.create_user(
+            username=phone,
+            password=password,
+            first_name=name,
+        )
+
+        # 3️⃣ ذخیره اطلاعات اضافی (اختیاری)
+        user.profile.company = company
+        user.profile.save()
+
+        # 4️⃣ برگرداندن رمز به اپ اول
+        return Response({
+            "status": "success",
+            "message": "User created",
+            "phone": phone,
+            "password": password,  # ← اپ اول می‌تواند استفاده کند یا پیامک کند
+        }, status=status.HTTP_201_CREATED)

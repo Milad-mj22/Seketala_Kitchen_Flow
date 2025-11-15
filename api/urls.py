@@ -9,5 +9,6 @@ urlpatterns = [
     path('load_messages/<int:count>/', views.get_last_sms, name='load_messages'),
     path('get_total_deposit/', views.get_total_deposit, name='get_total_deposit'),
     path('accounts/', views.account_list, name='account_list'),
+    path('register/', views.ExternalRegisterView.as_view(), name='external_register'),
     ]
 
