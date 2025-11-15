@@ -17,9 +17,15 @@ class CameraConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.camera_id = self.scope['url_route']['kwargs']['camera_id']
         camera_obj = await  self.get_camera(int(self.camera_id))
-        self.camera = CameraManager.get_camera(self.camera_id,rtsp_url=camera_obj.get_live_feed_url())
-        await self.accept()
-        await self.stream_video()
+        if camera_obj.ip_address != '0.0.0.0':
+            self.camera = CameraManager.get_camera(self.camera_id,rtsp_url=camera_obj.get_live_feed_url())
+            await self.accept()
+            await self.stream_video()
+        else:
+            self.camera = cv2.VideoCapture(0)
+            self.fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # or 'XVID'
+            await self.accept()
+            await self.stream_video()
 
     async def stream_video(self):
         while True:
@@ -28,6 +34,18 @@ class CameraConsumer(AsyncWebsocketConsumer):
                 _, buffer = cv2.imencode('.jpg', frame)
                 await self.send(base64.b64encode(buffer).decode('utf-8'))
             await asyncio.sleep(0.04)  # ~25 FPS
+
+    async def stream_video(self):
+        while True:
+            ret, frame  = self.camera.read()
+            if ret  :
+                
+                _, buffer = cv2.imencode('.jpg', frame)
+
+                await self.send(base64.b64encode(buffer).decode('utf-8'))
+            await asyncio.sleep(0.1)  # ~10 FPS
+
+
 
     @database_sync_to_async
     def get_camera(self, camera_id):
