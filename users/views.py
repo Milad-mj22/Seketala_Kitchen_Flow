@@ -378,7 +378,7 @@ def profile(request):
             # if request.user
             try:
 
-                user = Profile.objects.get(user = request.user)
+                user = Profile.objects.get(id = request.user.id)
 
 
             except Exception as e:
