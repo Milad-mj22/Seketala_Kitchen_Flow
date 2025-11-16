@@ -29,7 +29,7 @@ def receive_sms(request):
         # Replace the number that comes after "مانده"
         message = clean_message(message=message)
         content = {'sender':sender,'message':message}
-        # #print(content)
+        print(content)
         message_signal.send(sender=None, values = content)
 
         return JsonResponse({"status": "success"}, status=201)
@@ -65,7 +65,7 @@ def get_last_sms(request, count):
         ]
         return JsonResponse({'messages': data})
     except Exception as e:
-        # #print(f"Error fetching messages: {e}")
+        print(f"Error fetching messages: {e}")
         return JsonResponse({'error': 'Error fetching messages'}, status=500)
     
 
@@ -77,9 +77,9 @@ def get_total_deposit(request):
 
     # Determine the start of the custom day (2:00 AM today)
     if now.hour < 2:
-        start_time = (now - timezone.timedelta(days=1)).replace(hour=2, minute=0, second=0, microsecond=0)
+        start_time = (now - timezone.timedelta(days=1)).replace(hour=16, minute=0, second=0, microsecond=0)
     else:
-        start_time = now.replace(hour=2, minute=0, second=0, microsecond=0)
+        start_time = now.replace(hour=16, minute=0, second=0, microsecond=0)
     
     # End time is 24 hours after the start time
     end_time = start_time + timezone.timedelta(days=1)
@@ -89,9 +89,15 @@ def get_total_deposit(request):
 
     total_sum = 0
     for sms in today_sms:
-        match = re.search(r'واریز([\d,]+)', sms.message)
-        if match:
+        match = None
+        if 'واریز' in sms.message :
+            match = re.search(r'واریز([\d,]+)', sms.message)
+        elif 'انتقال' in sms.message:
+            match = re.search(r'انتقال:([\d,]+)', sms.message)
+
+        if match is not None:
             amount = int(match.group(1).replace(',', ''))
+            print(amount)
             total_sum += amount
 
     return JsonResponse({"success": True, "total": total_sum})
