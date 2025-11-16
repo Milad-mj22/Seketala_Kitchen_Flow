@@ -29,7 +29,7 @@ def receive_sms(request):
         # Replace the number that comes after "مانده"
         message = clean_message(message=message)
         content = {'sender':sender,'message':message}
-        print(content)
+        # #print(content)
         message_signal.send(sender=None, values = content)
 
         return JsonResponse({"status": "success"}, status=201)
@@ -65,7 +65,7 @@ def get_last_sms(request, count):
         ]
         return JsonResponse({'messages': data})
     except Exception as e:
-        print(f"Error fetching messages: {e}")
+        # #print(f"Error fetching messages: {e}")
         return JsonResponse({'error': 'Error fetching messages'}, status=500)
     
 

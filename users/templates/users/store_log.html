@@ -555,7 +555,7 @@ function jalaliToUnix(jStr){
     const a = document.createElement('a'); a.href=url; a.download='inventory_logs.csv'; a.click();
     URL.revokeObjectURL(url);
   });
-  document.getElementById('printBtn')?.addEventListener('click', ()=>window.print());
+  document.getElementById('printBtn')?.addEventListener('click', ()=>window.#print());
 
   // ---------- ذخیره/بازیابی فیلترها ----------
   const LS_KEY='inv_filters';
