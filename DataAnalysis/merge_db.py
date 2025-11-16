@@ -16,16 +16,16 @@ if os.path.exists(output_db):
 merged_conn = sqlite3.connect(output_db)
 
 for db_file in db_files:
-    print(f"Processing {db_file} ...")
+    #print(f"Processing {db_file} ...")
     conn = sqlite3.connect(db_file)
 
     # Read table into pandas DataFrame
     df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-    print(f" - Rows: {len(df)}")
+    #print(f" - Rows: {len(df)}")
     conn.close()
 
     # Append data into output database
     df.to_sql(table_name, merged_conn, if_exists="append", index=False)
 
 merged_conn.close()
-print("\n✅ All databases merged successfully into:", output_db)
+#print("\n✅ All databases merged successfully into:", output_db)

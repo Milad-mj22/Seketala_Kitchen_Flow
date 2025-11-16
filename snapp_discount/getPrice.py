@@ -85,6 +85,6 @@ if __name__=='__main__':
 
     gp = get_price(res_link=link,res_name=name)
 
-    print(gp.ret_price())
+    #print(gp.ret_price())
 
     # gp.get_name_price()

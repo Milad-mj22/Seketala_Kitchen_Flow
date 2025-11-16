@@ -131,7 +131,7 @@ class UserWorkTimeManager:
                 log_date = log.jalali_date()  # Get Jalali date
 
 
-                print('log.is_entry  ',log.is_entry)
+                #print('log.is_entry  ',log.is_entry)
                 entry_time = None
                 exit_time = None
 

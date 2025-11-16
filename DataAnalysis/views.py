@@ -48,7 +48,7 @@ def upload_db(request):
 
                         gregorian_date = JalaliDate(year, month, day).to_gregorian()
                     except Exception as e:
-                        print(f"⚠️ Error converting date {jalali_str}: {e}")
+                        #print(f"⚠️ Error converting date {jalali_str}: {e}")
                         continue  # skip bad records
 
 

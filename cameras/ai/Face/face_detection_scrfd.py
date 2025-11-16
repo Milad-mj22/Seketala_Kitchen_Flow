@@ -11,10 +11,10 @@ from faceDB import FaceDB
 import time
 import numpy as np
 
-# print(torch.cuda.is_available())
-# print(torch.cuda.device_count())
-# print(torch.cuda.get_device_name(0))
-# print("Available Execution Providers:", ort.get_available_providers())
+# #print(torch.cuda.is_available())
+# #print(torch.cuda.device_count())
+# #print(torch.cuda.get_device_name(0))
+# #print("Available Execution Providers:", ort.get_available_providers())
 
 # app = FaceAnalysis( name='buffalo_l', 
 #                     providers=['CUDAExecutionProvider'],
@@ -63,7 +63,7 @@ def procceess(frame):
     if len(fps_list) > 100:
         fps_list.pop(0)
 
-    print(np.array(fps_list).mean(),'  ', t)
+    #print(np.array(fps_list).mean(),'  ', t)
 
     
     for face in faces:

@@ -158,7 +158,7 @@ def section1_view(request,order_id):
                 "unit": material_units[i],
                 "quantity": material_quantities[i]
             })
-            # print(material_names[i])
+            # #print(material_names[i])
             material = get_object_or_404(raw_material, name= material_names[i])  # Find material by name
             
             MaterialUsage.objects.create(
@@ -179,7 +179,7 @@ def section1_view(request,order_id):
 
         # ret = create_order.objects.filter(id=order_id).first()
         ret = create_order.objects.filter(id=order_id).first()
-        # print(ret)
+        # #print(ret)
         raw_materials_obj = convert_raw_material2object(ret.content)
         user_profile = Profile.objects.get(user=request.user)
         user_role = user_profile.job_position.name
@@ -261,7 +261,7 @@ def section2_view(request, order_id):
 
 
         except ValueError as e:
-            print(e)
+            #print(e)
             # اینجا دیگه نیازی به set_rollback نیست
             return render(request, "not_confirmed.html", {
                 "message": str(e),
@@ -334,7 +334,7 @@ def section3_view(request,order_id):
                         status, message = food_inventory.add_stock(
                             amount=value, user=request.user.profile, receipt_number='7000'
                         )
-                        # print('status',status,'meesage',message)
+                        # #print('status',status,'meesage',message)
                         
                     MaterialUsage.objects.create(
                         step=order_step_obj,
@@ -607,7 +607,7 @@ def edit_request(request, order_id,step_number):
                 material.step_quantity = obj.quantity
             else:
                 print('Error in material edit req')
-                # print(obj)
+                # #print(obj)
 
         # is_confirmed = check_order_confirmed(order=ret,stepNumber=1)
         return render(request, 'edit.html', {

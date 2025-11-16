@@ -34,7 +34,7 @@ class web_driver():
         
 
     def create_driver(self):
-        print(os.name)
+        #print(os.name)
         if os.name !='nt':
             options = webdriver.ChromeOptions()
             options.add_experimental_option("detach", True)
@@ -122,7 +122,7 @@ class get_foods():
         self.web.find_element(element='/html/body/div[2]/div[2]/div/section/section/div',click=True)            # set city
         time.sleep(1)
         self.web.find_element(element='/html/body/div[2]/div/div/form/div/button',click=True)                   # confirm city
-        print('a')
+        #print('a')
         self.city = city
         # /html/body/div[2]/div/div/form/div/button
 
@@ -192,7 +192,7 @@ class get_foods():
                 break
 
         self.foods.update({str(restaurant_name):res_name})
-        print(self.foods)
+        #print(self.foods)
 
         return self.foods
 
@@ -205,7 +205,7 @@ class get_foods():
                 name = self.web.find_element('/html/body/div[1]/div/main/div[2]/div/div[1]/div[{}]/a/div/div[2]/div/h2'.format(iter),get_text=True,manual_timeout=0,print_error=False)
                 if name['text'] not in self.res_names:
                     self.res_names.append(name['text'])
-                print(name['text'])
+                #print(name['text'])
                 if not name['text'] and iter>100:
                     none+=1
                     if none>7:
@@ -250,7 +250,7 @@ class json_cache():
         try:
             file.close()
         except:
-            print('cant close file')
+            #print('cant close file')
             pass
         return data
 
@@ -315,7 +315,7 @@ class json_cache():
         ##### check if not exist return
 
         if not os.path.exists(path=path):
-            print('This Path for update is not exist')
+            #print('This Path for update is not exist')
             return False
 
         ######## get json values

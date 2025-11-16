@@ -20,7 +20,7 @@ class MenuWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        print("receive", data)
+        #print("receive", data)
         # Handle incoming data
         await self.send(text_data=json.dumps({"message": "Received data"}))
 
@@ -28,7 +28,7 @@ class MenuWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def send_menu_status(self, event):
         data = event['data']
-        # print('send_plc_status', data)
+        # #print('send_plc_status', data)
         await self.send(text_data=json.dumps({
             'menu_status': data
         }))

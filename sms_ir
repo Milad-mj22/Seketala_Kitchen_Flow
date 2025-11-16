@@ -15,12 +15,12 @@ parameters = [
 sms_ir = SmsIr(api_key,linenumber,)
 
 # ret = sms_ir.send_sms(number,message,linenumber,)
-# print(ret)
+# #print(ret)
 
 a = sms_ir.get_line_numbers()
-print(a.text)
+#print(a.text)
 
 
 a = sms_ir.send_verify_code(number,template_id,parameters,)
 
-print(a)
+#print(a)

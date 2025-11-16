@@ -74,10 +74,10 @@ def capture_qr(driver, qr_path_cropped):
 
         os.remove(full_path)
 
-        print("✅ QR ذخیره شد:", qr_path_cropped)
+        #print("✅ QR ذخیره شد:", qr_path_cropped)
         return qr_path_cropped
     except Exception as e:
-        print("⚠️ خطا در ذخیره QR:", e)
+        #print("⚠️ خطا در ذخیره QR:", e)
         return False
 
 def start_whatsapp_session(user_id):
@@ -97,7 +97,7 @@ def start_whatsapp_session(user_id):
     start_time = time.time()
     while time.time() - start_time < 60:  # تا ۶۰ ثانیه
         if is_user_logged_in(driver):
-            print("🎉 کاربر لاگین شد.")
+            #print("🎉 کاربر لاگین شد.")
             driver.quit()
             return True,''
 
@@ -107,7 +107,7 @@ def start_whatsapp_session(user_id):
         driver.quit()
         time.sleep(15)
 
-    print("⌛ زمان تمام شد، کاربر لاگین نشد.")
+    #print("⌛ زمان تمام شد، کاربر لاگین نشد.")
     
     
     driver.quit()
@@ -147,7 +147,7 @@ def get_chat_list(driver):
         except Exception as e:
             error+=1
             scroll_up_chat_full_xpath(driver=driver,scrol_bar_element=NAMES_SCROLL_BAR,repeat=1)
-            print(e)
+            #print(e)
             if error>10:
                 break     
 
@@ -249,12 +249,12 @@ def collect_messages_from_all_chats(user_id:int):
             contact_name = str(chat.text).split('\n')[0]
             messages = get_messages(driver, limit=100,user_id=user_id,contact_name=contact_name)
             all_data[contact_name] = messages
-            print(contact_name," : ",len(messages))
+            #print(contact_name," : ",len(messages))
             time.sleep(1)
         except Exception as e:
-            print(f"Failed on chat {i}: {e}")
+            #print(f"Failed on chat {i}: {e}")
             continue
-    print(all_data)
+    #print(all_data)
     
     return all_data
 
@@ -296,9 +296,9 @@ def worker(user_id: int):
 
                 )
 
-            print(f"[user {user_id}] ✅ Data saved.")
+            #print(f"[user {user_id}] ✅ Data saved.")
         except Exception as e:
-            print(f"[user {user_id}] ❌ Error: {e}")
+            print(f"[user  ❌ Error: {e}")
         
         time.sleep(600)  # wait 10 minutes
 
@@ -307,4 +307,4 @@ def worker(user_id: int):
 if __name__ == '__main__':
     # result = start_whatsapp_session(3)
     result =  collect_messages_from_all_chats(1)
-    print("نتیجه نهایی:", result)
+    #print("نتیجه نهایی:", result)
