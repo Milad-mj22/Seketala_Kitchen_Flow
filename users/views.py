@@ -378,7 +378,7 @@ def profile(request):
             # if request.user
             try:
 
-                user = Profile.objects.get(id = request.user.id)
+                user = Profile.objects.get(user = request.user)
 
 
             except Exception as e:
@@ -1614,8 +1614,12 @@ def take_store(request):
             data.pop('warehouse','Not found')
         elif ware_house is None:
             return
+        
 
-        profile = Profile.objects.get(id = request.user.id)
+        user_id =request.user.id
+        user = User.objects.get(id=user_id)
+        profile = Profile.objects.get(user=user)# Get the latest subscription for testing
+
 
         selected_warehouse = Warehouse.objects.get(name = ware_house)
 
@@ -1716,10 +1720,11 @@ def confrim_take_store(request):
             else:
                 return
             
-                
+            user_id =request.user.id
+            user = User.objects.get(id=user_id)
+            profile = Profile.objects.get(user=user)# Get the latest subscription for testing
 
 
-            profile = Profile.objects.get(id = request.user.id)
 
             ware_house = Warehouse.objects.get(id = ware_house)
 
