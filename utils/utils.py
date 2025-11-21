@@ -22,7 +22,7 @@ def repair_excel(input_file, output_file):
 
     # Save to a new Excel file
     df.to_excel(output_file, index=False)
-    print(f"✅ Fixed file saved to: {output_file}")
+    #print(f"✅ Fixed file saved to: {output_file}")
 
 
 
@@ -43,7 +43,7 @@ def repair_csv(input_file, output_file):
     df.to_excel(output_file, index=False)
 
 
-    print(f"✅ Fixed CSV file saved to: {output_file}")
+    #print(f"✅ Fixed CSV file saved to: {output_file}")
 
 
 import re

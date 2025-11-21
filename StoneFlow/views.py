@@ -350,7 +350,7 @@ def create_coope(request):
 
             except Exception as e:
                 # raise Exception(f"خطا در ثبت مواد اولیه: {field}")
-                print('Error is Save Raw amterial', field)
+                print('Error is Save Raw amterial')
 
 
 
@@ -386,7 +386,7 @@ def create_coope(request):
                         gregorian_date = jalali_date.togregorian()
                         value = gregorian_date  # نوع: datetime.date
                 except Exception as e:
-                    print(f'Error converting jalali to gregorian for {field_name}: {value} => {e}')
+                    #print(f'Error converting jalali to gregorian for {field_name}: {value} => {e}')
                     continue  # در صورت خطا، این مقدار را ذخیره نکن
 
 
@@ -406,7 +406,7 @@ def create_coope(request):
 
 
         # except Exception as e:
-        #     print('❌ خطا در ثبت اطلاعات:', e)
+        #     #print('❌ خطا در ثبت اطلاعات:', e)
 
         #     # اگر کوپ ساخته شده، آن را حذف کن
         #     if coop_record:
@@ -552,7 +552,7 @@ def dynamic_step_view(request, url_name, order_id=None):
                             )
                     except Exception as e:
                         # raise Exception(f"خطا در ثبت مواد اولیه: {field}")
-                        print('Error is Save Raw amterial', field)
+                        print('Error is Save Raw amterial')
 
 
 
@@ -603,7 +603,8 @@ def dynamic_step_view(request, url_name, order_id=None):
 
 
                         except (ValueError, IndexError) as e:
-                            print(f'خطا در ثبت CuttingSaw در ردیف {i}: {e}')
+                            print('Error in dynamic step view')
+                            # print(f'خطا در ثبت CuttingSaw در ردیف {i}: {e}')
 
 
 
@@ -643,7 +644,8 @@ def dynamic_step_view(request, url_name, order_id=None):
                                 )
 
                         except (ValueError, IndexError) as e:
-                            print(f'خطا در ثبت CuttingAround در ردیف {i}: {e}')
+                            # print(f'خطا در ثبت CuttingAround در ردیف {i}: {e}')
+                            print(f'error in  CuttingAround ')
                     continue  # چون مقدار در مدل دیگر ذخیره شد، ادامه نده
 
 
@@ -721,7 +723,7 @@ def dynamic_step_view(request, url_name, order_id=None):
                                     gregorian_date = jalali_date.togregorian()
                                     value = gregorian_date  # نوع: datetime.date
                             except Exception as e:
-                                print(f'Error converting jalali to gregorian for {field_name}: {value} => {e}')
+                                #print(f'Error converting jalali to gregorian for {field_name}: {value} => {e}')
                                 continue  # در صورت خطا، این مقدار را ذخیره نکن
 
 
@@ -764,7 +766,7 @@ def dynamic_step_view(request, url_name, order_id=None):
                 values = CoopAttributeValue.objects.filter(coop=coop_record)
                 for val in values:
                     attribute_values[val.attribute.id] = val.value
-                    print(val.attribute.field_type)
+                    #print(val.attribute.field_type)
                  
             
             for attr in attributes:
@@ -826,7 +828,7 @@ def convert_str_date2jalalian(date:str):
         jalali_str = jalali_date.strftime('%Y/%m/%d')
         return jalali_str
     except:
-        print('Error in convert date')
+        #print('Error in convert date')
         return date
 
 
@@ -979,7 +981,7 @@ def manage_coop_attributes(request):
                 return redirect('manage_coop_attributes')
             else:
                 # Print errors to console (terminal) for debugging
-                print(form.errors)
+                #print(form.errors)
                 messages.error(request, ' نام ویژگی تکراری است یا فرم کامل پرنشده است.', extra_tags='create_coop_feature_error')
 
     show_attr_items = CoopAttributeValue.objects.all()

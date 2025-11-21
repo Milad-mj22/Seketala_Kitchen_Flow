@@ -158,7 +158,7 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        print(reverse("blog/", kwargs={"slug": self.slug}))
+        #print(reverse("blog/", kwargs={"slug": self.slug}))
         # asd
         return "blog/"+{"slug": self.slug}
 

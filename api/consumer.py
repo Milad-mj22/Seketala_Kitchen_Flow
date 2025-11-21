@@ -19,7 +19,7 @@ class APIWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        print("receive", data)
+        #print("receive", data)
         # Echo the received data back to the client
         await self.send(text_data=json.dumps({"message": "Received data"}))
 
@@ -32,10 +32,10 @@ class APIWebSocketConsumer(AsyncWebsocketConsumer):
 
 @receiver(message_signal)
 def handle_message(sender, **kwargs):
-    print(kwargs)
+    #print(kwargs)
     values = kwargs.get("values", {})
 
-    print("Signal received:", values)
+    #print("Signal received:", values)
 
     channel_layer = get_channel_layer()
 

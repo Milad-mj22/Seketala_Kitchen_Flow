@@ -22,7 +22,7 @@ class SocialappsConfig(AppConfig):
 def start_celery():
     global celery_process
     if celery_process is None:
-        print("🔥 Starting Celery worker in background...")
+        #print("🔥 Starting Celery worker in background...")
         celery_process = subprocess.Popen([
             sys.executable,
             "-m", "celery",

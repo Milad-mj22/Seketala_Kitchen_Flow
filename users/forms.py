@@ -37,7 +37,7 @@ class RegisterForm(UserCreationForm):
                                                            }))
     CHOICES = (('Option 1', 'Option 1'),('Option 2', 'Option 2'),)
     jobs_list = jobs.objects.values_list('id','name')
-    # print(a)
+    # #print(a)
     job_position = forms.ChoiceField(choices=jobs_list,required=True,
                                      widget=forms.Select(attrs={'class':'form-control'}))
 
