@@ -82,7 +82,7 @@
     aspect-ratio: 15/9;
     background:
       linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
-      url("{% static 'images/hero1.png' %}") center/cover no-repeat;
+      url("{% static 'images/banner.png' %}") center/cover no-repeat;
   }
   .hero-badges{
     position:absolute; inset:auto 12px 12px auto; display:flex; gap:8px; flex-wrap:wrap;
@@ -229,10 +229,10 @@
       <!-- brand -->
       <div class="brand-side">
         <div class="brand-head rtl-right" style="text-align: right;">
-          <img src="{% static 'icons/logo.jpg' %}" alt="لوگوی سکه‌طلا" class="logo" width="60" height="60">
+          <img src="{% static 'icons/moallem_logo.png' %}" alt="لوگوی خانه معلم" class="logo" width="60" height="60">
           <div>
-            <div class="brand-title rtl-right" style="text-align: right;">سامانه مدیریت تولید فست‌ فود سکه‌طلا</div>
-            <div class="brand-sub rtl-right" style="text-align: right;">یک ورود؛ همه‌چیز زیر کنترل</div>
+            <div class="brand-title rtl-right" style="text-align: right;">سامانه مدیریت خانه معلم</div>
+            <div class="brand-sub rtl-right" style="text-align: right;">یک ورود؛ همه‌چیز تحت کنترل</div>
           </div>
         </div>
 
@@ -245,9 +245,7 @@
         </div>
 
         <div class="slogans rtl-right" style="text-align:right;">
-          <span class="active">کیفیت ثابت؛ سرعت برق‌آسا.</span>
-          <span>از سفارش تا ارسال، بی‌دردسر.</span>
-          <span>دقیق مثل وزن سس روی سیب‌زمینی!</span>
+          <span class="active">کیفیت ثابت؛ سرعت درلحظه.</span>
         </div>
       </div>
 
@@ -264,11 +262,7 @@
   <h4 class="form-title mb-1 rtl-right" id="formTitle" style="text-align:right;">ورود به حساب</h4>
   <div class="form-desc mb-3 rtl-right" id="formDesc" style="text-align:right;">لطفاً اطلاعات ورود خود را وارد کنید.</div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} mb-3 rtl-right" style="text-align:right;">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+
 
   {% if form.errors %}
     <div class="alert alert-danger alert-dismissible fade show mb-3 shake rtl-right" role="alert" style="text-align:right;">
@@ -321,12 +315,6 @@
               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             </span>
           </button>
-
-          <div class="d-flex justify-content-between mt-3 helper">
-            <a href="{% url 'password_reset' %}" class="rtl-right" style="text-align:right;">فراموشی رمز عبور</a>
-            <!-- register REMOVED on purpose -->
-            <span></span>
-          </div>
 
           <div class="note mt-4 rtl-right" style="text-align:right;">
             با ورود، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید.
