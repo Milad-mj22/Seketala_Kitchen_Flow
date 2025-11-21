@@ -603,7 +603,8 @@ def my_orders(request):
                         except:
                             print('eror')
                 except:
-                    print('Error in my_order : ')
+                    pass
+                    # print('Error in my_order : ')
 
 
     return render(request, 'users/my_orders.html', {'orders': orders,'editable':editable})
