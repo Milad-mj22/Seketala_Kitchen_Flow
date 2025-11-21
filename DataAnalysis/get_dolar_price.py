@@ -112,10 +112,10 @@ class get_dollar_price():
         
         self.web.find_element(element=f'/html/body/main/div[1]/div[2]/div[2]/div[1]/div/div[3]/div/div[2]/div/div[1]/a[2]',click=True)   # click restaurant
         time.sleep(1)
-        print('a')
+        #print('a')
         # /html/body/div[2]/div/div/form/div/button
         headers, rows = self.extract_table_from_page()
-        print(headers,rows)
+        #print(headers,rows)
 
         self.send_for_save(headers,rows=rows)
         # self.web.scrool()
@@ -138,16 +138,16 @@ class get_dollar_price():
 
         # اگه فایل هنوز وجود نداره → یعنی بار اول اجراست
         if not os.path.exists(file_path):
-            print("🆕 Creating new JSON file...")
+            #print("🆕 Creating new JSON file...")
             json_data = {
                 "headers": headers,
                 "data": rows
             }
             self.json_obj.write_json(file_path, json_data)
-            print(f"✅ Created {file_path} with {len(rows)} rows.")
+            #print(f"✅ Created {file_path} with {len(rows)} rows.")
         else:
             # در دفعات بعدی → فقط داده‌های جدید را اضافه کن
-            print("📈 Checking for duplicate dates before append...")
+            #print("📈 Checking for duplicate dates before append...")
             existing = self.json_obj.read_json(file_path)
             existing_data = existing.get("data", [])
 
@@ -161,7 +161,7 @@ class get_dollar_price():
                 existing_data.extend(new_rows)
                 existing["data"] = existing_data
                 self.json_obj.write_json(file_path, existing)
-                print(f"✅ Added {len(new_rows)} new rows (total {len(existing_data)}).")
+                #print(f"✅ Added {len(new_rows)} new rows (total {len(existing_data)}).")
             else:
                 print("⚠️ No new rows to add — all dates already exist.")
 
@@ -198,7 +198,7 @@ class json_cache():
         try:
             file.close()
         except:
-            print('cant close file')
+            #print('cant close file')
             pass
         return data
 

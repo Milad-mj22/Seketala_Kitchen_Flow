@@ -19,6 +19,6 @@ class CamerasConfig(AppConfig):
             for cam in cameras:
                 CameraManager.get_camera(str(cam.id), cam.get_live_feed_url())
         except Exception as e:
-            print(e)
+            #print(e)
             pass  # migrations stage, DB not ready
 

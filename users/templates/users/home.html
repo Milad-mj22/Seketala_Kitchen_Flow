@@ -3,75 +3,195 @@
 
 {% block content %}
 <style>
+    body {
+        direction: rtl;
+        font-family: "Vazirmatn", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #fef9c3 0%, #f3f4f6 45%, #e5e7eb 100%);
+    }
+
+    .home-wrapper {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 16px;
+    }
+
     .modern-jumbotron {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        border-radius: 20px;
-        padding: 40px;
-        margin-top: 40px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+        background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(229, 231, 235, 0.96));
+        border-radius: 22px;
+        padding: 32px 24px;
+        margin-top: 10px;
+        box-shadow:
+            0 20px 45px rgba(15, 23, 42, 0.18),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.8);
         text-align: center;
+        overflow: hidden;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .modern-jumbotron::before {
+        content: "";
+        position: absolute;
+        inset: -40px;
+        background:
+            radial-gradient(circle at top right, rgba(250, 204, 21, 0.16), transparent 55%),
+            radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.14), transparent 55%);
+        opacity: 0.9;
+        pointer-events: none;
+    }
+
+    .modern-jumbotron-inner {
+        position: relative;
+        z-index: 1;
     }
 
     .modern-jumbotron h1 {
-        font-weight: 700;
-        margin-bottom: 20px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+        color: #111827;
+    }
+
+    .modern-jumbotron .subtitle {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-bottom: 12px;
     }
 
     .modern-jumbotron p.lead {
-        font-size: 1.25rem;
-        margin-bottom: 30px;
+        font-size: 1.05rem;
+        margin-bottom: 22px;
+        color: #374151;
+    }
+
+    .modern-jumbotron hr {
+        margin: 18px auto 20px;
+        max-width: 260px;
+        border: none;
+        border-top: 1px solid rgba(209, 213, 219, 0.9);
     }
 
     .btn-lg {
-        padding: 12px 24px;
-        font-size: 1.1rem;
-        margin: 8px;
-        border-radius: 12px;
-        transition: all 0.3s ease-in-out;
+        padding: 10px 22px;
+        font-size: 1rem;
+        margin: 8px 6px;
+        border-radius: 999px;
+        transition: all 0.25s ease-in-out;
+        min-width: 180px;
     }
 
-    .btn-lg:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    .btn-outline-primary.btn-lg {
+        border-width: 1px;
+        border-color: rgba(59, 130, 246, 0.6);
+        color: #1d4ed8;
+        background: rgba(239, 246, 255, 0.9);
+    }
+
+    .btn-outline-primary.btn-lg:hover {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #f9fafb;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-success.btn-lg {
+        border-width: 1px;
+        border-color: rgba(16, 185, 129, 0.6);
+        color: #047857;
+        background: rgba(209, 250, 229, 0.95);
+    }
+
+    .btn-outline-success.btn-lg:hover {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #ecfdf5;
+        box-shadow: 0 10px 24px rgba(5, 150, 105, 0.45);
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-success.btn-lg.btn-success {
+        /* When active (already subscribed) */
+        border-color: transparent;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #ecfdf5;
+        box-shadow: 0 10px 24px rgba(5, 150, 105, 0.55);
+    }
+
+    /* Icon spacing */
+    .btn-lg i {
+        margin-left: 6px;
+        font-size: 1.05rem;
+    }
+
+    /* Toast position already fine – just soft rounding */
+    #notif-toast {
+        border-radius: 14px;
+        font-size: 0.9rem;
     }
 
     @media (max-width: 768px) {
+        .home-wrapper {
+            margin-top: 24px;
+        }
+
         .modern-jumbotron {
-            padding: 30px 20px;
+            padding: 24px 18px;
+            border-radius: 18px;
+        }
+
+        .modern-jumbotron h1 {
+            font-size: 1.5rem;
         }
 
         .btn-lg {
             width: 100%;
+            margin: 6px 0;
         }
     }
 </style>
 
-<div class="container">
+<div class="home-wrapper">
     <div class="modern-jumbotron">
-        <h1 class="display-5">👋 خوش آمدید، {{ user.profile.first_name|default:"مهمان" }}</h1>
-        <p class="lead">این سامانه برای <strong>{{ company_name }}</strong> جهت استفاده از ابزارهای توسعه‌یافته ایجاد شده است.</p>
-        <hr>
-        {% if user.is_authenticated %}
-            <form id="logout-form" method="POST" action="{% url 'logout' %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-primary btn-lg">
-                    <i class="bi bi-box-arrow-right"></i> خروج
-                </button>
-            </form>
+        <div class="modern-jumbotron-inner">
+            <h1 class="display-5">
+                 خوش آمدید، {{ user.profile.first_name|default:"مهمان" }}
+            </h1>
+            <div class="subtitle">
+                داشبورد ابزارها و سرویس‌های داخلی شرکت
+            </div>
+            <p class="lead">
+                این سامانه برای <strong>{{ company_name }}</strong> جهت استفاده از ابزارهای توسعه‌یافته ایجاد شده است.
+            </p>
+            <hr>
 
-            <button id="subscribe-btn" class="btn btn-outline-success btn-lg">
-                <i class="bi bi-bell"></i> فعال‌سازی اعلان‌ها
-            </button>
-<!-- 
-            <button id="send-notif-btn" class="btn btn-outline-warning btn-lg">
-                <i class="bi bi-send"></i> ارسال اعلان تستی
-            </button> -->
+            {% if user.is_authenticated %}
+                <div class="mb-2" style="font-size: 0.9rem; color: #6b7280;">
+                    ورود به عنوان: <strong>{{ user.username }}</strong>
+                </div>
+
+                <form id="logout-form" method="POST" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-box-arrow-right"></i> خروج
+                    </button>
+                </form>
+
+                <button id="subscribe-btn" class="btn btn-outline-success btn-lg">
+                    <i class="bi bi-bell"></i> فعال‌سازی اعلان‌ها
+                </button>
+
             
-        {% else %}
-            <a class="btn btn-primary btn-lg" href="{% url 'login' %}" role="button">
-                <i class="bi bi-box-arrow-in-right"></i> ورود
-            </a>
-        {% endif %}
+                <button id="send-notif-btn" class="btn btn-outline-warning btn-lg">
+                    <i class="bi bi-send"></i> ارسال اعلان تستی
+                </button> 
+             
+
+            {% else %}
+                <a class="btn btn-primary btn-lg" href="{% url 'login' %}" role="button">
+                    <i class="bi bi-box-arrow-in-right"></i> ورود
+                </a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
@@ -84,7 +204,7 @@
     </div>
 </div>
 
-<!-- ✅ Push Notification Script (end of page) -->
+<!-- ✅ Push Notification Script -->
 <script>
     const vapidPublicKey = "{{ vapid_public_key }}";
     console.log("VAPID key from backend:", vapidPublicKey);
@@ -111,8 +231,11 @@
 
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-            document.getElementById('subscribe-btn').classList.add('btn-success');
-            document.getElementById('subscribe-btn').innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+            const btn = document.getElementById('subscribe-btn');
+            if (btn) {
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+            }
         }
     }
 
@@ -122,7 +245,7 @@
         await checkExistingSubscription();
 
         const subscribeBtn = document.getElementById('subscribe-btn');
-        const sendNotifBtn = document.getElementById('send-notif-btn');
+        const sendNotifBtn = document.getElementById('send-notif-btn'); // ممکن است وجود نداشته باشد (کامنت شده)
 
         if (subscribeBtn) {
             console.log("Subscribe button found");
@@ -146,20 +269,22 @@
                         return;
                     }
 
-                    const existingSubscription = await registration.pushManager.getSubscription();
-
-                    const newSubscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-                    });
+                    // اگر از قبل subscription وجود دارد می‌توان از آن استفاده کرد
+                    let existingSubscription = await registration.pushManager.getSubscription();
+                    if (!existingSubscription) {
+                        existingSubscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                        });
+                    }
 
                     const res = await fetch('/subscribe/', {
+                        method: 'POST',
                         headers: {
-                            method: 'POST',
                             'Content-Type': 'application/json',
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
-                        body: JSON.stringify(newSubscription)
+                        body: JSON.stringify(existingSubscription)
                     });
 
                     if (res.ok) {
@@ -179,7 +304,6 @@
         }
 
         if (sendNotifBtn) {
-            
             sendNotifBtn.addEventListener('click', async () => {
                 try {
                     const res = await fetch('/send-test-notification/', {

@@ -65,31 +65,43 @@ function submitForm() {
             // Iterate over each mother material and build the HTML
             response.mother_materials.forEach(material => {
                 const submaterialsHTML = material.submaterials.map(sub => `
-                    <div class="col">
-                        <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0">
-                            <div class="card-body">
-                                <h5 class="card-title">
+                        <div class="col d-flex justify-content-center">
+                            <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0" style="max-width: 420px; width: 100%;">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title mb-3">
+                                        <span style="font-size: smaller;">${sub.describe}</span> :
+                                        ${sub.name}  -- موجودی : ${sub.total_quantity} ${sub.unit}
+                                    </h5>
 
-                                    <div>
-                                        <img src="${material.image_url}" alt="${material.name}"
-                                            style="max-width: 100px; max-height: 100px; margin: 10px;">
-                                    </div>
-                                    <span style="font-size: smaller;">${sub.describe}</span> :
-                                    ${sub.name}  -- موجودی : ${sub.total_quantity} ${sub.unit}
-                                </h5>
+                                    <!-- Input wrapper with increment/decrement buttons -->
+                                    <div class="input-wrapper justify-content-center">
+                                        <button type="button"
+                                                class="btn btn-decrement"
+                                                data-field-id="${sub.id}"
+                                                onclick="changeValue(this, -1, ${sub.total_quantity})">-</button>
 
-                                <!-- Input wrapper with increment/decrement buttons -->
-                                <div class="input-wrapper">
-                                    <button type="button" class="btn btn-decrement" data-field-id="${sub.id}" onclick="changeValue(this, -1, ${sub.total_quantity})">-</button>
-                                    <input class="form-control digit-input" type="number" step="1" id="input-${sub.id}" name="quantity-${sub.id}" value="0" min="0" max="${sub.total_quantity}">
-                                    <button type="button" class="btn btn-increment" data-field-id="${sub.id}" onclick="changeValue(this, 1, ${sub.total_quantity})">+</button>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">${sub.unit}</span>
+                                        <input class="form-control digit-input"
+                                            type="number"
+                                            step="1"
+                                            id="input-${sub.id}"
+                                            name="quantity-${sub.id}"
+                                            value="0"
+                                            min="0"
+                                            max="${sub.total_quantity}">
+
+                                        <button type="button"
+                                                class="btn btn-increment"
+                                                data-field-id="${sub.id}"
+                                                onclick="changeValue(this, 1, ${sub.total_quantity})">+</button>
+
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">${sub.unit}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+
                 `).join('');  // Use join() to properly concatenate the HTML string
 
                 // Append the submaterials HTML to the materials container
@@ -264,6 +276,307 @@ function submitAllItems() {
 
 
 
+<style>
+
+
+
+/* ========= برداشت از انبار – Modern RTL Gold/Glassy Style ========= */
+
+/* Page base */
+body {
+  direction: rtl;
+  font-family: "Vazirmatn", "IRANSans", system-ui, sans-serif;
+  background: radial-gradient(circle at top, #fef9c3 0%, #f3f4f6 45%, #e5e7eb 100%);
+}
+
+/* Container */
+.container {
+  max-width: 1000px;
+}
+
+/* Title card */
+.page-title-card {
+  background: linear-gradient(135deg, #fef3c7, #facc15);
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(148, 87, 0, 0.25);
+  text-align: center;
+}
+
+h1.page-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 0;
+}
+
+/* Warehouse selection card */
+.warehouse-selection-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(209, 213, 219, 0.9);
+  box-shadow:
+    0 10px 26px rgba(15, 23, 42, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+/* Dropdowns */
+.form-select {
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  font-size: 0.95rem;
+  padding: 0.6rem 0.9rem;
+  color: #111827;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-select:focus {
+  background-color: #ffffff;
+  border-color: #facc15;
+  box-shadow: 0 0 0 0.12rem rgba(250, 204, 21, 0.5);
+  outline: none;
+}
+
+/* Main primary button (ثبت انبار / ثبت) */
+.btn.btn-primary {
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #eab308);
+  border: none;
+  font-weight: 600;
+  color: #111827;
+  padding: 0.55rem 1.3rem;
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.4);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.btn.btn-primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn.btn-primary:disabled {
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  color: #6b7280;
+  box-shadow: none;
+}
+
+/* ==== Materials list ==== */
+
+/* Top-level cards in #materials-container (mother materials) */
+#materials-container > .card {
+  margin: 0.75rem 0;
+  padding: 0.9rem 1.1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff, #f9fafb);
+  border: 1px solid rgba(209, 213, 219, 0.9);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+/* Mother-material title link */
+#materials-container > .card > a {
+  display: block;
+  text-decoration: none;
+  color: #111827;
+  font-weight: 700;
+  font-size: 0.98rem;
+  padding: 4px 2px;
+  position: relative;
+}
+
+#materials-container > .card > a::after {
+  content: "▾";
+  font-size: 0.75rem;
+  margin-right: 6px;
+  color: #6b7280;
+}
+
+#materials-container > .card > a:hover {
+  color: #b45309;
+}
+
+/* Submaterials container */
+.submaterials {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.75);
+}
+
+/* Sub-material inner cards (the ones generated too) */
+.submaterials .card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  border: 1px solid rgba(209, 213, 219, 0.9);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Card body */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Material title (with image) */
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-title img {
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.35);
+}
+
+/* ==== Quantity controls (input-wrapper, plus/minus, unit) ==== */
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+/* Numeric input */
+.digit-input {
+  max-width: 90px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.5rem;
+  color: #111827;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+/* plus/minus buttons */
+.btn-increment,
+.btn-decrement {
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #f9fafb;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-increment {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.btn-decrement {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.btn-increment:hover,
+.btn-decrement:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+/* Unit chip */
+.input-group-append .input-group-text,
+.input-wrapper .input-group-text {
+  border-radius: 999px;
+  border: none;
+  background: rgba(248, 250, 252, 0.96);
+  color: #4b5563;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.7rem;
+  box-shadow: 0 2px 6px rgba(148, 163, 184, 0.5);
+}
+
+/* Submit-wrapper under list */
+.submit-wrapper {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Make the submit button a bit more prominent here */
+.submit-wrapper .btn.btn-primary {
+  max-width: 260px;
+}
+
+/* ========= Responsive tweaks ========= */
+
+@media (max-width: 768px) {
+  .page-title-card {
+    padding: 1rem 1.25rem !important;
+  }
+
+  h1.page-title {
+    font-size: 1.4rem;
+  }
+
+  .warehouse-selection-card {
+    padding: 0.9rem 0.9rem !important;
+  }
+
+  .mb-4.d-flex.align-items-center[style] {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .mb-4.d-flex.align-items-center[style] label.form-label {
+    flex: 0 0 auto !important;
+    margin-bottom: 0.4rem;
+  }
+
+  .mb-4.d-flex.align-items-center[style] .form-select {
+    width: 100%;
+  }
+
+  #materials-container > .card {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .card-title img {
+    max-width: 80px !important;
+    max-height: 80px !important;
+  }
+
+  .input-wrapper {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-increment,
+  .btn-decrement {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
+
+  .digit-input {
+    max-width: 80px;
+  }
+}
+
+
+
+</style>
+
+
+
 
 <div class="container">
     <div class="card page-title-card shadow-lg rounded-lg p-4 mb-4">
@@ -337,17 +650,20 @@ function submitAllItems() {
             <a href="javascript:void(0);" onclick="toggleSubmaterials('submaterials-{{ mother_material.id }}')">
                 {{ mother_material.describe }} : {{ mother_material.name }} -- موجودی : {{ mother_material.total_quantity }}
             </a>
+            
+            {% if mother_material.image %}
+                <div>
+                    <img src="{{ mother_material.image.url }}" alt="{{ mother_material.name }}" style="max-width: 100px; max-height: 100px;  margin-left: 10px;margin-right: 10px;">
+                </div>
+            {% endif %}
+            
             <div id="submaterials-{{ mother_material.id }}" class="submaterials" style="display: none;">
                 {% for field in mother_material.mother_material.all %}
                     <div class="col">
                         <div class="card shadow-lg border-10 rounded-lg mt-0 mb-0">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    {% if mother_material.image %}
-                                    <div>
-                                        <img src="{{ mother_material.image.url }}" alt="{{ mother_material.name }}" style="max-width: 100px; max-height: 100px;  margin-left: 10px;margin-right: 10px;">
-                                    </div>
-                                    {% endif %}
+
                                     <span style="font-size: smaller;">{{ field.describe }}</span> 
                                     <span style="font-size: smaller;">{{ mother_material.describe }}</span> :
                                     {{ field.name }}  -- موجودی : {{ field.total_quantity }} {{ field.unit }}

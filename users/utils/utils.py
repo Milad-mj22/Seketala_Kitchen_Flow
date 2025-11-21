@@ -8,7 +8,7 @@ def send_push_notification(user, message):
         profile = Profile.objects.get(user=user)
 
         if not profile.push_endpoint:
-            print(f"User {user.username} has no push subscription.")
+            #print(f"User {user.username} has no push subscription.")
             return
 
         webpush(
@@ -23,6 +23,6 @@ def send_push_notification(user, message):
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims=settings.VAPID_CLAIMS
         )
-        print(f"Notification sent to {user.username}")
+        #print(f"Notification sent to {user.username}")
     except WebPushException as ex:
         print(f"Error sending push notification to {user.username}: {ex}")

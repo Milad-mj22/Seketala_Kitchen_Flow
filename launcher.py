@@ -33,11 +33,11 @@ def get_mac():
 
 
 if get_mac() != ALLOWED_MAC.lower():
-    print("❌ این برنامه فقط روی یک سیستم مجاز اجرا می‌شود.")
+    #print("❌ این برنامه فقط روی یک سیستم مجاز اجرا می‌شود.")
     sys.exit()
 
 if not check_usb_key():
-    print("❌ لطفاً فلش مجاز را وصل کنید.")
+    #print("❌ لطفاً فلش مجاز را وصل کنید.")
     sys.exit()
 
 

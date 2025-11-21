@@ -5,12 +5,12 @@ a= {'پیتزا تی ان تی آمریکایی':'۱۵\n۲۵۴,۰۰۰\n۲۱۵,۹
 
 
 # for name,price in zip(a.keys(),a.values()):
-#     print(name,price)
+#     #print(name,price)
 #     a=price[2]
 #     a= price.split('\n')
-#     print(len(a))
+#     #print(len(a))
 #     b=convert_numbers.persian_to_english(a[1])
-#     print(price[0])
+#     #print(price[0])
 
 import json
 
