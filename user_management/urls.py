@@ -43,6 +43,7 @@ urlpatterns = [
      path('utils/', include('utils.urls')),
      path('cameras/', include('cameras.urls')),
      path('data_analysis/', include('DataAnalysis.urls')),
+     path('FoodManagment/', include('FoodPrice.urls')),
 
      path('', include('users.urls')),
 

@@ -95,7 +95,8 @@ INSTALLED_APPS = [
     'dashboard',
     'utils',
     'cameras',
-    'DataAnalysis'
+    'DataAnalysis',
+    'FoodPrice'
 
 ]
 
