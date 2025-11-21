@@ -96,7 +96,8 @@ INSTALLED_APPS = [
     'utils',
     'cameras',
     'DataAnalysis',
-    'FoodPrice'
+    'FoodPrice',
+    'vault',
 
 ]
 
@@ -268,6 +269,16 @@ WEBPUSH_SETTINGS = {
 VAPID_PUBLIC_KEY = WEBPUSH_SETTINGS['VAPID_PUBLIC_KEY']
 VAPID_PRIVATE_KEY = WEBPUSH_SETTINGS['VAPID_PRIVATE_KEY']
 VAPID_ADMIN_EMAIL = "mailto:m.moltaji@yahoo.com"
+
+
+MASTER_LOGIN_PASSWORD = "123"
+
+from cryptography.fernet import Fernet
+
+# !!! Generate this once in a shell and copy-paste it here:
+# >>> from cryptography.fernet import Fernet
+# >>> Fernet.generate_key()
+PASSWORD_ENCRYPTION_KEY =b'7a_Vx4nJrCLLn-MAHl2q0YKNGTF5272uG7DD1Ls6nzc='
 
 
 

@@ -69,6 +69,9 @@ from .models import DailyReports , ReportTitles
 from .forms import DailyReportForm
 from datetime import date
 
+from django.utils.timezone import now
+from django.db.models import Max
+
 
 
 
@@ -393,9 +396,7 @@ def profile(request):
 @job_required(['Manager', 'Admin','Programmer','CEO'])
 def tools(request):
     queryset = Tools.objects.all().order_by('-title').reverse()
-    print('queryset',queryset)
-    print('show tools page')
-    
+
     return render(request, 'users/tools_new.html',{'tools':queryset})
 
 
@@ -1161,12 +1162,11 @@ def night_food_order(request):
 
     else:
         mother_foods = MotherFood.objects.prefetch_related('mother_food_id').all()
-        producible_foods = calculateProducibleMeals()
+        try:
+            producible_foods = calculateProducibleMeals()
+        except:
+            producible_foods = {}
 
-
-
-        from django.utils.timezone import now
-        from django.db.models import Max
 
         # Get the latest recorded date from RemainingMaterialsUsage
         last_usage_date = RemainingMaterialsUsage.objects.aggregate(Max('used_at'))['used_at__max']

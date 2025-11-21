@@ -18,13 +18,16 @@ class FoodIngredientForm(forms.ModelForm):
 from django import forms
 from .models import FoodRawMaterial
 
-
 class FoodForm(forms.ModelForm):
     class Meta:
         model = FoodRawMaterial
-        fields = ['name', 'price', 'discount', 'priority', 'details', 'image']
+
+
+        
+        fields = ['mother', 'name', 'price', 'discount', 'priority', 'details', 'image']
 
         labels = {
+            'mother': 'دسته بندی غذا ',
             'name': 'نام غذا',
             'price': 'قیمت پایه (تومان)',
             'discount': 'درصد تخفیف (%)',
@@ -34,6 +37,7 @@ class FoodForm(forms.ModelForm):
         }
 
         widgets = {
+            'mother': forms.Select(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'price': forms.NumberInput(attrs={'class': 'form-control'}),
             'discount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
