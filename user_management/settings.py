@@ -25,6 +25,7 @@ TEMPLATES_DIRS = os.path.join(BASE_DIR,'templates')
 import django
 from django.utils.encoding import smart_str
 django.utils.encoding.smart_text = smart_str
+from Constatns import Constants
 
 #////////
 
@@ -98,6 +99,7 @@ INSTALLED_APPS = [
     'DataAnalysis',
     'FoodPrice',
     'vault',
+    'pwa',
 
 ]
 
@@ -313,3 +315,30 @@ LOGGING = {
 }
 
 
+
+
+# تنظیمات PWA
+PWA_APP_NAME = Constants.PWA_NAME
+PWA_APP_DESCRIPTION = Constants.PWA_DESCRIPTION
+PWA_APP_THEME_COLOR = Constants.PWA_COLOR
+PWA_APP_BACKGROUND_COLOR = Constants.PWA_BACKGROUND_COLOR
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_START_URL = '/'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '192x192'
+    },
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '512x512'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '192x192'
+    }
+]
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
