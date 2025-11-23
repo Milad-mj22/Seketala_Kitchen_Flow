@@ -1,6 +1,6 @@
 {% extends "users/base.html" %}
 {% block title %}صفحه اصلی{% endblock title %}
-
+{% load static %}
 {% block content %}
 <style>
     .modern-jumbotron {
@@ -62,15 +62,10 @@
             <button id="subscribe-btn" class="btn btn-outline-success btn-lg">
                 <i class="bi bi-bell"></i> فعال‌سازی اعلان‌ها
             </button>
-<!-- 
-            <button id="send-notif-btn" class="btn btn-outline-warning btn-lg">
+
+            <button id="send-notif-btn" class="btn btn-outline-warning btn-lg mt-2">
                 <i class="bi bi-send"></i> ارسال اعلان تستی
-            </button> -->
-            
-        {% else %}
-            <a class="btn btn-primary btn-lg" href="{% url 'login' %}" role="button">
-                <i class="bi bi-box-arrow-in-right"></i> ورود
-            </a>
+            </button>
         {% endif %}
     </div>
 
@@ -79,12 +74,13 @@
             <div class="d-flex">
                 <div class="toast-body" id="notif-toast-body">اعلان فعال شد</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                
             </div>
         </div>
     </div>
 </div>
 
-<!-- ✅ Push Notification Script (end of page) -->
+
 <script>
     const vapidPublicKey = "{{ vapid_public_key }}";
     console.log("VAPID key from backend:", vapidPublicKey);
@@ -105,25 +101,48 @@
     }
 
     async function checkExistingSubscription() {
-        if (!('serviceWorker' in navigator)) return;
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (!reg) return;
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-            document.getElementById('subscribe-btn').classList.add('btn-success');
-            document.getElementById('subscribe-btn').innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+        // منتظر آماده شدن SW می‌مانیم (اگر رجیستر شده باشد)
+        try {
+            const registration = await navigator.serviceWorker.getRegistration("{% static 'js/sw.js' %}");
+            if (!registration) return;
+
+            const sub = await registration.pushManager.getSubscription();
+            if (sub) {
+                const btn = document.getElementById('subscribe-btn');
+                if (!btn) return;
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+            }
+        } catch (err) {
+            console.error("checkExistingSubscription error:", err);
         }
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
         console.log("DOM fully loaded");
 
-        await checkExistingSubscription();
-
         const subscribeBtn = document.getElementById('subscribe-btn');
         const sendNotifBtn = document.getElementById('send-notif-btn');
 
+        // 1) اول Service Worker را روی این صفحه رجیستر کن (فقط یکبار)
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            try {
+                const registration = await navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+                console.log("Service Worker registered:", registration);
+            } catch (err) {
+                console.error("Service Worker registration failed:", err);
+                showToast("ثبت سرویس‌ورکر ناموفق بود", false);
+            }
+        } else {
+            console.warn("Service Worker / PushManager not supported");
+        }
+
+        // چک کن آیا قبلاً سابسکرایب شده یا نه
+        await checkExistingSubscription();
+
+        // 2) دکمه Subscribe
         if (subscribeBtn) {
             console.log("Subscribe button found");
 
@@ -136,27 +155,39 @@
                 }
 
                 try {
-                    const registration = await navigator.serviceWorker.register('sw.js');
-                    console.log("Service Worker registered");
-
+                    // اجازه نوتیفیکیشن
                     const permission = await Notification.requestPermission();
-
                     if (permission !== "granted") {
                         showToast("دسترسی اعلان رد شد", false);
                         return;
                     }
 
+                    // ⚠️ نکته مهم: به جای استفاده مستقیم از register،
+                    // منتظر می‌مانیم تا Service Worker کاملاً آماده شود
+                    const registration = await navigator.serviceWorker.ready;
+                    console.log("Service Worker ready:", registration);
+
                     const existingSubscription = await registration.pushManager.getSubscription();
+                    if (existingSubscription) {
+                        showToast("اعلان قبلاً فعال شده بود ✅");
+                        subscribeBtn.classList.add('btn-success');
+                        subscribeBtn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+                        return;
+                    }
 
                     const newSubscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
                         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
                     });
 
-                    const res = await fetch('/subscribe/', {
+                    console.log("New subscription:", newSubscription);
+
+                    const res = await fetch("{% url 'subscribe' %}", {
+                        method: 'POST',
                         headers: {
-                            method: 'POST',
                             'Content-Type': 'application/json',
+                            // چون view شما @csrf_exempt است، واقعا به این نیاز ندارید،
+                            // ولی اگر خواستی می‌توانی نگه‌داری:
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
                         body: JSON.stringify(newSubscription)
@@ -178,16 +209,27 @@
             console.warn("Subscribe button not found");
         }
 
+        // 3) دکمه ارسال اعلان تستی
         if (sendNotifBtn) {
-            
             sendNotifBtn.addEventListener('click', async () => {
+                console.log("🔔 send-notif-btn clicked");
+
                 try {
-                    const res = await fetch('/send-test-notification/', {
+                    const res = await fetch("{% url 'send_test_notification' %}", {
                         method: 'POST',
+                        credentials: 'same-origin',  // تضمین ارسال کوکی سشن
                         headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            // چون view شما csrf_exempt است، CSRF لازم نیست، ولی اشکالی هم ندارد
                             'X-CSRFToken': '{{ csrf_token }}'
-                        }
+                        },
+                        // بدنه لازم نیست، ولی برای شفافیت می‌فرستیم
+                        body: JSON.stringify({ test: true })
                     });
+
+                    console.log("send_test_notification status:", res.status);
+                    const text = await res.text();
+                    console.log("send_test_notification response body:", text);
 
                     if (res.ok) {
                         showToast("اعلان تستی ارسال شد ✅");
@@ -200,6 +242,9 @@
                 }
             });
         }
+
     });
 </script>
+
+
 {% endblock content %}

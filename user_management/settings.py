@@ -25,6 +25,7 @@ TEMPLATES_DIRS = os.path.join(BASE_DIR,'templates')
 import django
 from django.utils.encoding import smart_str
 django.utils.encoding.smart_text = smart_str
+from Constatns import Constants
 
 #////////
 
@@ -98,6 +99,7 @@ INSTALLED_APPS = [
     'DataAnalysis',
     'FoodPrice',
     'vault',
+    'pwa',
 
 ]
 
@@ -255,8 +257,8 @@ CHANNEL_LAYERS = {
 
 
 WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": "BK6rRtCRtgFjW0rft-prnCQXA9tcDsxfpWLtgpZpVSYLJvbaqj97m_-e6Vebzo-dY8OFnAloOdo-jN03UbdDiKo",
-    "VAPID_PRIVATE_KEY": "RR4yTzBUza6n-Dq36iqB97ooXeoBB87Ey8NEvJbjrPU",
+    "VAPID_PUBLIC_KEY": "BN0oOa6lZ36AUJr4Azo9ht6k63DJKw-1-gRaIzXsoBK7KhSsCET-LDmNBYnjKXzX19tQUozNs86cBmowzxN3Vfs",
+    "VAPID_PRIVATE_KEY": "VnPnJe17q1d6cLADG9Tvw8UOprnMxpSJVQrsbhNp8kY",
     "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
 }
 
@@ -313,3 +315,30 @@ LOGGING = {
 }
 
 
+
+
+# تنظیمات PWA
+PWA_APP_NAME = Constants.PWA_NAME
+PWA_APP_DESCRIPTION = Constants.PWA_DESCRIPTION
+PWA_APP_THEME_COLOR = Constants.PWA_COLOR
+PWA_APP_BACKGROUND_COLOR = Constants.PWA_BACKGROUND_COLOR
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_START_URL = '/'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '192x192'
+    },
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '512x512'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/icons/logo.jpg',
+        'sizes': '192x192'
+    }
+]
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')

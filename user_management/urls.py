@@ -46,6 +46,9 @@ urlpatterns = [
      path('FoodManagment/', include('FoodPrice.urls')),
      path('vault/', include('vault.urls')),
 
+     
+     path('', include('pwa.urls')),  # اضافه کردن URL های PWA
+
      path('', include('users.urls')),
 
     re_path(r'^oauth/', include('social_django.urls', namespace='social')),
