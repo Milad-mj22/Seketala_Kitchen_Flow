@@ -2873,16 +2873,21 @@ def subscribe(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         profile = request.user.profile
+        keys = data.get('keys', {})
         profile.push_endpoint = data.get('endpoint')
-        profile.push_p256dh = data['keys'].get('p256dh')
-        profile.push_auth = data['keys'].get('auth')
+        profile.push_p256dh = keys.get('p256dh')
+        profile.push_auth = keys.get('auth')
         profile.save()
         return JsonResponse({'status': 'subscription saved'})
     return JsonResponse({'error': 'invalid request'}, status=400)
 
 
-
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from pywebpush import webpush, WebPushException
+import json
 
 @csrf_exempt
 @login_required
@@ -2902,7 +2907,7 @@ def send_test_notification(request):
             },
             data=json.dumps({
                 "title": "اعلان تستی",
-                "body": "این یک اعلان تستی است."
+                "body": "این یک اعلان تستی است 🚀"
             }),
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims={"sub": settings.VAPID_ADMIN_EMAIL}
@@ -2910,19 +2915,13 @@ def send_test_notification(request):
         return JsonResponse({'status': 'notification sent'})
 
     except WebPushException as ex:
-        # در صورت خطای اتصال یا endpoint نامعتبر، اشتراک را حذف کن
         if ex.response and ex.response.status_code in [404, 410]:
             profile.push_endpoint = None
             profile.push_p256dh = None
             profile.push_auth = None
             profile.save()
             return JsonResponse({'error': 'Subscription removed due to invalid endpoint'}, status=410)
-        else:
-            # خطای دیگر را گزارش بده
-            return JsonResponse({'error': str(ex)}, status=500)
-        
-
-
+        return JsonResponse({'error': str(ex)}, status=500)
 
 
 
