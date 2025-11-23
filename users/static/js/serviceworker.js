@@ -1,10 +1,7 @@
 var CACHE_NAME = 'warehouse-cache-v1';
 var urlsToCache = [
     '/',
-    '/static/css/style.css',
-    '/static/css/base.css',
-    '/static/css/store.css',
-    '/static/js/main.js'
+    '/static/icons/logo.png',
 ];
 
 self.addEventListener('install', function(event) {

@@ -1,6 +1,6 @@
 {% extends "users/base.html" %}
 {% block title %}صفحه اصلی{% endblock title %}
-
+{% load static %}
 {% block content %}
 <style>
     .modern-jumbotron {
@@ -62,15 +62,10 @@
             <button id="subscribe-btn" class="btn btn-outline-success btn-lg">
                 <i class="bi bi-bell"></i> فعال‌سازی اعلان‌ها
             </button>
-<!-- 
-            <button id="send-notif-btn" class="btn btn-outline-warning btn-lg">
+
+            <button id="send-notif-btn" class="btn btn-outline-warning btn-lg mt-2">
                 <i class="bi bi-send"></i> ارسال اعلان تستی
-            </button> -->
-            
-        {% else %}
-            <a class="btn btn-primary btn-lg" href="{% url 'login' %}" role="button">
-                <i class="bi bi-box-arrow-in-right"></i> ورود
-            </a>
+            </button>
         {% endif %}
     </div>
 
@@ -79,12 +74,12 @@
             <div class="d-flex">
                 <div class="toast-body" id="notif-toast-body">اعلان فعال شد</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                
             </div>
         </div>
     </div>
 </div>
 
-<!-- ✅ Push Notification Script (end of page) -->
 <script>
     const vapidPublicKey = "{{ vapid_public_key }}";
     console.log("VAPID key from backend:", vapidPublicKey);
@@ -111,8 +106,10 @@
 
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-            document.getElementById('subscribe-btn').classList.add('btn-success');
-            document.getElementById('subscribe-btn').innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+            const btn = document.getElementById('subscribe-btn');
+            if (!btn) return;
+            btn.classList.add('btn-success');
+            btn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
         }
     }
 
@@ -136,8 +133,9 @@
                 }
 
                 try {
-                    const registration = await navigator.serviceWorker.register('sw.js');
-                    console.log("Service Worker registered");
+                    // 🔹 ثبت Service Worker (فقط یک‌بار لازم است، ولی اینجا هم اوکی است)
+                    const registration = await navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+                    console.log("Service Worker registered", registration);
 
                     const permission = await Notification.requestPermission();
 
@@ -147,15 +145,21 @@
                     }
 
                     const existingSubscription = await registration.pushManager.getSubscription();
+                    if (existingSubscription) {
+                        showToast("اعلان قبلاً فعال شده بود ✅");
+                        subscribeBtn.classList.add('btn-success');
+                        subscribeBtn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+                        return;
+                    }
 
                     const newSubscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
                         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
                     });
 
-                    const res = await fetch('/subscribe/', {
+                    const res = await fetch("{% url 'subscribe' %}", {
+                        method: 'POST',
                         headers: {
-                            method: 'POST',
                             'Content-Type': 'application/json',
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
@@ -178,28 +182,31 @@
             console.warn("Subscribe button not found");
         }
 
-        if (sendNotifBtn) {
-            
-            sendNotifBtn.addEventListener('click', async () => {
-                try {
-                    const res = await fetch('/send-test-notification/', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    });
 
-                    if (res.ok) {
-                        showToast("اعلان تستی ارسال شد ✅");
-                    } else {
-                        showToast("ارسال اعلان تستی ناموفق بود", false);
+
+        if (sendNotifBtn) {
+                sendNotifBtn.addEventListener('click', async () => {
+                    try {
+                        const res = await fetch("{% url 'send_test_notification' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        });
+
+                        if (res.ok) {
+                            showToast("اعلان تستی ارسال شد ✅");
+                        } else {
+                            showToast("ارسال اعلان تستی ناموفق بود", false);
+                        }
+                    } catch (err) {
+                        console.error("Notification send failed:", err);
+                        showToast("خطا در ارسال اعلان", false);
                     }
-                } catch (err) {
-                    console.error("Notification send failed:", err);
-                    showToast("خطا در ارسال اعلان", false);
-                }
-            });
-        }
-    });
+                });
+            }
+        });
+
 </script>
+
 {% endblock content %}

@@ -1,7 +1,7 @@
 {
   "name": "Warehouse Manager",
   "short_name": "Warehouse",
-  "description": "مدیریت انبار به صورت PWA",
+  "description": "مدیریت انبار",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
