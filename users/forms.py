@@ -165,40 +165,52 @@ class PostForm_tinymce(forms.ModelForm):
         }
 
 
-
 class PostForm_add_material(forms.ModelForm):
     choice = mother_material.objects.values_list('id', 'name')
+
     mother_material = forms.ChoiceField(
         choices=choice,
         required=True,
+        label="ماده اولیه مادر",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     class Meta:
         model = raw_material
-        fields = ['name', 'describe', 'unit', 'mother_material', 'image']  # ⬅ Add 'image'
+        fields = ['name', 'describe', 'unit', 'mother_material', 'image']
 
+        # ✅ Persian Labels
+        labels = {
+            'name': "نام ماده اولیه",
+            'describe': "توضیحات",
+            'unit': "واحد اندازه‌گیری",
+            'mother_material': "ماده اولیه مادر",
+            'image': "تصویر ماده اولیه",
+        }
+
+        # Widgets + Placeholders (Persian)
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': "form-control",
                 'style': 'max-width: 300px;',
-                'placeholder': 'Material name'
+                'placeholder': 'مثال: روغن، نمک، برنج ...'
             }),
             'describe': TextInput(attrs={
                 'class': "form-control",
                 'style': 'max-width: 300px;',
-                'placeholder': 'describe'
+                'placeholder': 'توضیحات ماده اولیه'
             }),
             'unit': TextInput(attrs={
                 'class': "form-control",
                 'style': 'max-width: 300px;',
-                'placeholder': 'unit'
+                'placeholder': 'مثال: کیلوگرم، گرم، لیتر ...'
             }),
             'image': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
-                'style': 'max-width: 300px;'
+                'style': 'max-width: 300px;',
             }),
         }
+
 
 
 class PostFormAddMotherMaterial(forms.ModelForm):
