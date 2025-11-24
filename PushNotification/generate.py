@@ -27,5 +27,5 @@ y = public_numbers.y.to_bytes(32, 'big')
 public_raw = b'\x04' + x + y
 public_b64 = base64.urlsafe_b64encode(public_raw).decode('utf-8').rstrip('=')
 
-#print("Private key (Base64):", private_b64)
-#print("Public key (Base64):", public_b64)
+print("Private key (Base64):", private_b64)
+print("Public key (Base64):", public_b64)
