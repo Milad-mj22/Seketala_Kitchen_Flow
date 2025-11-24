@@ -3221,3 +3221,14 @@ def add_material_to_category(request, category_id):
         "category": category,
         "materials": all_materials,
     })
+
+def remove_material_from_category(request, category_id, material_id):
+    category = get_object_or_404(MaterialCategory, id=category_id)
+    material = get_object_or_404(raw_material, id=material_id, category=category)
+
+    if request.method == "POST":
+        material.category = None
+        material.save()
+        return redirect("category_detail", category_id=category.id)
+
+    return redirect("category_detail", category_id=category.id)
