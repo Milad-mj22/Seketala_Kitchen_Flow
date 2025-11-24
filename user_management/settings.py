@@ -54,9 +54,9 @@ ALLOWED_HOSTS = ['37.191.77.130','192.168.1.107','172.20.10.4','127.0.0.1','0.0.
 
 
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True  # Optional, only if not forcing from server
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False  # Optional, only if not forcing from server
 
 
 CSRF_TRUSTED_ORIGINS = [
@@ -257,8 +257,8 @@ CHANNEL_LAYERS = {
 
 
 WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": "BK6rRtCRtgFjW0rft-prnCQXA9tcDsxfpWLtgpZpVSYLJvbaqj97m_-e6Vebzo-dY8OFnAloOdo-jN03UbdDiKo",
-    "VAPID_PRIVATE_KEY": "RR4yTzBUza6n-Dq36iqB97ooXeoBB87Ey8NEvJbjrPU",
+    "VAPID_PUBLIC_KEY":"BDlfGLF-v7-9m_uak02iKI63xiy9wPkikqehmhyl0yoO17LuU2FA8tvraM9toimunurINJyxJJbRoBAd4qWhT80",
+    "VAPID_PRIVATE_KEY": "CDhKWLY0OVZ0EIt6skWCXGIXYcMUS0aeAs_sR_txd8g",
     "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
 }
 
