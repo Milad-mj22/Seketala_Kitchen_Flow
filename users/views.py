@@ -12,7 +12,6 @@ from khayyam import JalaliDatetime
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
-from users.utils.utils import send_push_notification
 from .decorators import job_required
 from users.utils.CalulatedDistance import calculate_distance
 
@@ -68,6 +67,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from .models import DailyReports , ReportTitles
 from .forms import DailyReportForm
 from datetime import date
+
+from django.utils.timezone import now
+from django.db.models import Max
 
 
 
@@ -162,93 +164,6 @@ class RegisterView(View):
         return render(request, self.template_name, {'form': form})
 
 
-def send_notification(request, user_id):
-    try:
-        user = User.objects.get(id=user_id)
-        send_push_notification(user, "شما یک پیام جدید دارید!")
-        return JsonResponse({"message": f"Notification sent to {user.username}"})
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
-
-
-@login_required
-def send_push_notification(request):
-    from webpush import send_user_notification
-    payload = {
-        "head": "New Notification",
-        "body": "This is a test notification!",
-        "icon": "https://your-site.com/static/icon.png",
-        "url": "https://your-site.com/",
-    }
-    send_user_notification(user=request.user, payload=payload, ttl=1000)
-    return JsonResponse({"message": "Notification sent"})
-
-
-@csrf_exempt
-def send_test_notification(request):
-    if request.method == "POST":
-        try:
-            user_id =request.user.id
-            user = User.objects.get(id=user_id)
-            profile = Profile.objects.get(user=user)# Get the latest subscription for testing
-            if not profile or not profile.push_endpoint:
-                return JsonResponse({"error": "No valid subscription found"}, status=400)
-
-            # Extract push service URL origin (scheme + host + port if exists)
-            endpoint_origin = f"{urlparse(profile.push_endpoint).scheme}://{urlparse(profile.push_endpoint).netloc}"
-
-            payload = json.dumps({
-                "title": "اعلان تستی",
-                "body": "این یک پیام آزمایشی است.",
-                "icon": "/static/img/notification-icon.png"
-            })
-
-            print("Push Endpoint:", profile.push_endpoint)
-            print("P256DH Key:", profile.push_p256dh)
-            print("Auth Key:", profile.push_auth)
-
-
-
-            # Prepare the subscription info
-            subscription_info = {
-                "endpoint": profile.push_endpoint,
-                "keys": {
-                    "p256dh": profile.push_p256dh,
-                    "auth": profile.push_auth
-                },
-            }
-
-            # Prepare the VAPID claims
-            vapid_claims = {
-                "sub": "mailto:m.moltaji@yahoo.com",  # Update with your email
-            }
-
-            # Send push notification
-            response = webpush(
-                subscription_info=subscription_info,
-                data='test',
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,  # Ensure this is set in your settings
-                vapid_claims=vapid_claims,
-                verbose=True  # You can set to True for debugging
-            )
-            
-            print(f"Notification sent to {user.username}. Response: {response.status_code}")
-            print(f"Notification sent to {user.username}")
-            return JsonResponse({"message": "Notification sent successfully!"})
-        except WebPushException as ex:
-            import traceback
-            print("WebPushException:", ex)
-            print("Traceback:", traceback.format_exc())  
-
-            if ex.response:
-                print("Response Status:", ex.response.status_code)
-                print("Response Headers:", ex.response.headers)
-                print("Response Body:", ex.response.text)  # This will show the exact error message from the push server
-
-            return JsonResponse({"error": f"Failed to send notification: {str(ex)}"}, status=500)
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-
 @csrf_exempt
 def save_subscription(request):
     if request.method == "POST":
@@ -269,23 +184,6 @@ def save_subscription(request):
             return JsonResponse({"error": "User not found"}, status=404)
         
         
-# Class based view that extends from the built in login view to add a remember me functionality
-
-# class CustomLoginView(LoginView):
-#     form_class = LoginForm
-
-#     def form_valid(self, form):
-#         remember_me = form.cleaned_data.get('remember_me')
-
-#         if not remember_me:
-#             # set session expiry to 0 seconds. So it will automatically close the session after the browser is closed.
-#             self.request.session.set_expiry(0)
-
-#             # Set session as modified to force data updates/cookie to be saved.
-#             self.request.session.modified = True
-
-#         # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
-#         return super(CustomLoginView, self).form_valid(form)
 
 
 
@@ -382,7 +280,7 @@ def profile(request):
 
 
             except Exception as e:
-                print('Error profile_form :' , e)
+                #print('Error profile_form :' , e)
                 return render(request, 'users/profile.html', {'user_form': user_form})
 
 
@@ -393,9 +291,7 @@ def profile(request):
 @job_required(['Manager', 'Admin','Programmer','CEO'])
 def tools(request):
     queryset = Tools.objects.all().order_by('-title').reverse()
-    print('queryset',queryset)
-    print('show tools page')
-    
+
     return render(request, 'users/tools_new.html',{'tools':queryset})
 
 
@@ -561,8 +457,8 @@ def my_orders(request):
             if field!='additional_details'  :
                 try:
                     if float(values[field])>0:
-                        # try:
-                            # print(field)
+                        try:
+                            # #print(field)
                             value = float(values[field])
 
                             data = {}
@@ -599,10 +495,11 @@ def my_orders(request):
                             values[field] = data
                         
                         
-                        # except:
-                        #     print('eror')
+                        except:
+                            print('eror')
                 except:
-                    print('Error in my_order : ',values[field])
+                    pass
+                    # print('Error in my_order : ')
 
 
     return render(request, 'users/my_orders.html', {'orders': orders,'editable':editable})
@@ -773,7 +670,7 @@ def show_order(request,id):
 @login_required
 def snapp(request):
 
-    print('show snapp page')
+    #print('show snapp page')
 
     try:
         cities = os.listdir(CACHE_CITIES)
@@ -788,7 +685,7 @@ def snapp(request):
 def show_restaurant_list(request,city):
 
 
-    print('show snapp page')
+    #print('show snapp page')
     restaurants = SnappFoodList.objects.all().order_by('-name')
 
     try:
@@ -823,7 +720,7 @@ def restaurant_food_list(request,city,res_name):
 
     prices = gp.ret_price()
     prices = prices[res_name]
-    print('show restaurant_list page')
+    #print('show restaurant_list page')
 
 
     # except:
@@ -897,7 +794,8 @@ def print_order(request,id):
                         full_id = mother_id+material_id
 
                     except:
-                        print('Cant get unit {}'.format(material))
+                        print('Cant get unit')
+                        #print('Cant get unit {}'.format(material))
                     new_materials[material] = {}
                     new_materials[material]['code'] = str(full_id)
                     new_materials[material]['unit'] = translate(str(unit))
@@ -928,7 +826,7 @@ def print_order(request,id):
 @login_required
 def foodRawMaterials(request):
 
-    print('show snapp page')
+    #print('show snapp page')
     restaurants = FoodRawMaterial.objects.all().order_by('-name')
 
 
@@ -968,9 +866,9 @@ def addfoodrawmaterial(request):
                         # item = raw_material.objects.get(id=item_id)
                         # b=AddtoStore.objects.create(item=item,location=location,count =value, author = user)
                         # update_store(item=item,location=location,value=value)
-                        # print(b)
+                        # #print(b)
                 # except:
-                # print('error in add to store')
+                # #print('error in add to store')
 
             obj_mother_food = MotherFood.objects.filter(id=mother_food).first()
             if obj_mother_food:
@@ -982,7 +880,7 @@ def addfoodrawmaterial(request):
             return redirect('/tools/foodrawmaterials')
         
         else:
-            print('mojooooooodddddd')
+            #print('mojooooooodddddd')
             return redirect('/tools/foodrawmaterials')
 
 
@@ -1056,7 +954,7 @@ def show_food_material(request,id):
 
         return redirect('/tools/foodrawmaterials')
         # else:
-        #     print('Error in update data')
+        #     #print('Error in update data')
         #     return redirect('/tools/foodrawmaterials')
 
   
@@ -1161,12 +1059,11 @@ def night_food_order(request):
 
     else:
         mother_foods = MotherFood.objects.prefetch_related('mother_food_id').all()
-        producible_foods = calculateProducibleMeals()
+        try:
+            producible_foods = calculateProducibleMeals()
+        except:
+            producible_foods = {}
 
-
-
-        from django.utils.timezone import now
-        from django.db.models import Max
 
         # Get the latest recorded date from RemainingMaterialsUsage
         last_usage_date = RemainingMaterialsUsage.objects.aggregate(Max('used_at'))['used_at__max']
@@ -1229,7 +1126,7 @@ def show_night_order_material(request):
 
         for food_name,value in data.items():
             # if value.isnumeric():
-                print(float(value))
+                #print(float(value))
                 if float(value)>0:
                     data[food_name]=float(value)
                     
@@ -1327,7 +1224,7 @@ def calculateProducibleMeals():
             producible_foods[food.name] = int(max_food_quantity)
     # Print the producible foods and the quantity
     # for food, quantity in producible_foods:
-    #     print(f'You can make {quantity} of {food.name}')
+    #     #print(f'You can make {quantity} of {food.name}')
 
     return producible_foods
 
@@ -1371,7 +1268,7 @@ def add_store(request):
         
 
         image_data = request.POST.get('captured_image')
-        # print('image_data',image_data)
+        # #print('image_data',image_data)
         if image_data:
             data.pop('captured_image','Not found')
             try:
@@ -1387,32 +1284,34 @@ def add_store(request):
 
 
                 # image = ContentFile(base64.b64decode(imgstr), name=f"receipt_image.{ext}")
-                # print('3')
+                # #print('3')
 
                 
-                print(f'Format: {format}')  # Check the extracted format
-                print(f'Ext: {format.split("/")[-1]}')  # Check extension
-                print(f'First 50 chars of imgstr: {imgstr[:50]}')  # Check base64 content
+                #print(f'Format: {format}')  # Check the extracted format
+                #print(f'Ext: {format.split("/")[-1]}')  # Check extension
+                #print(f'First 50 chars of imgstr: {imgstr[:50]}')  # Check base64 content
 
                 try:
                     # image = ContentFile(base64.b64decode(imgstr), name=f"receipt_image.{ext}")
                     image = ContentFile(base64.urlsafe_b64decode(imgstr), name=f"receipt_image.{ext}")
-                    print("Image successfully created")
+                    #print("Image successfully created")
                 except Exception as e:
                     print(f"Error: {e}")
             
                 saved_image = CapturedImage.objects.create(image=image,receipt_number=receipt_number)  # Save to model
-                print('saved_image : ',saved_image)
+                #print('saved_image : ',saved_image)
             except:
-                print('Error in save image')
+                #print('Error in save image')
                 pass
                 
             
-        print('milaaaaaaaad')
+        #print('milaaaaaaaad')
 
 
+        user_id =request.user.id
+        user = User.objects.get(id=user_id)
+        profile = Profile.objects.get(user=user)# Get the latest subscription for testing
 
-        profile = Profile.objects.get(id = request.user.id)
 
         ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1431,7 +1330,7 @@ def add_store(request):
 
 
             except:
-                print('error in add to store')
+                #print('error in add to store')
                 messages.success(request,'بروز خطا در هنگام اضافه نمودن')
                 return redirect('/')  # Redirect to your desired page
 
@@ -1528,12 +1427,12 @@ def material_composition_view(request):
                         if key not in main_materials:
                             # Remove stock
                             status, message = inventory.remove_stock(amount=decimal_value, user=profile)
-                            print('Remove:', key, 'value:', value)
+                            #print('Remove:', key, 'value:', value)
                         else:
                             # Add stock
                             receipt_number = '9000'  # You can make this dynamic if needed
                             status, message = inventory.add_stock(amount=decimal_value, user=profile, receipt_number=receipt_number)
-                            print('Add:', key, 'value:', value)
+                            #print('Add:', key, 'value:', value)
 
                         if not status:
                             flag_error = True
@@ -1611,8 +1510,12 @@ def take_store(request):
             data.pop('warehouse','Not found')
         elif ware_house is None:
             return
+        
 
-        profile = Profile.objects.get(id = request.user.id)
+        user_id =request.user.id
+        user = User.objects.get(id=user_id)
+        profile = Profile.objects.get(user=user)# Get the latest subscription for testing
+
 
         selected_warehouse = Warehouse.objects.get(name = ware_house)
 
@@ -1627,7 +1530,7 @@ def take_store(request):
 
         mother_materials = get_mother_material_quantity(show_all=False,selected_warehouses=selected_warehouse,raw_materials_with_quantity=raw_materials_with_quantity)
         if raw_materials_with_quantity is None or mother_materials is None:
-            print('error in get_mother_material_quantity')
+            #print('error in get_mother_material_quantity')
             return False
         # Serialize your mother_materials data
         materials_data = [
@@ -1650,7 +1553,7 @@ def take_store(request):
             for mother_material in mother_materials
         ]
 
-        # print(time.time()-t)
+        # #print(time.time()-t)
 
         return JsonResponse({'mother_materials': materials_data,'backend_endpoint':BACKEND_ENDPOINT})
 
@@ -1694,7 +1597,7 @@ def confrim_take_store(request):
         try:
             data = dict(request.POST.dict())
             data.pop('csrfmiddlewaretoken','Not found')
-            print(data)
+            #print(data)
 
 
             if 'warehouse' in data.keys():
@@ -1713,10 +1616,11 @@ def confrim_take_store(request):
             else:
                 return
             
-                
+            user_id =request.user.id
+            user = User.objects.get(id=user_id)
+            profile = Profile.objects.get(user=user)# Get the latest subscription for testing
 
 
-            profile = Profile.objects.get(id = request.user.id)
 
             ware_house = Warehouse.objects.get(id = ware_house)
 
@@ -1730,13 +1634,13 @@ def confrim_take_store(request):
                     # Assuming 'id' is the primary key of the Material model
                 id  = item_id.split('-')[1]
                 raw_material_instance = raw_material.objects.get(id=int(id))
-                print(raw_material_instance)
+                #print(raw_material_instance)
 
                 decimal_value = Decimal(items[item_id])
 
                 inventory, created = Inventory.objects.get_or_create(inventory_raw_material=raw_material_instance,warehouse=ware_house)
                 status,message = inventory.remove_stock(amount=decimal_value,user=profile,buyer=buyer)
-                print('status : ',status)
+                #print('status : ',status)
                 # if status:
                 messages.success(request,message)
                 # return redirect('/profile/my_orders')
@@ -1790,7 +1694,7 @@ def show_store(request):
 
             mother_materials = get_mother_material_quantity(show_all=show_all,selected_warehouses=selected_warehouses,raw_materials_with_quantity=raw_materials_with_quantity)
             if raw_materials_with_quantity is None or mother_materials is None:
-                print('error in get_mother_material_quantity')
+                #print('error in get_mother_material_quantity')
                 return False
             # Serialize your mother_materials data
             materials_data = [
@@ -1813,7 +1717,7 @@ def show_store(request):
                 for mother_material in mother_materials
             ]
 
-            print(time.time()-t)
+            #print(time.time()-t)
 
             return JsonResponse({'mother_materials': materials_data,'backend_endpoint':BACKEND_ENDPOINT})
 
@@ -1827,7 +1731,7 @@ def show_store(request):
 
             mother_materials = get_mother_material_quantity(material_name='all',show_all=True, raw_materials_with_quantity =  raw_materials_with_quantity)
 
-            print(time.time()-t)
+            #print(time.time()-t)
     
             return render(request, 'users/store.html', {'mother_materials': mother_materials,'warehouses':ware_houses,'backend_endpoint':BACKEND_ENDPOINT})
         
@@ -2213,7 +2117,7 @@ def update_prices(request,city,res_name):
     
 
     if ret is None:
-        print('Restaurant link is not in DB')
+        #print('Restaurant link is not in DB')
         return
 
     res_link = ret.link
@@ -2225,7 +2129,7 @@ def update_prices(request,city,res_name):
 
     gp.get_name_price(update=True)
 
-    print(id)
+    #print(id)
 
 
 
@@ -2243,7 +2147,7 @@ def submit_data(request):
         email = request.POST.get('email')
 
         # Here you can process the data (e.g., save to database, validate, etc.)
-        print(request.POST)
+        #print(request.POST)
 
         # Send a JSON response back
         response_data = {
@@ -2861,19 +2765,25 @@ def delete_buyer_activity(request, pk):
 @csrf_exempt
 @login_required
 def subscribe(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        profile = request.user.profile
-        profile.push_endpoint = data.get('endpoint')
-        profile.push_p256dh = data['keys'].get('p256dh')
-        profile.push_auth = data['keys'].get('auth')
-        profile.save()
-        return JsonResponse({'status': 'subscription saved'})
-    return JsonResponse({'error': 'invalid request'}, status=400)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'invalid request'}, status=400)
 
+    data = json.loads(request.body)
+    profile = request.user.profile
+    keys = data.get('keys', {})
 
+    profile.push_endpoint = data.get('endpoint')
+    profile.push_p256dh = keys.get('p256dh')
+    profile.push_auth = keys.get('auth')
+    profile.save()
 
+    return JsonResponse({'status': 'subscription saved'})
 
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from pywebpush import webpush, WebPushException
+import json
 
 @csrf_exempt
 @login_required
@@ -2893,7 +2803,7 @@ def send_test_notification(request):
             },
             data=json.dumps({
                 "title": "اعلان تستی",
-                "body": "این یک اعلان تستی است."
+                "body": "این یک اعلان تستی است 🚀"
             }),
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims={"sub": settings.VAPID_ADMIN_EMAIL}
@@ -2901,25 +2811,33 @@ def send_test_notification(request):
         return JsonResponse({'status': 'notification sent'})
 
     except WebPushException as ex:
-        # در صورت خطای اتصال یا endpoint نامعتبر، اشتراک را حذف کن
-        if ex.response and ex.response.status_code in [404, 410]:
+        msg = str(ex)
+        # ۱) اگر خود response هست و status_code داره
+        if getattr(ex, "response", None) is not None:
+            status = getattr(ex.response, "status_code", None)
+            if status in [404, 410]:
+                profile.push_endpoint = None
+                profile.push_p256dh = None
+                profile.push_auth = None
+                profile.save()
+                return JsonResponse(
+                    {'error': 'Subscription removed due to invalid endpoint'},
+                    status=410
+                )
+
+        # ۲) fallback: اگر داخل متن خطا 410 یا unsubscribed/expired بود
+        if "410" in msg or "unsubscribed or expired" in msg:
             profile.push_endpoint = None
             profile.push_p256dh = None
             profile.push_auth = None
             profile.save()
-            return JsonResponse({'error': 'Subscription removed due to invalid endpoint'}, status=410)
-        else:
-            # خطای دیگر را گزارش بده
-            return JsonResponse({'error': str(ex)}, status=500)
-        
+            return JsonResponse(
+                {'error': 'Subscription removed due to invalid endpoint'},
+                status=410
+            )
 
-
-
-
-
-
-
-
+        # هر خطای دیگه → 500
+        return JsonResponse({'error': msg}, status=500)
 
 
 
@@ -3215,7 +3133,8 @@ User = get_user_model()
 
 def send_sms(phone, text):
     # TODO: integrate your SMS gateway here
-    print(f"[SMS to {phone}] {text}")
+    # print(f"[SMS to {phone}] {text}")
+    pass
 
 def cache_key(phone): return f"otp:{phone}"
 
@@ -3302,3 +3221,14 @@ def add_material_to_category(request, category_id):
         "category": category,
         "materials": all_materials,
     })
+
+def remove_material_from_category(request, category_id, material_id):
+    category = get_object_or_404(MaterialCategory, id=category_id)
+    material = get_object_or_404(raw_material, id=material_id, category=category)
+
+    if request.method == "POST":
+        material.category = None
+        material.save()
+        return redirect("category_detail", category_id=category.id)
+
+    return redirect("category_detail", category_id=category.id)

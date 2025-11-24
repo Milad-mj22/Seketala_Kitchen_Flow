@@ -310,14 +310,14 @@ def import_composition_materials_csv(request):
                                 
                         else:
                             try:
-                                print('not exist : ',name)
+                                #print('not exist : ',name)
                                 mother_code = sub_material_code[:4]
                                 mother_code  = int(float(mother_code))
                                 mother_obj = mother_material.objects.filter(describe=mother_code).first()
                                 sub_material_obj = raw_material.objects.create(name=name,describe=sub_material_code,unit=unit,mother=mother_obj)
                                 MaterialComposition.objects.get_or_create(main_material=composition_material,ingredient =sub_material_obj,ratio=ratio )
                             except:
-                                print('Errior in ',name,mother_code,sub_material_code)
+                                print('Errior in imnport composition')
                 
                 
 

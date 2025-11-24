@@ -57,7 +57,7 @@ def UrlGenerator(ip,port,username,password):
 
         # except Exception as e:
         #     # مدیریت خطا
-        #     print(e)
+        #     #print(e)
         #     return None
 
 
@@ -332,7 +332,7 @@ def UrlGenerator(ip,port,username,password):
 #                 while not self.motion_status and self.runing:
 #                     frame = stream.read()
 #                     if frame is None:
-#                         print('frame is NOne')
+#                         #print('frame is NOne')
 #                         self.camrea_connection = False
 #                         break
 #                     motion_frames.append(frame)
@@ -347,15 +347,15 @@ def UrlGenerator(ip,port,username,password):
 
 
 
-#                 print('milad'*80)
+#                 #print('milad'*80)
 
 #                 while (self.motion_status or time.time() - start_time < 2*60) and self.runing:
                         
-#                         # print('motion_status',self.motion_status)
+#                         # #print('motion_status',self.motion_status)
                     
 #                         frame = stream.read()
 #                         if frame is None:
-#                             print('frame is NOne')
+#                             #print('frame is NOne')
 #                             self.camrea_connection = False
 #                             break
 #                         if time.time()- t_motion > 10:
@@ -367,7 +367,7 @@ def UrlGenerator(ip,port,username,password):
                         
 
                         
-#                         # print(time.time()-t , type(frame),frame.size)
+#                         # #print(time.time()-t , type(frame),frame.size)
 
 #                 #         # If no frame is received, stop the stream
 #                 #         if frame is None:
@@ -389,7 +389,7 @@ def UrlGenerator(ip,port,username,password):
 #                             video_counter += 1
 #                             start_time = time.time()
 #                             writer = WriteGear(output=output_path, compression_mode=True, logging=True, **output_params)
-#                             print(f"Started recording: {output_path}")
+#                             #print(f"Started recording: {output_path}")
 
 #                 #         # # Write the current frame to the video fil
 
@@ -406,17 +406,17 @@ def UrlGenerator(ip,port,username,password):
                 
 #                 while self.runing:
                         
-#                         # print('motion_status',self.motion_status)
+#                         # #print('motion_status',self.motion_status)
                     
 #                         frame = stream.read()
 #                         if frame is None:
-#                             print('frame is NOne')
+#                             #print('frame is NOne')
 #                             self.camrea_connection = False
 #                             break
                         
 
                         
-#                         # print(time.time()-t , type(frame),frame.size)
+#                         # #print(time.time()-t , type(frame),frame.size)
 
 #                 #         # If no frame is received, stop the stream
 #                 #         if frame is None:
@@ -438,7 +438,7 @@ def UrlGenerator(ip,port,username,password):
 #                             video_counter += 1
 #                             start_time = time.time()
 #                             writer = WriteGear(output=output_path, compression_mode=True, logging=True, **output_params)
-#                             print(f"Started recording: {output_path}")
+#                             #print(f"Started recording: {output_path}")
 
 #                 #         # # Write the current frame to the video fil
 
@@ -475,7 +475,7 @@ def UrlGenerator(ip,port,username,password):
 #         #     stream.stop()
 #         #     if writer:
 #         #         writer.close()
-#         #     print("Recording stopped and resources released.")
+#         #     #print("Recording stopped and resources released.")
 
 
 
@@ -556,7 +556,7 @@ def UrlGenerator(ip,port,username,password):
 #                 #-----------------------------------------------------------
 #     def stop_thread(self,):
 #         self.runing =False
-#         print('runing',self.runing)
+#         #print('runing',self.runing)
 
 #     def run(self,):
 #       self.runing = True
@@ -567,7 +567,7 @@ def UrlGenerator(ip,port,username,password):
 #       self.logger.create_new_log(message=log_msg)
 #       #-----------------------------------------------------------
 #       while self.runing:
-#         # print('asdw'*80,self.name)
+#         # #print('asdw'*80,self.name)
 #         #-----------------------------------------------------------
 #         log_msg = dorsa_logger.log_message(level=dorsa_logger.log_levels.DEBUG,
 #                                            text=f"try connect to camera {self.name}", 

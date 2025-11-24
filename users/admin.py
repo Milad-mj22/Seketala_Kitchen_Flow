@@ -29,7 +29,7 @@ class PostAdmin(admin.ModelAdmin):
 admin.site.register(raw_material)
 admin.site.register(mother_material)
 admin.site.register(create_order)
-admin.site.register(Tools)
+
 admin.site.register(FoodFilter)
 admin.site.register(SnappFoodList)
 admin.site.register(cities)
@@ -52,7 +52,12 @@ admin.site.register(BuyerActivity)
 # admin.site.register(Inventory)
 
 
-
+@admin.register(Tools)
+class ToolAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "status", "icon")
+    list_filter = ("status", "category")
+    search_fields = ("title", "content")
+    fields = ("title", "slug", "content", "icon", "category", "status")
 
 
 

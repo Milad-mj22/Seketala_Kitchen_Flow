@@ -29,5 +29,5 @@ def menu_items_processor(request):
         return {'menu_items': items}    
     
     except:
-        print('Error in menu_items_processor')
+        #print('Error in menu_items_processor')
         return {'menu_items': None}    
