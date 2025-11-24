@@ -2779,13 +2779,15 @@ def subscribe(request):
 
     return JsonResponse({'status': 'subscription saved'})
 
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from pywebpush import webpush, WebPushException
+import json
 
 @csrf_exempt
 @login_required
 def send_test_notification(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'invalid request'}, status=400)
-
     profile = request.user.profile
     if not profile.push_endpoint:
         return JsonResponse({'error': 'No push subscription found'}, status=400)
@@ -2809,8 +2811,22 @@ def send_test_notification(request):
         return JsonResponse({'status': 'notification sent'})
 
     except WebPushException as ex:
-        print("WebPush error:", repr(ex))
-        if ex.response and ex.response.status_code in [404, 410]:
+        msg = str(ex)
+        # ۱) اگر خود response هست و status_code داره
+        if getattr(ex, "response", None) is not None:
+            status = getattr(ex.response, "status_code", None)
+            if status in [404, 410]:
+                profile.push_endpoint = None
+                profile.push_p256dh = None
+                profile.push_auth = None
+                profile.save()
+                return JsonResponse(
+                    {'error': 'Subscription removed due to invalid endpoint'},
+                    status=410
+                )
+
+        # ۲) fallback: اگر داخل متن خطا 410 یا unsubscribed/expired بود
+        if "410" in msg or "unsubscribed or expired" in msg:
             profile.push_endpoint = None
             profile.push_p256dh = None
             profile.push_auth = None
@@ -2819,9 +2835,9 @@ def send_test_notification(request):
                 {'error': 'Subscription removed due to invalid endpoint'},
                 status=410
             )
-        return JsonResponse({'error': str(ex)}, status=500)
 
-
+        # هر خطای دیگه → 500
+        return JsonResponse({'error': msg}, status=500)
 
 
 

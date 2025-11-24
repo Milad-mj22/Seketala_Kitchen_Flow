@@ -142,72 +142,65 @@
         // چک کن آیا قبلاً سابسکرایب شده یا نه
         await checkExistingSubscription();
 
-        // 2) دکمه Subscribe
-        if (subscribeBtn) {
-            console.log("Subscribe button found");
+if (subscribeBtn) {
+    console.log("Subscribe button found");
 
-            subscribeBtn.addEventListener('click', async () => {
-                console.log("Subscribe button clicked");
+    subscribeBtn.addEventListener('click', async () => {
+        console.log("Subscribe button clicked");
 
-                if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                    showToast("مرورگر شما از اعلان‌ها پشتیبانی نمی‌کند", false);
-                    return;
-                }
-
-                try {
-                    // اجازه نوتیفیکیشن
-                    const permission = await Notification.requestPermission();
-                    if (permission !== "granted") {
-                        showToast("دسترسی اعلان رد شد", false);
-                        return;
-                    }
-
-                    // ⚠️ نکته مهم: به جای استفاده مستقیم از register،
-                    // منتظر می‌مانیم تا Service Worker کاملاً آماده شود
-                    const registration = await navigator.serviceWorker.ready;
-                    console.log("Service Worker ready:", registration);
-
-                    const existingSubscription = await registration.pushManager.getSubscription();
-                    if (existingSubscription) {
-                        showToast("اعلان قبلاً فعال شده بود ✅");
-                        subscribeBtn.classList.add('btn-success');
-                        subscribeBtn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
-                        return;
-                    }
-
-                    const newSubscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-                    });
-
-                    console.log("New subscription:", newSubscription);
-
-                    const res = await fetch("{% url 'subscribe' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            // چون view شما @csrf_exempt است، واقعا به این نیاز ندارید،
-                            // ولی اگر خواستی می‌توانی نگه‌داری:
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify(newSubscription)
-                    });
-
-                    if (res.ok) {
-                        showToast("اعلان با موفقیت فعال شد 🎉");
-                        subscribeBtn.classList.add('btn-success');
-                        subscribeBtn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
-                    } else {
-                        showToast("ذخیره‌سازی اشتراک موفق نبود", false);
-                    }
-                } catch (error) {
-                    console.error("Subscription error:", error);
-                    showToast("خطا در فعال‌سازی اعلان", false);
-                }
-            });
-        } else {
-            console.warn("Subscribe button not found");
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            showToast("مرورگر شما از اعلان‌ها پشتیبانی نمی‌کند", false);
+            return;
         }
+
+        try {
+            // ثبت یا گرفتن Service Worker
+            const registration = await navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+            console.log("Service Worker registered", registration);
+
+            const permission = await Notification.requestPermission();
+
+            if (permission !== "granted") {
+                showToast("دسترسی اعلان رد شد", false);
+                return;
+            }
+
+            // اینجا: اگر از قبل subscription هست، از همون استفاده می‌کنیم
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                });
+            }
+
+            // همیشه subscription را برای backend بفرست (حتی اگر قبلاً وجود داشته)
+            const res = await fetch("{% url 'subscribe' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            if (res.ok) {
+                showToast("اعلان با موفقیت فعال شد 🎉");
+                subscribeBtn.classList.add('btn-success');
+                subscribeBtn.innerHTML = '<i class="bi bi-bell-fill"></i> اعلان فعال است';
+            } else {
+                const txt = await res.text();
+                console.error("Subscribe save failed:", txt);
+                showToast("ذخیره‌سازی اشتراک موفق نبود", false);
+            }
+        } catch (error) {
+            console.error("Subscription error:", error);
+            showToast("خطا در فعال‌سازی اعلان", false);
+        }
+    });
+}
+
 
         // 3) دکمه ارسال اعلان تستی
         if (sendNotifBtn) {
