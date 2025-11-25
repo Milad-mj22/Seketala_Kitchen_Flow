@@ -13,7 +13,7 @@ urlpatterns = [
     path("users/", views.notification_user_list, name="notification_user_list"),
     path("manage/<int:user_id>/", views.manage_notifications, name="manage_notifications"),
 
-    path("steps/", views.notification_step_list, name="notification_step_list"),
+    path("", views.notification_step_list, name="notification_step_list"),
     path("steps/add/", views.notification_step_create, name="notification_step_create"),
     path(
         "steps/<int:step_id>/assign-users/",
