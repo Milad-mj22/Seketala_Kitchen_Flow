@@ -266,7 +266,12 @@ if username == 'milad':
         "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
     }
 
-
+elif username == 'Dorsa-co':
+    WEBPUSH_SETTINGS = {
+        "VAPID_PUBLIC_KEY":"BAJy6J5b6Ot5M6UQ0B4HbsA2VsEzim4LmqEJO5VyPbR_BdUSCY7gclaYjg118UYKjrLAYRKo05yU1A_KamrBojs",
+        "VAPID_PRIVATE_KEY": "    2c6iN4MNJk36VZFtsVqHzwhK0idpEIzj_7APKeG1pt8",
+        "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
+    }
 
 else:
 
