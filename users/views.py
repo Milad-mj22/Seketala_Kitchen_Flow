@@ -319,7 +319,18 @@ def create_order(request):
             # obj.author = User.objects.get(pk=request.user.id)
             # form.save()
         messages.success(request,'New Forum Successfully Added')
-        notify_users_for_step("ORDER_CREATED",'ثبت سفارش','سفارش جدید ثبت شد')
+        orders_url = request.build_absolute_uri("/profile/my_orders/")
+        
+        notify_users_for_step(
+            "ORDER_CREATED",
+            title="ثبت سفارش جدید",
+            body="سفارش جدید ثبت شد. جهت مشاهده کلیک کنید.",
+            extra_data={
+                "url": orders_url
+            }
+        )
+
+
         return redirect('/profile/my_orders')
 
     

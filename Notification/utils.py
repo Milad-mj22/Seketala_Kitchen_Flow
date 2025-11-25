@@ -88,7 +88,7 @@ def send_in_app_message(user, title, body, extra=None):
 
 from .models import NotificationStep, NotificationPreference
 
-def notify_users_for_step(step_code, title, body):
+def notify_users_for_step(step_code, title, body, extra_data=None):
     try:
         step = NotificationStep.objects.get(code=step_code)
     except NotificationStep.DoesNotExist:
@@ -97,8 +97,18 @@ def notify_users_for_step(step_code, title, body):
     prefs = NotificationPreference.objects.filter(step=step, enabled=True)
 
     for pref in prefs:
+        user = pref.user
+
+        payload_extra = extra_data or {}
+        # مثلا اگر بخوای برای هر کاربر چیز اضافه بفرستی، اینجا می‌تونی دستکاری کنی
+
         if pref.channel in ["push", "both"]:
-            send_push_notification_to_user(pref.user, title, body)
-        
+            send_push_notification_to_user(
+                user,
+                title=title,
+                body=body,
+                extra_data=payload_extra
+            )
+
         if pref.channel in ["message", "both"]:
             send_in_app_message(pref.user, title, body)
