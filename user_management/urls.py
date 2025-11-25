@@ -31,25 +31,25 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
 
-     path('password-change/', ChangePasswordView.as_view(), name='password_change'),
-     path('menu/', include('menu.urls'), name='password_change'),
-     path('order_flow/', include('order_flow.urls'), name='password_change'),
-     path('stone_flow/', include('StoneFlow.urls'), name='password_change'),
-     path('api/', include('api.urls')),  # Add this line
-     path('SocialApps/', include('SocialApps.urls')),  # ← add this line
-     path('formApp/', include('formApp.urls')),  # ← add this line
-     path('mines/', include('mines.urls')),
-     path('dashboard/', include('dashboard.urls')),
-     path('utils/', include('utils.urls')),
-     path('cameras/', include('cameras.urls')),
-     path('data_analysis/', include('DataAnalysis.urls')),
-     path('FoodManagment/', include('FoodPrice.urls')),
-     path('vault/', include('vault.urls')),
+    path('password-change/', ChangePasswordView.as_view(), name='password_change'),
+    path('menu/', include('menu.urls'), name='password_change'),
+    path('order_flow/', include('order_flow.urls'), name='password_change'),
+    path('stone_flow/', include('StoneFlow.urls'), name='password_change'),
+    path('api/', include('api.urls')),  # Add this line
+    path('SocialApps/', include('SocialApps.urls')),  # ← add this line
+    path('formApp/', include('formApp.urls')),  # ← add this line
+    path('mines/', include('mines.urls')),
+    path('dashboard/', include('dashboard.urls')),
+    path('utils/', include('utils.urls')),
+    path('cameras/', include('cameras.urls')),
+    path('data_analysis/', include('DataAnalysis.urls')),
+    path('FoodManagment/', include('FoodPrice.urls')),
+    path('vault/', include('vault.urls')),
+    path("notifications/", include("Notification.urls")),
+    
+    path('', include('pwa.urls')),  # اضافه کردن URL های PWA
 
-     
-     path('', include('pwa.urls')),  # اضافه کردن URL های PWA
-
-     path('', include('users.urls')),
+    path('', include('users.urls')),
 
     re_path(r'^oauth/', include('social_django.urls', namespace='social')),
 
