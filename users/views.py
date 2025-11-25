@@ -2844,6 +2844,7 @@ def send_test_notification(request):
 
 
 
+
 def user_list_view(request):
     users = User.objects.all()
     return render(request, 'users/user_list.html', {'users': users})
