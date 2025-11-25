@@ -1,16 +1,76 @@
 # notifications/utils.py
 
 from .models import NotificationPreference, NotificationStep
+from pywebpush import webpush, WebPushException
+import json
+from django.conf import settings
 
 
-def send_push_notification(user, title, body, extra=None):
+def send_push_notification_to_user(user, title, body, extra_data=None):
     """
-    TODO: call your existing webpush function here.
+    ارسال Web Push برای یک کاربر.
+    خروجی: (success: bool, error_code: str | None)
+
+    error_code می‌تونه این‌ها باشه:
+      - "no_subscription"
+      - "invalid_subscription"
+      - "other_error"
     """
-    # Example:
-    # from .push import send_web_push_to_user
-    # send_web_push_to_user(user, title, body, extra=extra)
-    pass
+
+    # 1) پروفایل و سابسکریپشن
+    profile = getattr(user, "profile", None)
+    if not profile or not profile.push_endpoint:
+        return False, "no_subscription"
+
+    # 2) ساخت payload
+    payload = {
+        "title": title,
+        "body": body,
+    }
+    if extra_data and isinstance(extra_data, dict):
+        payload.update(extra_data)
+
+    try:
+        webpush(
+            subscription_info={
+                "endpoint": profile.push_endpoint,
+                "keys": {
+                    "p256dh": profile.push_p256dh,
+                    "auth": profile.push_auth,
+                },
+            },
+            data=json.dumps(payload, ensure_ascii=False),
+            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": settings.VAPID_ADMIN_EMAIL},
+        )
+        return True, None
+
+    except WebPushException as ex:
+        msg = str(ex)
+
+        # اگر response و status_code داشته باشه
+        if getattr(ex, "response", None) is not None:
+            status = getattr(ex.response, "status_code", None)
+            if status in [404, 410]:
+                # سابسکریپشن دیگه معتبر نیست → پاکش کن
+                profile.push_endpoint = None
+                profile.push_p256dh = None
+                profile.push_auth = None
+                profile.save()
+                return False, "invalid_subscription"
+
+        # اگر داخل متن خطا 410 یا unsubscribed بود
+        if "410" in msg or "unsubscribed or expired" in msg:
+            profile.push_endpoint = None
+            profile.push_p256dh = None
+            profile.push_auth = None
+            profile.save()
+            return False, "invalid_subscription"
+
+        # بقیه خطاها
+        return False, "other_error"
+    
+
 
 
 def send_in_app_message(user, title, body, extra=None):
@@ -38,7 +98,7 @@ def notify_users_for_step(step_code, title, body):
 
     for pref in prefs:
         if pref.channel in ["push", "both"]:
-            send_push_notification(pref.user, title, body)
+            send_push_notification_to_user(pref.user, title, body)
         
         if pref.channel in ["message", "both"]:
             send_in_app_message(pref.user, title, body)

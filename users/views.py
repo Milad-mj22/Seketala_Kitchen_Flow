@@ -9,6 +9,7 @@ from django.views import View
 from django.contrib.auth.decorators import login_required
 from khayyam import JalaliDatetime
 
+from Notification.utils import notify_users_for_step
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
@@ -318,6 +319,7 @@ def create_order(request):
             # obj.author = User.objects.get(pk=request.user.id)
             # form.save()
         messages.success(request,'New Forum Successfully Added')
+        notify_users_for_step("ORDER_CREATED",'ثبت سفارش','سفارش جدید ثبت شد')
         return redirect('/profile/my_orders')
 
     
