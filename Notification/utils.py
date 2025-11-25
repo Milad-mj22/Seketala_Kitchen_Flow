@@ -27,6 +27,10 @@ def send_push_notification_to_user(user, title, body, extra_data=None):
         "title": title,
         "body": body,
     }
+
+    if extra_data and "url" in extra_data:
+        extra_data["url"] = extra_data["url"].rstrip("/")
+
     if extra_data and isinstance(extra_data, dict):
         payload.update(extra_data)
 
