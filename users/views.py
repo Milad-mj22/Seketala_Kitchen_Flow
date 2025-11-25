@@ -277,7 +277,8 @@ def profile(request):
             # if request.user
             try:
 
-                user = Profile.objects.get(id = request.user.id)
+                user = User.objects.get(user = request.user)
+
 
 
             except Exception as e:
@@ -319,17 +320,19 @@ def create_order(request):
             # obj.author = User.objects.get(pk=request.user.id)
             # form.save()
         messages.success(request,'New Forum Successfully Added')
-        orders_url = request.build_absolute_uri("/profile/my_orders/")
-        
-        notify_users_for_step(
-            "ORDER_CREATED",
-            title="ثبت سفارش جدید",
-            body="سفارش جدید ثبت شد. جهت مشاهده کلیک کنید.",
-            extra_data={
-                "url": orders_url
-            }
-        )
-
+        try:
+            orders_url = request.build_absolute_uri("/profile/my_orders/")
+            
+            notify_users_for_step(
+                "ORDER_CREATED",
+                title="ثبت سفارش جدید",
+                body="سفارش جدید ثبت شد. جهت مشاهده کلیک کنید.",
+                extra_data={
+                    "url": orders_url
+                }
+            )
+        except:
+            pass
 
         return redirect('/profile/my_orders')
 

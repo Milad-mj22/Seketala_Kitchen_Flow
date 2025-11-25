@@ -4,167 +4,479 @@
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/persian.datepicker.css' %}">
+<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 <script src="{% static 'js/jquery-3.5.1.slim.min.js' %}"></script>
 <script src="{% static 'js/persian.date.js' %}"></script>
 <script src="{% static 'js/persian.datepicker.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 
 <style>
-  body {
-    background-color: #f3f4f6;
+  :root {
+    --gold-main: #F4B41A;
+    --gold-light: #F7D141;
+    --gold-soft: #FFF7CC;
+    --gold-deep: #B38408;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --card-radius: 22px;
+    --shadow-soft: 0 18px 45px rgba(148, 120, 52, 0.16);
+  }
 
+  body {
+    background: radial-gradient(circle at top left, #fff7e6, #fdfdfd 40%, #fff5cc 100%);
+    font-size: 15px;
+  }
+
+  .profile-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+    direction: rtl;
+    text-align: right;
+  }
+
+  @media (min-width: 768px) {
+    .profile-page {
+      padding-top: 32px;
+    }
+  }
+
+  .page-shell {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    border-radius: 28px;
+    padding: 24px 18px 28px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(212, 178, 88, 0.45);
+  }
+
+  @media (min-width: 992px) {
+    .page-shell {
+      padding: 28px 24px 32px;
+    }
+  }
+
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  @media (min-width: 768px) {
+    .page-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .page-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .page-title-pill {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 20%, #F7D141, #F4B41A);
+    box-shadow: 0 12px 30px rgba(180, 137, 12, 0.7);
+    font-size: 20px;
+  }
+
+  .page-title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .chip-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: var(--gold-soft);
+    color: #6b4b02;
+    border: 1px solid rgba(244, 180, 26, 0.7);
+  }
+
+  .chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--gold-main);
   }
 
   .card-custom {
     background: #ffffff;
     border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    padding: 24px;
+    border-radius: var(--card-radius);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+    padding: 20px 18px;
+    margin-bottom: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .card-custom {
+      padding: 22px 20px;
+    }
   }
 
   .avatar-lg {
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #dee2e6;
+    border: 3px solid rgba(244, 180, 26, 0.6);
+    box-shadow: 0 8px 22px rgba(148, 120, 52, 0.35);
   }
 
-  .badge-icon {
-    padding: 0.6rem 1rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-    display: inline-flex;
+  .username-label {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .username-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .profile-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 14px;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 15px;
+    gap: 8px;
   }
 
-  .btn-modern {
-    border-radius: 0.75rem;
-    font-weight: 500;
-    padding: 12px 20px;
+  .profile-section-title span.icon {
+    font-size: 18px;
+  }
+
+  .profile-field {
     font-size: 15px;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+  .profile-field strong {
+    font-weight: 700;
+  }
+
+  .link-row {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .link-row i {
+    width: 18px;
+    text-align: center;
+    margin-left: 6px;
+  }
+
+  .link-row a {
+    text-decoration: none;
+    color: #2563eb;
+    font-weight: 500;
+    word-break: break-all;
+  }
+
+  .link-row a:hover {
+    text-decoration: underline;
+  }
+
+  /* Quick links */
+  .quick-links {
+    display: grid;
+    gap: 8px;
+  }
+
+  @media (min-width: 768px) {
+    .quick-links {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .quick-links a {
     text-decoration: none;
     display: flex;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
     gap: 0.75rem;
-    padding: 14px 20px;
-    background-color: #f9fafb;
-    border-radius: 0.75rem;
+    padding: 11px 16px;
+    background: #f9fafb;
+    border-radius: 14px;
     transition: all 0.2s ease-in-out;
-    border: 1px solid #e0e0e0;
-    color: #333;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 14px;
   }
+
+  .quick-links a i {
+    font-size: 16px;
+    color: #b8860b;
+  }
+
   .quick-links a:hover {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background: linear-gradient(135deg, #fff9e6, #fef3c7);
+    border-color: rgba(244, 180, 26, 0.8);
+    color: #b45309;
+    transform: translateY(-1px);
+  }
+
+  /* Skills */
+  .skill-name {
+    font-size: 14px;
+  }
+
+  .skill-percent {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .progress {
+    background-color: #f3f4f6;
+  }
+
+  .progress-bar {
+    background: linear-gradient(135deg, #F4B41A, #D97706);
   }
 </style>
 
-<div class="container py-5">
-  <div class="row gy-4">
-    <div class="col-lg-4">
-      <div class="card-custom text-center">
-        <img src="{{ user.avatar.url }}" class="avatar-lg mb-3" alt="Avatar">
-        <h5 class="mb-0"></h5>
-        <small class="text-muted">نام کاربری</small>
-        <h5 class="mb-0">{{ user.username }}</h5>
-
-        <hr>
-        <div class="text-start mt-3">
-          {% if user.website %}
-            <div class="mb-2"><i class="fas fa-globe text-primary me-2"></i> <a href="{{ user.website }}" target="_blank">{{ user.website }}</a></div>
-          {% endif %}
-          {% if user.github %}
-            <div class="mb-2"><i class="fab fa-github text-dark me-2"></i> <a href="{{ user.github }}" target="_blank">{{ user.github_username }}</a></div>
-          {% endif %}
-          {% if user.instagram %}
-            <div class="mb-2"><i class="fab fa-instagram text-danger me-2"></i> <a href="{{ user.instagram }}" target="_blank">{{ user.instagram_username }}</a></div>
-          {% endif %}
+<div class="profile-page">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-title-wrapper">
+        <div class="page-title-pill">
+          👤
         </div>
+        <div>
+          <h1 class="page-title">پروفایل کاربری</h1>
+          <div class="page-subtitle">
+            مشاهده اطلاعات فردی، دسترسی‌های سریع و مهارت‌های ثبت‌شده شما
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="chip-small">
+          <span class="chip-dot"></span>
+          خوش آمدی {{ user.username }}
+        </span>
       </div>
     </div>
 
-    <div class="col-lg-8">
-      <div class="card-custom mb-4">
-        <h5 class="fw-bold mb-3">اطلاعات فردی</h5>
-        <div class="row g-3">
-          <div class="col-6">نام و نام خانوادگی: <strong>{{ user.profile.first_name }} {{ user.profile.last_name }}</strong></div>
-          <div class="col-6">سمت شغل: <strong>{{ user.profile.job_position.persian_name }}</strong></div>
-          <div class="col-6">تلفن: <strong>{{ user.profile.phone }}</strong></div>
-          <div class="col-6">آدرس: <strong>{{ user.profile.address }}</strong></div>
-        </div>
-      </div>
+    <div class="row gy-4">
+      <!-- Left column: avatar & social -->
+      <div class="col-lg-4">
+        <div class="card-custom text-center">
+          {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" class="avatar-lg mb-3" alt="Avatar">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" class="avatar-lg mb-3" alt="Avatar">
+          {% endif %}
 
-      <div class="card-custom mb-4">
-        <h5 class="fw-bold mb-3">دسترسی سریع</h5>
-        <div class="quick-links d-grid gap-3">
-          <a href="/profile/daily-report/"><i class="fas fa-calendar-alt"></i> ثبت گزارش روزانه</a>
-          <a href="/formApp/my-forms"><i class="fas fa-file-alt"></i> فرم‌های من</a>
-          <a href="/profile/{{ user.id }}/register_entry/"><i class="fas fa-sign-in-alt"></i> ورود و خروج</a>
-          <a href="/SocialApps/WA/{{ user.id }}/"><i class="fab fa-whatsapp"></i> اتصال واتساپ</a>
-          <a href="/SocialApps/TE/{{ user.id }}/"><i class="fab fa-telegram"></i> اتصال تلگرام</a>
-          <a href="/buyers/add/"><i class="fas fa-user-plus"></i> افزودن مشتری</a>
-          <a href="/utils/import-buyers-csv"><i class="fas fa-box me-2"></i> افزودن مشتری از طریق فایل</a> 
+          <div class="mb-1 username-label">نام کاربری</div>
+          <div class="username-value mb-2">{{ user.username }}</div>
 
-          <a href="/buyers/"><i class="fas fa-users"></i> لیست مشتریان</a>
-          <a href="/stone_flow/preInvoice/"><i class="fas fa-users"></i>ایجاد پیش فاکتور</a>
-          <a href="/stone_flow/preinvoices_list/"><i class="fas fa-users"></i> پیش فاکتور های صادرشده</a>
-          <!-- <a href="/formApp/create" class="btn btn-modern btn-primary w-100">ایجاد فرم جدید</a> -->
-        </div>
-      </div>
+          <hr class="my-3">
 
-      <!-- <div class="card-custom mb-4">
-        <h5 class="fw-bold mb-3">عملکرد ماه گذشته</h5>
-        <div class="row g-3">
-          <div class="col-4">عملکرد: <strong>{{ user.last_month_performance }}%</strong></div>
-          <div class="col-4">مرخصی استفاده‌شده: <strong>{{ user.used_leave_days }} روز</strong></div>
-          <div class="col-4">مرخصی مجاز: <strong>{{ user.allowed_leave_days }} روز</strong></div>
-        </div>
-        <div class="mt-3">
-          <input type="text" id="leave-date" class="form-control mb-2" placeholder="تاریخ مرخصی">
-          <button type="button" id="open-calendar" class="btn btn-success w-100">درخواست مرخصی</button>
-        </div>
-      </div> -->
+          <div class="text-start mt-2">
+            <div class="profile-section-title mb-2" style="font-size: 15px;">
+              <span class="icon">🌐</span>
+              راه‌های ارتباطی
+            </div>
 
-      {% if user.skills %}
-      <div class="card-custom">
-        <h5 class="fw-bold mb-3">مهارت‌ها</h5>
-        {% for skill in user.skills %}
-        <div class="mb-3">
-          <div class="d-flex justify-content-between">
-            <span>{{ skill.name }}</span>
-            <span>{{ skill.level }}%</span>
-          </div>
-          <div class="progress rounded" style="height: 8px;">
-            <div class="progress-bar bg-success" style="width: {{ skill.level }}%"></div>
+            {% if user.website %}
+              <div class="link-row">
+                <i class="fas fa-globe text-primary"></i>
+                <a href="{{ user.website }}" target="_blank">{{ user.website }}</a>
+              </div>
+            {% endif %}
+
+            {% if user.github %}
+              <div class="link-row">
+                <i class="fab fa-github text-dark"></i>
+                <a href="{{ user.github }}" target="_blank">
+                  {% if user.github_username %}{{ user.github_username }}{% else %}Github{% endif %}
+                </a>
+              </div>
+            {% endif %}
+
+            {% if user.instagram %}
+              <div class="link-row">
+                <i class="fab fa-instagram text-danger"></i>
+                <a href="{{ user.instagram }}" target="_blank">
+                  {% if user.instagram_username %}{{ user.instagram_username }}{% else %}Instagram{% endif %}
+                </a>
+              </div>
+            {% endif %}
           </div>
         </div>
-        {% endfor %}
       </div>
-      {% endif %}
+
+      <!-- Right column: info, quick links, skills -->
+      <div class="col-lg-8">
+        <!-- Personal info -->
+        <div class="card-custom mb-4">
+          <div class="profile-section-title">
+            <span class="icon">🪪</span>
+            اطلاعات فردی
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6 profile-field">
+              نام و نام خانوادگی:
+              <strong>{{ user.profile.first_name }} {{ user.profile.last_name }}</strong>
+            </div>
+            <div class="col-md-6 profile-field">
+              سمت شغل:
+              <strong>{{ user.profile.job_position.persian_name }}</strong>
+            </div>
+            <div class="col-md-6 profile-field">
+              تلفن:
+              <strong>{{ user.profile.phone }}</strong>
+            </div>
+            <div class="col-md-6 profile-field">
+              آدرس:
+              <strong>{{ user.profile.address }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick links -->
+        <div class="card-custom mb-4">
+          <div class="profile-section-title">
+            <span class="icon">⚡</span>
+            دسترسی سریع
+          </div>
+          <div class="quick-links">
+            <a href="/profile/daily-report/">
+              <i class="fas fa-calendar-alt"></i>
+              <span>ثبت گزارش روزانه</span>
+            </a>
+            <a href="/formApp/my-forms">
+              <i class="fas fa-file-alt"></i>
+              <span>فرم‌های من</span>
+            </a>
+            <a href="/profile/{{ user.id }}/register_entry/">
+              <i class="fas fa-sign-in-alt"></i>
+              <span>ورود و خروج</span>
+            </a>
+            <a href="/SocialApps/WA/{{ user.id }}/">
+              <i class="fab fa-whatsapp"></i>
+              <span>اتصال واتساپ</span>
+            </a>
+            <a href="/SocialApps/TE/{{ user.id }}/">
+              <i class="fab fa-telegram"></i>
+              <span>اتصال تلگرام</span>
+            </a>
+            <a href="/buyers/add/">
+              <i class="fas fa-user-plus"></i>
+              <span>افزودن مشتری</span>
+            </a>
+            <a href="/utils/import-buyers-csv">
+              <i class="fas fa-box me-1"></i>
+              <span>افزودن مشتری از طریق فایل</span>
+            </a>
+            <a href="/buyers/">
+              <i class="fas fa-users"></i>
+              <span>لیست مشتریان</span>
+            </a>
+            <a href="/stone_flow/preInvoice/">
+              <i class="fas fa-file-invoice-dollar"></i>
+              <span>ایجاد پیش‌فاکتور</span>
+            </a>
+            <a href="/stone_flow/preinvoices_list/">
+              <i class="fas fa-list-alt"></i>
+              <span>پیش‌فاکتورهای صادر شده</span>
+            </a>
+          </div>
+        </div>
+
+        {# Optional leave section – if you decide to enable later #}
+      
+        <div class="card-custom mb-4">
+          <div class="profile-section-title">
+            <span class="icon">🗓️</span>
+            مرخصی و حضور
+          </div>
+          <div class="row g-3 mb-2">
+            <div class="col-md-4 profile-field">
+              عملکرد ماه گذشته:
+              <strong>{{ user.last_month_performance }}%</strong>
+            </div>
+            <div class="col-md-4 profile-field">
+              مرخصی استفاده‌شده:
+              <strong>{{ user.used_leave_days }} روز</strong>
+            </div>
+            <div class="col-md-4 profile-field">
+              مرخصی مجاز:
+              <strong>{{ user.allowed_leave_days }} روز</strong>
+            </div>
+          </div>
+          <div class="mt-2">
+            <input type="text" id="leave-date" class="form-control mb-2" placeholder="تاریخ مرخصی (تقویم فارسی)">
+            <button type="button" id="open-calendar" class="btn btn-warning w-100" style="border-radius: 14px;">
+              درخواست مرخصی
+            </button>
+          </div>
+        </div>
+      
+
+        {% if user.skills %}
+        <div class="card-custom">
+          <div class="profile-section-title">
+            <span class="icon">🎯</span>
+            مهارت‌ها
+          </div>
+          {% for skill in user.skills %}
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-percent">{{ skill.level }}%</span>
+              </div>
+              <div class="progress rounded" style="height: 9px;">
+                <div class="progress-bar" style="width: {{ skill.level }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 </div>
 
 <script>
   $(document).ready(function() {
-    $("#leave-date").pDatepicker({
-      format: 'YYYY/MM/DD',
-      autoClose: true,
-      calendar: {
-        persian: { locale: 'fa' }
-      }
-    });
-    $("#open-calendar").click(function () {
-      $("#leave-date").focus();
-    });
+    if ($("#leave-date").length) {
+      $("#leave-date").pDatepicker({
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        calendar: {
+          persian: { locale: 'fa' }
+        }
+      });
+
+      $("#open-calendar").click(function () {
+        $("#leave-date").focus();
+      });
+    }
   });
 </script>
 {% endblock %}
