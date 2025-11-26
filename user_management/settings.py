@@ -235,7 +235,11 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = str(os.getenv('EMAIL_USER'))
 EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_PASSWORD'))
 
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+# settings.py
+
+# This will make the session cookie last indefinitely (until the user logs out).
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # This will ensure sessions don't expire on browser close.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 365  # 1 year (in seconds). You can adjust this duration.
 
 
 # Default primary key field type
