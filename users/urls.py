@@ -7,6 +7,7 @@ from .views import  add_buyer_activity, add_material_to_category, buyer_activity
         show_store,submit_data,show_test,take_store,confrim_take_store,log_view_store,\
         register_entry,register_exit,get_allowed_locations,histoty_entry,update_prices, show_night_order_material,\
         add_buyer,edit_buyer,buyer_list , subscribe , send_test_notification, user_list_view 
+from . import views
 
 from menu.views import set_sold_out
         
@@ -41,9 +42,9 @@ urlpatterns = [
 
 
     path('orders/print_order/<int:id>', print_order, name='order-show'),
+    # urls.py
 
-
-
+    path('update-shortage/<int:order_id>/', views.send_shortage_to_buyer, name='update_shortage'),
 
 
     path('mother-materials/', mother_material_list, name='mother_material_list'),

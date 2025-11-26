@@ -163,3 +163,10 @@ admin.site.register(MaterialCategory)
 
 
 
+from .models import buyer_order_list
+
+@admin.register(buyer_order_list)
+class BuyerOrderListAdmin(admin.ModelAdmin):
+    list_display = ('order', 'material', 'count', 'created_at', 'is_confirmed')
+    search_fields = ('order__id', 'material__name')
+    list_filter = ('is_confirmed',)

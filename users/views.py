@@ -9,6 +9,7 @@ from django.views import View
 from django.contrib.auth.decorators import login_required
 from khayyam import JalaliDatetime
 
+from Notification.models import NotificationStep
 from Notification.utils import notify_users_for_step
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
@@ -18,7 +19,7 @@ from users.utils.CalulatedDistance import calculate_distance
 
 from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, CategoryForm, JobForm, MotherMaterialForm, RawMaterialCategoryForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -320,19 +321,21 @@ def create_order(request):
             # obj.author = User.objects.get(pk=request.user.id)
             # form.save()
         messages.success(request,'New Forum Successfully Added')
-        try:
-            orders_url = request.build_absolute_uri("/profile/my_orders/")
-            
-            notify_users_for_step(
-                "ORDER_CREATED",
-                title="ثبت سفارش جدید",
-                body="سفارش جدید ثبت شد. جهت مشاهده کلیک کنید.",
-                extra_data={
-                    "url": orders_url
-                }
-            )
+
+        try : 
+            first_name = request.user.profile.first_name
+            body=f"سفارش جدید توسط  {first_name}ثبت شد. جهت مشاهده کلیک کنید.",
+
         except:
-            pass
+            body="سفارش جدید ثبت شد. جهت مشاهده کلیک کنید.",
+
+
+        try:
+            open_url = "/profile/my_orders/"
+            send_webpush(request=request,code="ORDER_CREATED",title="ثبت سفارش جدید",body=body,url=open_url)
+
+        except:
+            print('Error in send notification')
 
         return redirect('/profile/my_orders')
 
@@ -997,6 +1000,39 @@ def show_food_material(request,id):
         return render(request, 'users/show_food_raw_material.html', {'mother_materials': mother_materials,'food_name':food_name})
     
 
+def send_shortage_to_buyer(request, order_id):
+    if request.method == 'POST':
+        order = ModelCreateOrder.objects.filter(id=order_id).first()
+        user = request.user
+        if order is None:
+            error_page_flow(request=request,title='سفارش موجود نیست',message='خطا در دریافت سفارش از پایگاه داده')
+            return
+        
+
+        data = dict(request.POST.dict())
+        data.pop('csrfmiddlewaretoken','Not found')
+
+        for item in list(data.keys()):
+
+            material = RawMaterial.objects.get(name=item)
+            try:
+                buyer_order_list.objects.create(user=user,order=order,material=material,count=data[item])
+            except:
+                pass
+        
+
+        title = 'لیست خرید جدید' 
+        try:
+            name = user.profile.first_name
+            body = 'لیست خرید جدید توسط {name} آماده شد جهت مشاهده کلیک کنید.'
+        except:
+            body = 'لیست خرید جدید آماده شد جهت مشاهده کلیک کنید.'
+
+        send_webpush(request=request,code="BUYER_NOTIFICATION",title=title,body=body)
+
+        return redirect('/profile/my_orders')
+
+    error_page_flow(request=request,title='سفارش موجود نیست',message='خطا در دریافت سفارش از پایگاه داده')
 
 
 
@@ -1029,18 +1065,19 @@ def night_food_order(request):
                 ret = FoodRawMaterial.objects.filter(name=food_name).first()
 
                 if ret :
-                    for material in ret.data.keys():
-                        
-                        
-                        new_value = round(float(ret.data[material])*float(value),4)
+                    if ret.data is not  None:
+                        for material in ret.data.keys():
+                            
+                            
+                            new_value = round(float(ret.data[material])*float(value),4)
 
 
-                        if material in raw_material.keys():
+                            if material in raw_material.keys():
 
-                            raw_material[material]+=new_value
-                        
-                        else:
-                            raw_material[material]=new_value
+                                raw_material[material]+=new_value
+                            
+                            else:
+                                raw_material[material]=new_value
 
 
 
@@ -1069,7 +1106,7 @@ def night_food_order(request):
         if required_items=={}:
             return redirect('/profile/my_orders')
         else:
-            return render(request, 'users/reqiured_items.html', {'required_items': required_items})
+            return render(request, 'users/reqiured_items.html', {'required_items': required_items,'order':status})
 
 
 
@@ -1213,34 +1250,34 @@ def calculateProducibleMeals():
     foods = FoodRawMaterial.objects.all()  # Get all food recipes
 
     for food in foods:
-        recepi = food.data  # Recipe for the food (ingredients and their required quantities)
+        try:
+            recepi = food.data  # Recipe for the food (ingredients and their required quantities)
+            if recepi is not None:
+                max_food_quantity = float('inf')  # Start with infinity, then find the limiting material
 
-        max_food_quantity = float('inf')  # Start with infinity, then find the limiting material
+                for item, required_qty in recepi.items():  # Iterate through each material in the recipe
+                    if item not in exist_materials:  # If the material is not available, you can't make this food
+                        max_food_quantity = 0
+                        break
 
-        for item, required_qty in recepi.items():  # Iterate through each material in the recipe
-            if item not in exist_materials:  # If the material is not available, you can't make this food
-                max_food_quantity = 0
-                break
+                    material = materials.get(name=item)  # Get the available material from the materials list
 
-            material = materials.get(name=item)  # Get the available material from the materials list
+                    # Calculate how many times the available material can meet the required quantity
+                    available_qty = Decimal(material.total_quantity)
+                    possible_quantity = available_qty // Decimal(required_qty)  # Use floor division
 
-            # Calculate how many times the available material can meet the required quantity
-            available_qty = Decimal(material.total_quantity)
-            possible_quantity = available_qty // Decimal(required_qty)  # Use floor division
+                    # The maximum food quantity is determined by the most limiting ingredient
+                    max_food_quantity = min(max_food_quantity, possible_quantity)
 
-            # The maximum food quantity is determined by the most limiting ingredient
-            max_food_quantity = min(max_food_quantity, possible_quantity)
-
-        # if max_food_quantity==0:
-        #     break
+                # if max_food_quantity==0:
+                #     break
 
 
-        if max_food_quantity > 0 and  max_food_quantity != float('inf'):  # If at least 1 of this food can be made
-            # producible_foods.append((food, max_food_quantity))  # Append the food and the quantity
-            producible_foods[food.name] = int(max_food_quantity)
-    # Print the producible foods and the quantity
-    # for food, quantity in producible_foods:
-    #     #print(f'You can make {quantity} of {food.name}')
+                if max_food_quantity > 0 and  max_food_quantity != float('inf'):  # If at least 1 of this food can be made
+                    # producible_foods.append((food, max_food_quantity))  # Append the food and the quantity
+                    producible_foods[food.name] = int(max_food_quantity)
+        except:
+            print('Error in calc producible_foods ')
 
     return producible_foods
 
@@ -3249,3 +3286,30 @@ def remove_material_from_category(request, category_id, material_id):
         return redirect("category_detail", category_id=category.id)
 
     return redirect("category_detail", category_id=category.id)
+
+
+
+
+def error_page_flow(request, title, message):
+    return render(request, 'error_page_flow.html', {
+        'title': title,
+        'message': message
+    })
+
+
+
+
+def send_webpush(request,code: str = NotificationStep.code ,title:str='',body:str='',url:str='/'):
+        try:
+            orders_url = request.build_absolute_uri(url)
+            
+            notify_users_for_step(
+                code,
+                title=title,
+                body = body,
+                extra_data={
+                    "url": orders_url
+                }
+            )
+        except:
+            print('Error in send notification')

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db import models
 from django_quill.fields import QuillField
-
+from django.utils.translation import gettext_lazy as _
 from tinymce.models import HTMLField
 from users.fields import JalaliDateField  # Adjust the import path as needed
 from phonenumber_field.modelfields import PhoneNumberField
@@ -991,3 +991,38 @@ class UserRole(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.role.name}"
+    
+
+
+
+# اختصاص نقش به کاربر
+class buyer_order_list(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='ایجاد کننده لیست خرید')
+    
+    order = models.ForeignKey(create_order, on_delete=models.CASCADE, verbose_name="لیست خرید سفارش")
+    material = models.ForeignKey(raw_material, on_delete=models.CASCADE, verbose_name="لیست خرید سفارش")
+    created_at = models.DateTimeField(auto_now_add=True)
+    count = models.DecimalField(max_digits=20, decimal_places=3)
+    
+    
+    # Optional: Adding a field to track if this item is confirmed or not (e.g., for later processing)
+    is_confirmed = models.BooleanField(default=False, verbose_name=_("تأیید شده"))
+
+    class Meta:
+        verbose_name = _("لیست خرید مواد اولیه")
+        verbose_name_plural = _("لیست خرید مواد اولیه")
+        # Optionally, create a unique constraint if you want each order-item combination to be unique
+        constraints = [
+            models.UniqueConstraint(fields=['order', 'material'], name='unique_order_material')
+        ]
+
+    def __str__(self):
+        return f"{self.order} - {self.material} ({self.count})"
+
+    def update_quantity(self, new_count):
+        """ Update the count of materials in the order """
+        if new_count > 0:
+            self.count = new_count
+            self.save()
+        else:
+            raise ValueError("Count must be greater than 0")
