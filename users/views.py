@@ -1007,12 +1007,12 @@ def send_shortage_to_buyer(request, order_id):
         title = 'لیست خرید جدید' 
         try:
             name = user.profile.first_name
-            body = 'لیست خرید جدید توسط {name} آماده شد جهت مشاهده کلیک کنید.'
+            body = f'لیست خرید جدید توسط {name} آماده شد جهت مشاهده کلیک کنید.'
         except:
             body = 'لیست خرید جدید آماده شد جهت مشاهده کلیک کنید.'
 
         try:
-            open_url =f"orders/{order.id}/items/"
+            open_url =f"/orders/{order.id}/items"
             send_webpush(request=request,code="BUYER_NOTIFICATION",title=title,body=body,url=open_url)
         except:
             print('Error in sendwebpush in shoratege to buyer')
@@ -1088,6 +1088,21 @@ def night_food_order(request):
 
         if status:
             messages.success(request,'New Forum Successfully Added')
+
+        title = 'سفارش امشب ثبت شد'
+        open_url = '/profile/my_orders'
+        try:
+            name = request.user.profile.first_name
+            body = f'سفارش امشب توسط {name}  ثبت شد جهت مشاهده کلیک کنید'
+        except:
+            body = 'سفارش امشب ثبت شد جهت مشاهده کلیک کنید.'
+
+        try:
+            send_webpush(request=request,code='NIGHT_ORDER',title=title,body=body,url=open_url)
+        except:
+            print('Errror in send notificiation in night food order')
+
+
 
         if required_items=={}:
             return redirect('/profile/my_orders')
