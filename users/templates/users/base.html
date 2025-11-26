@@ -23,6 +23,8 @@
   <link rel="icon" href="{% static 'icons/logo.png' %}" type="image/x-icon" />
 
   <style>
+
+    
 body {
   direction: rtl;
   margin: 0;
@@ -51,6 +53,13 @@ body {
       color: #f9fafb;
       gap: 12px;
       overflow: visible; /* اجازه بده ساب‌منو بیرونش دیده بشه */
+      
+      
+    }
+
+    .topbar-left{
+      overflow-x: auto;  /* اسکرول افقی فعال */
+
     }
 
     .topbar-left,
@@ -158,6 +167,7 @@ body {
       white-space: nowrap;
       position: relative; /* برای مرجع ساب‌منوها */
       overflow: visible;  /* ساب‌منوها بیرون دیده می‌شن */
+      overflow-x: auto;  /* اسکرول افقی فعال */
     }
 
     .menu-item {
@@ -189,6 +199,20 @@ body {
       box-shadow: 0 4px 12px rgba(0,0,0,0.45);
       transform: translateY(-1px);
     }
+
+    .menu::-webkit-scrollbar {
+      height: 8px;  /* ارتفاع نوار اسکرول */
+    }
+
+    .menu::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2); /* رنگ نوار اسکرول */
+      border-radius: 4px;
+    }
+
+    .menu::-webkit-scrollbar-track {
+      background: transparent;  /* رنگ پس زمینه نوار اسکرول */
+    }
+
 
     .has-submenu > a::after {
       content: "▾";

@@ -42,6 +42,9 @@ urlpatterns = [
 
 
     path('orders/print_order/<int:id>', print_order, name='order-show'),
+    path('orders/<int:order_id>/items/', views.order_items_view, name='order_items'),  # Show items for a specific order
+    path('orders/confirm-item/<int:order_id>/<int:item_id>/', views.confirm_item, name='confirm_item'),
+    path('orders/<int:order_id>/confirm-all/', views.confirm_all_items, name='confirm_all_items'),
     # urls.py
 
     path('update-shortage/<int:order_id>/', views.send_shortage_to_buyer, name='update_shortage'),
@@ -68,6 +71,8 @@ urlpatterns = [
     path('profile/show_night_order_material', show_night_order_material, name='show_night_order_material'),
     path('profile/show_night_order_material/submit', night_food_order, name='show_night_order_material_submit'),
     # path('tools/<slug:slug>/',PostDetail.as_view(), name='post_detail'),
+
+    
     path('orders/edit_order/<int:id>', post_edit_quil, name='order-edit'),
     path('orders/show_order/<int:id>', show_order, name='order-show'),
     path('posts/<int:id>/', post_edit_quil, name='post-edit'),

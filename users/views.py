@@ -339,27 +339,10 @@ def create_order(request):
 
         return redirect('/profile/my_orders')
 
-    
-        # else:
-        #     messages.error(request, 'Please correct the following errors:')
-        #     materials = raw_material.objects.all()
-        #     return render(request, 'users/post_list_quil.html', {'materials': materials})
-
 
 
     else:
 
-        # materials = raw_material.objects.all().order_by('-mother_id')
-        # return render(request, 'users/create_order.html', {'materials': materials})
-
-
-
-
-
-        # mother_materials = MotherMaterial.objects.prefetch_related('mother_material').order_by('describe').all()
- 
-        # return render(request, 'users/create_order.html', {'mother_materials': mother_materials})
-    
 
 
         user = request.user
@@ -1028,8 +1011,11 @@ def send_shortage_to_buyer(request, order_id):
         except:
             body = 'لیست خرید جدید آماده شد جهت مشاهده کلیک کنید.'
 
-        send_webpush(request=request,code="BUYER_NOTIFICATION",title=title,body=body)
-
+        try:
+            open_url =f"orders/{order.id}/items/"
+            send_webpush(request=request,code="BUYER_NOTIFICATION",title=title,body=body,url=open_url)
+        except:
+            print('Error in sendwebpush in shoratege to buyer')
         return redirect('/profile/my_orders')
 
     error_page_flow(request=request,title='سفارش موجود نیست',message='خطا در دریافت سفارش از پایگاه داده')
@@ -3290,6 +3276,66 @@ def remove_material_from_category(request, category_id, material_id):
 
 
 
+# View to handle pagination and load orders
+def load_orders(request):
+    # Get the page number from the request
+    page = request.GET.get('page', 1)  # Default to page 1
+    orders = buyer_order_list.objects.all().order_by('-created_at')  # Get orders, newest first
+    
+    # Pagination logic (show 10 orders per page)
+    orders = orders[(int(page) - 1) * 10 : int(page) * 10]
+    
+    orders_data = []
+    for order in orders:
+        orders_data.append({
+            'id': order.id,
+            'name': order.name,
+            'created_at': order.created_at,
+            'total_price': order.total_price,
+            'buyer': order.buyer.username,  # Assuming a related `buyer` field
+        })
+
+    return JsonResponse({'orders': orders_data})
+
+
+
+# View to show items needed in a specific order
+def order_items_view(request, order_id):
+    order = get_object_or_404(ModelCreateOrder, id=order_id)
+    order_items = buyer_order_list.objects.filter(order=order)  # Get all items for the specific order
+    return render(request, 'users/order_items.html', {'order': order, 'order_items': order_items})
+
+
+# View to confirm an item (update is_confirmed to True)
+def confirm_item(request,order_id, item_id):
+    order = get_object_or_404(ModelCreateOrder, id=order_id)
+    order_items = buyer_order_list.objects.filter(order=order)  # Get all items for the specific order
+
+    item = get_object_or_404(buyer_order_list, id=item_id)
+    item.is_confirmed = True
+    item.save()
+    return render(request, 'users/order_items.html', {'order': order, 'order_items': order_items})
+ # Redirect back to the order items page
+
+def confirm_all_items(request, order_id):
+    # Get the order for which you want to confirm the items
+    order = get_object_or_404(ModelCreateOrder, id=order_id)
+    order_items = buyer_order_list.objects.filter(order=order)  # Get all items for the specific order
+    
+    # Get all buyer_order_list items related to this order
+    items_to_confirm = buyer_order_list.objects.filter(order=order)
+    
+    # Loop through each item and set is_confirmed to True
+    for item in items_to_confirm:
+        item.is_confirmed = True
+        item.save()
+    
+    return render(request, 'users/order_items.html', {'order': order, 'order_items': order_items})
+
+
+
+
+
 def error_page_flow(request, title, message):
     return render(request, 'error_page_flow.html', {
         'title': title,
@@ -3313,3 +3359,4 @@ def send_webpush(request,code: str = NotificationStep.code ,title:str='',body:st
             )
         except:
             print('Error in send notification')
+

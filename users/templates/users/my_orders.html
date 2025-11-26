@@ -548,6 +548,9 @@
                       onclick="openQuickView({{ order.id }})">
                 👁 مشاهده سریع
               </button>
+
+
+
               {% if order.created_at %}
                 <a href="/orders/edit_order/{{ order.id }}" class="btn btn-warning">
                   ✏️ ویرایش
@@ -556,6 +559,11 @@
               <a href="/orders/print_order/{{ order.id }}" class="btn btn-success text-white">
                 🖨 چاپ
               </a>
+              
+              <a href="{% url 'order_items' order.id %}" class="btn btn-success text-white">
+                  <i class="fas fa-shopping-cart"></i> لیست خرید
+              </a>
+
               <a href="/order_flow/orders/show_flow/{{ order.id }}" class="btn btn-primary text-white">
                 🔄 چرخه
               </a>
