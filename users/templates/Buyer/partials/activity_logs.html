@@ -40,6 +40,30 @@
               <label for="description" class="form-label">توضیحات</label>
               <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
             </div>
+
+            <!-- Persian Calendar (for Activity Date) -->
+            <div class="mb-3">
+              <label for="activity_date" class="form-label">تاریخ فعالیت</label>
+              <input type="text" id="persianCalendar" name="activity_date" class="form-control" placeholder="تاریخ فعالیت را انتخاب کنید" required>
+            </div>
+
+            <!-- Calendar for Due Date (پیگیری) -->
+            <div class="mb-3">
+              <label for="due_date" class="form-label">تاریخ پیگیری</label>
+              <input type="text" id="dueDateCalendar" name="due_date" class="form-control" placeholder="تاریخ پیگیری را انتخاب کنید" required>
+            </div>
+
+            <!-- Mention Users (Select Team Member) -->
+            <div class="mb-3">
+              <label for="mentioned_user" class="form-label">منشن کردن عضو تیم</label>
+              <select name="mentioned_user" class="form-select">
+                <option value="">هیچ کدام</option>
+                {% for user in users %}
+                  <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
@@ -51,8 +75,6 @@
   </div>
 
 {% else %}
-
-
 
   <h4 class="fw-bold text-primary mb-4">📊 نمودار خرید مواد</h4>
 
@@ -98,7 +120,6 @@
         </div>
         <a href="{% url 'show_factor' f.pre_invoice.id %}" class="btn btn-sm btn-outline-info">مشاهده فاکتور</a>
       </li>
-
     {% endfor %}
   </ul>
 
@@ -108,3 +129,22 @@
   </h5>
 
 {% endif %}
+
+<!-- Include External Scripts for Datepickers -->
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pikaday/jalali.js"></script>
+
+<script>
+  // Persian Calendar
+  var persianCalendar = new Pikaday({
+    field: document.getElementById('persianCalendar'),
+    format: 'YYYY/MM/DD',
+    persian: true,
+  });
+
+  // Due Date Calendar (پیگیری)
+  var dueDateCalendar = new Pikaday({
+    field: document.getElementById('dueDateCalendar'),
+    format: 'YYYY/MM/DD',
+  });
+</script>

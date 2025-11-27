@@ -19,7 +19,7 @@ from users.utils.CalulatedDistance import calculate_distance
 
 from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, CategoryForm, JobForm, MotherMaterialForm, RawMaterialCategoryForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Post, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Nationality, Post, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -89,10 +89,17 @@ from django.contrib.auth.views import LogoutView
 def clean_buyer_names(buyers):
     try:
         for buyer in buyers:
-
-            buyer.first_name = buyer.first_name.replace('�','')
-            buyer.last_name = buyer.last_name.replace('�','')
-            full_name = f"{buyer.first_name} {buyer.last_name or ''}"
+            full_name = ''
+            try:
+                buyer.first_name = buyer.first_name.replace('�','')
+                full_name += f"{buyer.first_name} "
+            except:
+                pass
+            try:
+                buyer.last_name = buyer.last_name.replace('�','')
+                full_name += f"{buyer.last_name or ''}"
+            except:
+                pass
             buyer.short_name = full_name[:40] + ('…' if len(full_name) > 50 else '')
     except:    
         return buyers
@@ -2377,6 +2384,8 @@ def buyer_list(request):
 
     buyers = clean_buyer_names(buyers=buyers)
 
+    nationalities = Nationality.objects.all()
+
 
     try:
         len_buyer = len(buyers)
@@ -2386,6 +2395,7 @@ def buyer_list(request):
         'counts' : len_buyer,
         'buyers': buyers,
         'query': query,
+        'nationalities': nationalities
         
     })
 
