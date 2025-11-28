@@ -2642,7 +2642,7 @@ def activity_presian2english(persian_activity):
 def buyer_activity_detail(request, buyer_id, activity_type):
     activity_type_english = activity_presian2english(activity_type)
     
-    activity_logs = BuyerActivity.objects.filter(buyer_id=buyer_id, activity_type=activity_type_english)
+    activity_logs = BuyerActivity.objects.filter(buyer_id=buyer_id, activity_type=activity_type)
     factor_items = None
     total_price =0
     if activity_type=='فاکتور ها و خرید':
@@ -2658,6 +2658,12 @@ def buyer_activity_detail(request, buyer_id, activity_type):
         # جمع کل قیمت‌ها
         # total_price = sum(item.total_price or 0 for item in factor_items)
 
+
+    try:
+        all_users = User.objects.all()
+    except:
+        all_users = []
+
     return render(request, 'Buyer/partials/activity_logs.html', {
         'logs': activity_logs,
         'buyer_id': buyer_id,
@@ -2665,19 +2671,35 @@ def buyer_activity_detail(request, buyer_id, activity_type):
         'selected_activity_type': activity_type,  # Add this line
         'factors':factor_items,
         'total_price':total_price,
+        'users' :  all_users # Add this line to get all users
     })
 
 def add_buyer_activity(request, buyer_id):
     if request.method == 'POST':
-        activity_type = request.POST.get('activity_type')
-        description = request.POST.get('description')
+        activity_type = request.POST.get('activity_type',None)
+        description = request.POST.get('description','')
+        start_date = request.POST.get('start_date',None)
+        follow_date = request.POST.get('follow_date',None)
+        doing_date = request.POST.get('doing_date',None)
+
+        if start_date is not None:
+            start_date = convert_jalali_to_gregorian(start_date)
+        if follow_date is not None:
+            follow_date = convert_jalali_to_gregorian(follow_date)
+        if doing_date is not None:
+            doing_date = convert_jalali_to_gregorian(doing_date)
+
+
 
         BuyerActivity.objects.create(
         
             buyer_id=buyer_id,
             activity_type=activity_type,
             description=description,
-            created_by=request.user  # if your model supports it
+            created_by=request.user,  # if your model supports it
+            created_at = start_date,
+            next_followup = follow_date,
+            doing_date = doing_date
         )
         return redirect('buyer_detail', buyer_id=buyer_id)
 
@@ -2709,12 +2731,14 @@ def show_factor(request, pk):
 import jdatetime
 
 def convert_jalali_to_gregorian(jalali_date_str):
-    # فرض: فرمت ورودی '۱۴۰۴/۰۵/۱۴' و به صورت فارسی
-    jalali_date_str = jalali_date_str.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
-    year, month, day = map(int, jalali_date_str.split('/'))
-    gregorian_date = jdatetime.date(year, month, day).togregorian()
-    return gregorian_date.strftime('%Y-%m-%d')
-
+    try:
+        # فرض: فرمت ورودی '۱۴۰۴/۰۵/۱۴' و به صورت فارسی
+        jalali_date_str = jalali_date_str.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
+        year, month, day = map(int, jalali_date_str.split('/'))
+        gregorian_date = jdatetime.date(year, month, day).togregorian()
+        return gregorian_date.strftime('%Y-%m-%d')
+    except:
+        return None
 
 
 @login_required

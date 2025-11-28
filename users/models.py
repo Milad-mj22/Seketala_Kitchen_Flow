@@ -741,9 +741,11 @@ class BuyerActivity(models.Model):
         blank=True,
         verbose_name="کاربر ثبت‌کننده"
     )
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    
     next_followup = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پیگیری بعدی")
 
+    doing_date =  models.DateTimeField(null=True, blank=True, verbose_name="تاریخ انجام ")
 
     logo = models.ImageField(
         upload_to='activity_logos/',
@@ -752,10 +754,16 @@ class BuyerActivity(models.Model):
         verbose_name='لوگو فعالیت'
     )
 
-    
+    # ⬇️ این هم فیلد mention کاربران
+    mentioned_users = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name='mentioned_in_activities',
+        verbose_name="کاربران منشن‌شده",
+    )
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-created_at']
         verbose_name = "فعالیت خریدار"
         verbose_name_plural = "فعالیت‌های خریدار"
 

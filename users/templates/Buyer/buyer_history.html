@@ -122,15 +122,6 @@
       <div><strong>آدرس:</strong> {{ buyer.address }}</div>
       <div><strong>تاریخ ثبت:</strong> {{ buyer.created_date|to_jalali }}</div>
       
-          <label for="start_date" class="form-label">تاریخ شروع</label>
-    <input type="text"
-            id="start_date"
-            name="start_date"
-            class="form-control"
-            placeholder="تاریخ شروع را انتخاب کنید"
-            value="{% if form.start_date.value %}{{ form.start_date.value|to_jalali }}{% endif %}"
-            autocomplete="off" 
-            required/>
 
       
       <hr>
