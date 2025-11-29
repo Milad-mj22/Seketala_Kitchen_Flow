@@ -1,9 +1,15 @@
 
+from Constatns import Constants
 from users.models import MenuItem, UserRole, jobs
 
 
 
 def menu_items_processor(request):
+   
+    SITE_LOGO = Constants.LOGO_PATH
+    SITE_NAME = Constants.NAME
+
+   
     try:
         user = request.user
         if not user.is_authenticated:
@@ -22,12 +28,11 @@ def menu_items_processor(request):
         items = items.prefetch_related('submenus')
 
 
-
         # گرفتن آیتم‌های منو مرتبط با نقش‌ها
         # items = MenuItem.objects.filter(roles__id__in=roles).distinct().order_by('order')
 
-        return {'menu_items': items}    
+        return {'menu_items': items , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME}    
     
     except:
-        #print('Error in menu_items_processor')
-        return {'menu_items': None}    
+        return {'menu_items': None , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME}    
+

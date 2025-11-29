@@ -6,7 +6,7 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>سکه طلا</title>
+  <title>{{ SITE_NAME }}</title>
 
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#0d6efd">
@@ -14,13 +14,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     <!-- آیکون برای موبایل -->
-    <link rel="icon" sizes="192x192" href="{% static 'icons/logo.png' %}">
+    <link rel="icon" sizes="192x192" href="{% static  SITE_LOGO %}">
   <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
-  <link rel="icon" href="{% static 'icons/logo.png' %}" type="image/x-icon" />
+  <link rel="icon" href="{% static  SITE_LOGO %}" type="image/x-icon" />
 
   <style>
 
