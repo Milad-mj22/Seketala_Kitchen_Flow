@@ -11,6 +11,9 @@ from tinymce.models import HTMLField
 from users.fields import JalaliDateField  # Adjust the import path as needed
 from phonenumber_field.modelfields import PhoneNumberField
 from khayyam import JalaliDatetime
+from timeTracker.models import Team
+
+
 try:
     RESAMPLING = Image.Resampling.LANCZOS
 except AttributeError:
@@ -135,6 +138,13 @@ class Profile(models.Model):
     push_auth = models.TextField(blank=True, null=True)
 
     categories = models.ManyToManyField(MaterialCategory, blank=True, related_name="users_category")
+
+
+    # Teams the user belongs to (member of)
+    teams = models.ManyToManyField(Team, related_name='members', blank=True)
+    admin_teams = models.ManyToManyField(Team, related_name='admins', blank=True)
+
+
 
 
 

@@ -205,7 +205,7 @@ class CustomLoginView(LoginView):
 
         # SEND YOUR EXTRA VARIABLES HERE
         context["PWA_DESCRIPTION"] = Constants.PWA_DESCRIPTION
-        context["SITE_LOGO"] = Constants.LOGO_PATH  # path inside static/
+        context["SITE_LOGO"] = Constants.LOGIN_LOGO_PATH  # path inside static/
         context["LOGIN_BANNER"] = Constants.LOGIN_BANNER  # path inside static/
 
         context["FOOTER_MESSAGE"] = "Powered by Sekke Tala"  # example

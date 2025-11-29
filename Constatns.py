@@ -4,8 +4,9 @@ class Base:
 
         seke = 'seke'
         moallem = 'moallem'
+        dorsa = 'drosa'
 
-    name = Name.moallem
+    name = Name.dorsa
 
 class Constants:
     if Base.name == Base.Name.seke:
@@ -27,3 +28,14 @@ class Constants:
         LOGO_PATH = 'icons/moallem_logo.png'
         ALT_LOGO = 'لوگوی خانه معلم'
         LOGIN_BANNER = 'images/banner.png'
+
+    elif Base.name == Base.Name.dorsa:
+        NAME = 'شرکت درصا'
+        PWA_NAME = 'مدیریت شرکت درصا'
+        PWA_DESCRIPTION = 'مدیریت زمانی و نیروهای هوشمند شرکت درصا'
+        PWA_COLOR = "#2723FC"
+        PWA_BACKGROUND_COLOR = "#74B0FF"
+        LOGO_PATH = 'icons/dorsa_logo.png'
+        LOGIN_LOGO_PATH = 'icons/d_logo.png'
+        ALT_LOGO = 'لوگوی شرکت درصا'
+        LOGIN_BANNER = 'images/dorsa_timing.png'
