@@ -101,3 +101,5 @@ onvif-zeep
 
 vidgear
 selenium
+
+django-pwa
