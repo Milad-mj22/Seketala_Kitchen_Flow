@@ -5,282 +5,350 @@
 {% load custom_tags %}
 
 <style>
+  .tasks-page {
+    min-height: calc(100vh - 80px);
+    padding: 2rem 1.5rem 3rem;
+    background: radial-gradient(circle at top left, #1f2937 0, #020617 45%, #020617 100%);
+    font-family: "Vazirmatn", sans-serif;
+    direction: rtl;
+    color: #e5e7eb;
+  }
 
-.kanban-board {
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-}
-
-.kanban-column {
-  flex: 1;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1rem;
-  min-height: 400px;
-}
-
-.kanban-column h3 {
-  margin-top: 0;
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.task-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  min-height: 100px;
-}
-
-.task-item {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-  cursor: grab;
-  transition: box-shadow 0.2s;
-}
-
-.task-item:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-
-
-</style>
-<form method="get" style="margin-bottom: 1.5rem;">
-<form method="get" style="margin-bottom: 1.5rem;">
-  <div style="
+  .filters-bar {
+    max-width: 1200px;
+    margin: 0 auto 1.5rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem;
-  ">
+    gap: 0.75rem;
+  }
 
-    <!-- Team Filter -->
-    <select name="team" id="team" style="
-      appearance: none;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: white;
-      font-size: 14px;
-    ">
-      <option value="">Team ⏷</option>
-      {% for team in teams %}
-        <option value="{{ team.id }}" {% if team.id|stringformat:"s" == selected_team_id %}selected{% endif %}>
-          {{ team.name }}
-        </option>
-      {% endfor %}
-    </select>
+  .filters-select {
+    appearance: none;
+    padding: 0.45rem 1.8rem 0.45rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    font-size: 0.85rem;
+    min-width: 150px;
+    position: relative;
+  }
 
+  .filters-select option {
+    background: #020617;
+    color: #e5e7eb;
+  }
 
-    <!-- Priority Filter -->
-    <select name="priority" id="priority">
-      <option value="">All Priorities</option>
-      <option value="1" {% if selected_priority == '1' %}selected{% endif %}>Priority 1</option>
-      <option value="2" {% if selected_priority == '2' %}selected{% endif %}>Priority 2</option>
-      <option value="3" {% if selected_priority == '3' %}selected{% endif %}>Priority 3</option>
-    </select>
+  .filters-button {
+    padding: 0.45rem 1.4rem;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(79, 70, 229, 0.5);
+    transition: 0.15s ease;
+  }
 
+  .filters-button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
 
+  .card-center {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+  }
 
-    <!-- User Filter -->
-    <select name="user" id="user" style="
-      appearance: none;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: white;
-      font-size: 14px;
-    ">
-      <option value="">User ⏷</option>
-      {% for user in users %}
-        <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_user_id %}selected{% endif %}>
-          {{ user.username }}
-        </option>
-      {% endfor %}
-    </select>
+  .kanban-board {
+    display: flex;
+    gap: 1.25rem;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
 
-    <!-- Sprint Filter -->
-    <select name="sprint" id="sprint" style="
-      appearance: none;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: white;
-      font-size: 14px;
-    ">
-      <option value="">Sprint ⏷</option>
-      {% for sprint in sprints %}
-        <option value="{{ sprint.id }}" {% if sprint.id|stringformat:"s" == selected_sprint_id %}selected{% endif %}>
-          {{ sprint.name }}
-        </option>
-      {% endfor %}
-    </select>
+  .kanban-column {
+    flex: 1;
+    min-width: 260px;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 1.2rem;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    min-height: 420px;
+  }
 
+  .kanban-column-header {
+    text-align: center;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+  }
 
+  .kanban-column-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
 
+  .kanban-column[data-status="todo"] .kanban-column-header h3 {
+    color: #f97373;
+  }
 
-    <button type="submit" style="padding: 6px 12px; background: #2563eb; color: white; border: none; border-radius: 6px;">
-      Apply
-    </button>
+  .kanban-column[data-status="doing"] .kanban-column-header h3 {
+    color: #facc15;
+  }
 
-  </div>
-</form>
+  .kanban-column[data-status="done"] .kanban-column-header h3 {
+    color: #4ade80;
+  }
 
+  .task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-height: 100px;
+    text-align: right;
+  }
 
-<div class="card-center" style="align-items: start;">
+  .task-item {
+    background: rgba(15, 23, 42, 0.98);
+    border-radius: 0.9rem;
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    cursor: grab;
+    transition:
+      box-shadow 0.18s ease,
+      transform 0.12s ease,
+      border-color 0.18s ease,
+      background 0.18s ease;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+  }
 
+  .task-item:hover {
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.7);
+    transform: translateY(-2px);
+  }
 
+  .task-item strong {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: #f9fafb;
+  }
 
+  .task-item small {
+    display: block;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
 
+  /* Priority colors */
+  .task-item.priority-1 {
+    border-color: rgba(248, 113, 113, 0.9);
+    background: rgba(248, 113, 113, 0.08);
+  }
 
+  .task-item.priority-2 {
+    border-color: rgba(250, 204, 21, 0.9);
+    background: rgba(250, 204, 21, 0.08);
+  }
 
+  .task-item.priority-3,
+  .task-item.priority-4,
+  .task-item.priority-5 {
+    border-color: rgba(74, 222, 128, 0.9);
+    background: rgba(34, 197, 94, 0.08);
+  }
 
-  <div class="kanban-board">
+  /* Modal */
+  .modal {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.75);
+    display: none;
+  }
 
-    <div class="kanban-column" data-status="todo">
-      <div style="text-align: center; display: block;">
-      <h3>To Do</h3>
-      </div>
-      <ul id="todo" class="task-list" data-status="todo"  style="text-align: right; display: block;">
-        {% for task in tasks %}
-          {% if task.status == "todo" %}
+  .modal-content {
+    background: rgba(15, 23, 42, 0.98);
+    padding: 1.5rem;
+    margin: 4% auto;
+    max-width: 650px;
+    border-radius: 1.2rem;
+    color: #e5e7eb;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+  }
 
-            <li class="task-item" data-task-id="{{ task.id }}" 
-                style="
-                    {% if task.priority == 1 %} 
-                        background-color: rgba(255, 99, 71, 0.2); /* light red */
-                    {% elif task.priority == 2 %}
-                        background-color: rgba(255, 255, 0, 0.2); /* light yellow */
-                    {% elif task.priority >= 3 %}
-                        background-color: rgba(34, 139, 34, 0.2); /* light green */
-                    {% endif %}
-                ">
+  .close {
+    float: left;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #9ca3af;
+  }
 
+  .close:hover {
+    color: #f97373;
+  }
 
-              <strong>{{ task.title }}</strong><br>
-              <strong>اهمیت: {{ task.priority }}</strong><br>
-              <small><b>تیم:</b> {{ task.story.team.name }}</small>
-              <small><b>اسپرینت:</b> {{ task.story.sprint.name }}</small>
-              <small><b>Story:</b> {{ task.story.title }}</small><br>
-              <small><b>Assigned to:</b> </small>
-            
-                {% if task.assigned_to %}
-                {{ task.assigned_to.username }}
-                {% else %}
-                Unassigned
-                {% endif %}
+  @media (max-width: 768px) {
+    .tasks-page {
+      padding: 1.5rem 0.75rem 3rem;
+    }
+    .kanban-board {
+      gap: 0.75rem;
+    }
+  }
+</style>
 
-            </li>
-          {% endif %}
+<div class="tasks-page">
+
+  <form method="get" style="margin-bottom: 0;">
+    <div class="filters-bar">
+      <!-- Team Filter -->
+      <select name="team" id="team" class="filters-select">
+        <option value="">Team ⏷</option>
+        {% for team in teams %}
+          <option value="{{ team.id }}" {% if team.id|stringformat:"s" == selected_team_id %}selected{% endif %}>
+            {{ team.name }}
+          </option>
         {% endfor %}
-      </ul>
-    </div>
+      </select>
 
-    <div class="kanban-column" data-status="doing">
-      <div style="text-align: center; display: block;">
+      <!-- Priority Filter -->
+      <select name="priority" id="priority" class="filters-select">
+        <option value="">All Priorities</option>
+        <option value="1" {% if selected_priority == '1' %}selected{% endif %}>Priority 1</option>
+        <option value="2" {% if selected_priority == '2' %}selected{% endif %}>Priority 2</option>
+        <option value="3" {% if selected_priority == '3' %}selected{% endif %}>Priority 3</option>
+      </select>
 
-      <h3>Doing</h3>
-      </div>
-      <ul id="doing" class="task-list" data-status="doing"  style="text-align: right; display: block;">
-        {% for task in tasks %}
-          {% if task.status == "doing" %}
-            <li class="task-item" data-task-id="{{ task.id }}" 
-                style="
-                    {% if task.priority == 1 %} 
-                        background-color: rgba(255, 99, 71, 0.2); /* light red */
-                    {% elif task.priority == 2 %}
-                        background-color: rgba(255, 255, 0, 0.2); /* light yellow */
-                    {% elif task.priority >= 3 %}
-                        background-color: rgba(34, 139, 34, 0.2); /* light green */
-                    {% endif %}
-                ">
-              <strong>{{ task.title }}</strong><br>
-              <strong>Priority: {{ task.priority }}</strong><br>
-
-              <small><b>Team:</b> {{ task.story.team.name }}</small><br>
-              <small><b>Sprint:</b> {{ task.story.sprint.name }}</small><br>
-              <small><b>Story:</b> {{ task.story.title }}</small><br>
-
-              <small><b>Assigned to:</b> </small>
-            
-                {% if task.assigned_to %}
-                {{ task.assigned_to.username }}
-                {% else %}
-                Unassigned
-                {% endif %}
-
-
-
-            </li>
-          {% endif %}
+      <!-- User Filter -->
+      <select name="user" id="user" class="filters-select">
+        <option value="">User ⏷</option>
+        {% for user in users %}
+          <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_user_id %}selected{% endif %}>
+            {{ user.username }}
+          </option>
         {% endfor %}
-      </ul>
-    </div>
+      </select>
 
-    <div class="kanban-column" data-status="done">
-      <div style="text-align: center; display: block;">
-      <h3>Done</h3>
-      </div>
-      <ul id="done" class="task-list" data-status="done" style="text-align: right; display: block;">
-        {% for task in tasks %}
-          {% if task.status == "done" %}
-            <li class="task-item" data-task-id="{{ task.id }}" 
-                style="
-                    {% if task.priority == 1 %} 
-                        background-color: rgba(255, 99, 71, 0.2); /* light red */
-                    {% elif task.priority == 2 %}
-                        background-color: rgba(255, 255, 0, 0.2); /* light yellow */
-                    {% elif task.priority >= 3 %}
-                        background-color: rgba(34, 139, 34, 0.2); /* light green */
-                    {% endif %}
-                ">
-              <strong>{{ task.title }}</strong><br>
-              <strong>Priority: {{ task.priority }}</strong><br>
-
-
-              <strong>Goal Time :{{ task.goal_time }}</strong><br>
-              <small><b>Team:</b> {{ task.story.team.name }}</small><br>
-              <small><b>Sprint:</b> {{ task.story.sprint.name }}</small><br>
-             
-              <small><b>Story:</b> {{ task.story.title }}</small><br>
-              <small><b>Assigned to:</b> </small>
-            
-                {% if task.assigned_to %}
-                {{ task.assigned_to.username }}
-                {% else %}
-                Unassigned
-                {% endif %}
-
-
-
-            </li>
-          {% endif %}
+      <!-- Sprint Filter -->
+      <select name="sprint" id="sprint" class="filters-select">
+        <option value="">Sprint ⏷</option>
+        {% for sprint in sprints %}
+          <option value="{{ sprint.id }}" {% if sprint.id|stringformat:"s" == selected_sprint_id %}selected{% endif %}>
+            {{ sprint.name }}
+          </option>
         {% endfor %}
-      </ul>
+      </select>
+
+      <button type="submit" class="filters-button">Apply</button>
     </div>
+  </form>
 
+  <div class="card-center">
+    <div class="kanban-board">
+
+      <!-- To Do -->
+      <div class="kanban-column" data-status="todo">
+        <div class="kanban-column-header">
+          <h3>To Do</h3>
+        </div>
+        <ul id="todo" class="task-list" data-status="todo">
+          {% for task in tasks %}
+            {% if task.status == "todo" %}
+              <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <strong>اهمیت: {{ task.priority }}</strong>
+                <small><b>تیم:</b> {{ task.story.team.name }}</small>
+                <small><b>اسپرینت:</b> {{ task.story.sprint.name }}</small>
+                <small><b>Story:</b> {{ task.story.title }}</small>
+                <small><b>Assigned to:</b>
+                  {% if task.assigned_to %}
+                    {{ task.assigned_to.username }}
+                  {% else %}
+                    Unassigned
+                  {% endif %}
+                </small>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Doing -->
+      <div class="kanban-column" data-status="doing">
+        <div class="kanban-column-header">
+          <h3>Doing</h3>
+        </div>
+        <ul id="doing" class="task-list" data-status="doing">
+          {% for task in tasks %}
+            {% if task.status == "doing" %}
+              <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <strong>Priority: {{ task.priority }}</strong>
+                <small><b>Team:</b> {{ task.story.team.name }}</small>
+                <small><b>Sprint:</b> {{ task.story.sprint.name }}</small>
+                <small><b>Story:</b> {{ task.story.title }}</small>
+                <small><b>Assigned to:</b>
+                  {% if task.assigned_to %}
+                    {{ task.assigned_to.username }}
+                  {% else %}
+                    Unassigned
+                  {% endif %}
+                </small>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Done -->
+      <div class="kanban-column" data-status="done">
+        <div class="kanban-column-header">
+          <h3>Done</h3>
+        </div>
+        <ul id="done" class="task-list" data-status="done">
+          {% for task in tasks %}
+            {% if task.status == "done" %}
+              <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <strong>Priority: {{ task.priority }}</strong>
+                <strong>Goal Time: {{ task.goal_time }}</strong>
+                <small><b>Team:</b> {{ task.story.team.name }}</small>
+                <small><b>Sprint:</b> {{ task.story.sprint.name }}</small>
+                <small><b>Story:</b> {{ task.story.title }}</small>
+                <small><b>Assigned to:</b>
+                  {% if task.assigned_to %}
+                    {{ task.assigned_to.username }}
+                  {% else %}
+                    Unassigned
+                  {% endif %}
+                </small>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
   </div>
-</div>
 
-
-
-
-
-
-
-<!-- Modal -->
-<div id="taskModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <div id="modal-body"></div>
+  <!-- Modal -->
+  <div id="taskModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="modal-body"></div>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -293,14 +361,11 @@
           document.getElementById('modal-body').innerHTML = data.html;
           document.getElementById('taskModal').style.display = 'block';
 
-          // Bind submit
           document.getElementById('log-time-form')?.addEventListener('submit', function (e) {
             e.preventDefault();
             fetch(`/timeTracker/tasks/${taskId}/modal/`, {
               method: 'POST',
-              headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-              },
+              headers: { 'X-CSRFToken': '{{ csrf_token }}' },
               body: new FormData(this)
             }).then(resp => resp.json()).then(data => {
               document.getElementById('modal-body').innerHTML = data.html;
@@ -310,45 +375,13 @@
     });
   });
 
-  // Close modal
   document.querySelector('.close').onclick = function () {
     document.getElementById('taskModal').style.display = 'none';
   };
+
+  // Include SortableJS
 </script>
 
-<style>
-.modal {
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-}
-.modal-content {
-  background: #fff;
-  padding: 1.5rem;
-  margin: 5% auto;
-  max-width: 600px;
-  border-radius: 10px;
-}
-.close {
-  float: right;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-</style>
-
-
-
-
-
-
-
-
-
-
-
-<!-- Include SortableJS -->
 <script src="{% static 'js/Sortable.min.js' %}"></script>
 <script>
   ['todo', 'doing', 'done'].forEach(status => {
@@ -359,7 +392,6 @@
         const taskId = evt.item.dataset.taskId;
         const newStatus = evt.to.dataset.status;
 
-        // AJAX request to update status
         fetch(`/timeTracker/tasks/${taskId}/status/`, {
           method: 'POST',
           headers: {
@@ -376,4 +408,5 @@
     });
   });
 </script>
+
 {% endblock %}
