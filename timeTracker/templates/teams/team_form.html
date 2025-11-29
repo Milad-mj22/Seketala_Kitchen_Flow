@@ -1,0 +1,25 @@
+{% extends "users/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card-center">
+  <div class="card">
+    <div  style="text-align: center; display: block;">
+    <h2>{{ title }}</h2>
+    </div>  
+
+    <!-- Scrollable form area -->
+    <div class="form-scroll-area" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+      <form method="post" class="modern-form">
+        <div  style="text-align: right; display: block;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+    </div>
+
+    <a href="{% url 'team_list' %}" class="back-link">← Back to Team List</a>
+
+  </div>
+</div>
+{% endblock %}

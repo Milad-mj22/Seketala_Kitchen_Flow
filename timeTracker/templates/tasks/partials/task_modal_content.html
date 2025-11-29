@@ -1,0 +1,47 @@
+{% load custom_tags %}
+
+<h3>{{ task.title }}</h3>
+<p><b>Story:</b> {{ task.story.title }}</p>
+<p><b>Team:</b> {{ task.story.team.name }}</p>
+<p><b>Assigned to:</b></p>
+{% if task.assigned_to %}
+{{ task.assigned_to.username }}
+{% else %}
+Unassigned
+{% endif %}
+
+
+
+<hr>
+<form id="log-time-form" method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Save Time Entry</button>
+</form>
+
+<hr>
+<h4>Time Logs</h4>
+<ul>
+  {% for entry in entries %}
+    <li>{{ entry.user.username }} | {{ entry.datetime|to_jalali }} — {{ entry.hours_spent }} hours</li>
+  
+  
+      <!-- Delete button for each entry -->
+      <form method="post" action="{% url 'delete_time_entry' entry.id %}" style="display:inline;" onsubmit="return confirm('آیا از حذف این ساعت مطمئن هستید؟');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 6px;">
+          🗑️ حذف
+        </button>
+  
+    {% empty %}
+    <li>No time logged yet.</li>
+  {% endfor %}
+</ul>
+
+
+<form method="post" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('آیا از حذف این تسک مطمئن هستید؟');" style="margin-top: 1rem;">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger" style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 6px;">
+    🗑️ حذف تسک
+  </button>
+</form>

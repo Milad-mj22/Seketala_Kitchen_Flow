@@ -1,0 +1,27 @@
+{% extends "users/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card-center" dir="rtl">
+  <div class="card">
+    <div  style="text-align: center; display: block;">
+    <h2>{{ title }}</h2>
+    </div>
+    <form method="post" class="modern-form">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="floating-label-container">
+          {{ field }}
+          {{ field.label_tag }}
+          {% if field.errors %}
+            <div class="form-error">{{ field.errors|striptags }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn-primary">Save</button>
+    </form>
+
+    <a href="{% url 'sprint_list' %}" class="back-link">← بازگشت به لیست اسپرینت‌ها</a>
+  </div>
+</div>
+
+{% endblock %}

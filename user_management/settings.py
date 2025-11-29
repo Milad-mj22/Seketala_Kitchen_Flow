@@ -100,7 +100,11 @@ INSTALLED_APPS = [
     'FoodPrice',
     'vault',
     'pwa',
-    'Notification'
+    'Notification',
+    'Missions',
+    'Projects',
+    'TasksManager',
+    'timeTracker'
 
 ]
 

@@ -1,0 +1,40 @@
+{% extends "users/base.html" %}
+{% block title %}Teams{% endblock %}
+{% block content %}
+<div class="card-center">
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">Teams</h2>
+      <a href="{% url 'team_create' %}" class="btn-primary">+ New Team</a>
+    </div>
+
+    {% if teams %}
+      <ul class="team-list">
+        {% for team in teams %}
+          <li class="team-item">
+            <div>
+              <div  style="text-align: center; display: block;">
+              <strong>{{ team.name }}</strong><br>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; text-align: right">
+                <!-- Admins displayed on the first line -->
+                <div><span class="label">Admins:</span> {{ team.admins.all|join:", " }}</div>
+                <!-- Members displayed on the second line -->
+                <div><span class="label">Members:</span> {{ team.members.all|join:", " }}</div>
+              </div>
+            </div>
+            
+            {% if request.user.profile.position.level <= 4 %}
+              <a href="{% url 'team_edit' team.pk %}" class="btn-outline">Edit</a>
+            {% endif %}
+            <hr>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No teams found.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

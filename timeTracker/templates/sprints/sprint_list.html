@@ -1,0 +1,33 @@
+{% extends "users/base.html" %}
+{% block title %}Sprints{% endblock %}
+{% block content %}
+<div class="card-center">
+  <div class="card">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">Sprints</h2>
+      <a href="{% url 'sprint_create' %}" class="btn-primary">+ New Sprint</a>
+    </div>
+
+    {% if sprints %}
+      <ul class="sprint-list">
+        {% for sprint in sprints %}
+          <li class="sprint-item">
+            <div>
+              <strong>{{ sprint.name }}</strong><br>
+              <span class="label">Dates:</span> {{ sprint.start_date }} → {{ sprint.end_date }}
+            </div>
+            <!-- Edit button for each sprint -->
+            <a href="{% url 'sprint_edit' sprint.id %}" class="btn btn-outline-primary" style="margin-top: 8px;">
+              Edit
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No sprints found.</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

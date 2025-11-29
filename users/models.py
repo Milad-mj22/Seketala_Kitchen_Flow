@@ -97,6 +97,23 @@ class MaterialCategory(models.Model):
         return self.name
 
 
+class Department(models.Model):
+    """
+    Represents a department in the company (e.g., Mechanical, Electrical, Software, Management).
+    """
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-name']
+        
+        
+
+
 
 # Extending User Model Using a One-To-One Link
 class Profile(models.Model):

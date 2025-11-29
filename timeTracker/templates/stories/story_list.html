@@ -1,0 +1,41 @@
+{% extends "users/base.html" %}
+{% block title %}Stories{% endblock %}
+{% block content %}
+<div class="card-center">
+
+<div class="card">
+  <h2>Stories</h2>
+
+  <!-- Team Filter -->
+  <form method="get" style="margin-bottom: 1rem;">
+    <label for="team">Filter by Team:</label>
+    <select name="team" id="team" onchange="this.form.submit()">
+      <option value="">All Teams</option>
+      {% for team in admin_teams %}
+        <option value="{{ team.id }}" {% if selected_team and selected_team.id == team.id %}selected{% endif %}>
+          {{ team.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <a class="back-link" href="{% url 'story_create' %}">+ New Story</a>
+
+  <!-- Scrollable container for stories -->
+  <div style="max-height: 400px; overflow-y: auto; margin-top: 1rem;">
+    <ul>
+      {% for story in stories %}
+        <li>
+          <strong>{{ story.title }}</strong> — {{ story.team.name }} | {{ story.sprint.name }}
+          [<a href="{% url 'story_edit' story.pk %}">Edit</a>]
+          [<a href="{% url 'story_delete' story.pk %}">Delete</a>]
+        </li>
+      {% empty %}
+        <li>No stories found.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+</div>
+</div>
+{% endblock %}

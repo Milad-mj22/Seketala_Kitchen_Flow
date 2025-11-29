@@ -1,0 +1,40 @@
+{% extends "users/base.html" %}
+{% block content %}
+
+
+<!-- Include Select2 CSS -->
+<!-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> -->
+
+<!-- Include Select2 JS -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Apply Select2 to specific fields
+    const storySelect = document.getElementById("id_story");
+    const userSelect = document.getElementById("id_assigned_to");
+
+    if (storySelect) {
+      $(storySelect).select2({ width: '100%', placeholder: "Select a story" });
+    }
+
+    if (userSelect) {
+      $(userSelect).select2({ width: '100%', placeholder: "Assign to a user" });
+    }
+  });
+</script>
+
+<body>
+<div class="card-center">
+  <div class="card">
+    <h2>{{ title }}</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Create Task</button>
+    </form>
+    <a class="back-link" href="{% url 'sprint_list' %}">← Back to Sprints</a>
+  </div>
+</div>
+
+</body>
+{% endblock %}
