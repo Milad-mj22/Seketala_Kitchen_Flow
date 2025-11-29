@@ -52,12 +52,7 @@
         <p class="lead">این سامانه برای <strong>{{ company_name }}</strong> جهت استفاده از ابزارهای توسعه‌یافته ایجاد شده است.</p>
         <hr>
         {% if user.is_authenticated %}
-            <form id="logout-form" method="POST" action="{% url 'logout' %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-primary btn-lg">
-                    <i class="bi bi-box-arrow-right"></i> خروج
-                </button>
-            </form>
+
 
             <button id="subscribe-btn" class="btn btn-outline-success btn-lg">
                 <i class="bi bi-bell"></i> فعال‌سازی اعلان‌ها

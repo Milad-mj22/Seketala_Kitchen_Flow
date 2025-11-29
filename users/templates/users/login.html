@@ -290,11 +290,7 @@
   <h4 class="form-title mb-1 rtl-right" id="formTitle" style="text-align:right;">ورود به حساب</h4>
   <div class="form-desc mb-3 rtl-right" id="formDesc" style="text-align:right;">لطفاً اطلاعات ورود خود را وارد کنید.</div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} mb-3 rtl-right" style="text-align:right;">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+
 
   {% if form.errors %}
     <div class="alert alert-danger alert-dismissible fade show mb-3 shake rtl-right" role="alert" style="text-align:right;">
@@ -347,12 +343,6 @@
               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             </span>
           </button>
-
-          <div class="d-flex justify-content-between mt-3 helper">
-            <a href="{% url 'password_reset' %}" class="rtl-right" style="text-align:right;">فراموشی رمز عبور</a>
-            <!-- register REMOVED on purpose -->
-            <span></span>
-          </div>
 
           <div class="note mt-4 rtl-right" style="text-align:right;">
             با ورود، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید.
