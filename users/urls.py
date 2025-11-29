@@ -1,4 +1,6 @@
 from django.urls import path
+
+from users.manifest_generator import manifest
 from .views import  add_buyer_activity, add_material_to_category, buyer_activity_detail, buyer_attr_manage, buyer_dashboard, buyer_dashboard_partial, buyer_dashboard_view, buyer_detail, buyer_login_view, buyer_logout_view, categories_list, category_create, category_delete, category_detail, category_list, category_update, confirm_delete_buyer_request, confirm_delete_view, confirm_purchase_view, delete_buyer_activity, edit_buyer_activity, logout_view, mother_material_add, mother_material_edit, mother_material_list, otp_send, otp_verify, post_login_redirect, raw_material_add, raw_material_delete, raw_material_edit, raw_material_list, reject_delete_buyer_request, remove_material_from_category, review_delete_buyers_requests, show_factor,create_user_view, daily_report_view, delete_buyer, delete_buyer_attribute, delete_user, edit_user, error_page, home, job_create_view, job_delete_view, job_edit_view, job_list_view, manage_role_access, material_composition_view, no_access, profile, RegisterView, send_test_notification, show_menu_options,tools \
         ,my_orders,add_raw_material,post_edit_quil\
         ,create_order,add_mother_material,show_order,snapp,show_restaurant_list,\
@@ -175,6 +177,8 @@ urlpatterns = [
     path("category/<int:category_id>/remove/<int:material_id>/",
         remove_material_from_category,
         name="remove_material_from_category"),
+
+    path("manifest.json", manifest, name="manifest"),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

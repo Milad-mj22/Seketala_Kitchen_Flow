@@ -198,6 +198,19 @@ def save_subscription(request):
 
 class CustomLoginView(LoginView):
     form_class = LoginForm
+    template_name = "login.html"   # your login page template name
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # SEND YOUR EXTRA VARIABLES HERE
+        context["PWA_DESCRIPTION"] = Constants.PWA_DESCRIPTION
+        context["SITE_LOGO"] = Constants.LOGO_PATH  # path inside static/
+        context["LOGIN_BANNER"] = Constants.LOGIN_BANNER  # path inside static/
+
+        context["FOOTER_MESSAGE"] = "Powered by Sekke Tala"  # example
+
+        return context
 
     def form_valid(self, form):
         remember_me = form.cleaned_data.get('remember_me')
@@ -210,32 +223,22 @@ class CustomLoginView(LoginView):
             messages.error(self.request, 'کاربری با این نام وجود ندارد.')
             return self.form_invalid(form)
 
-        # Now check if Profile exists for that user
         try:
             profile = user.profile
         except ObjectDoesNotExist:
             messages.error(self.request, 'پروفایل کاربر یافت نشد.')
             return self.form_invalid(form)
 
-
-
         if not remember_me:
             self.request.session.set_expiry(0)
-            self.request.session.modified = True
 
-
-
-        # انجام ورود
         response = super().form_valid(form)
-        # بررسی اینکه آیا پروفایل وجود دارد یا نه
+
         try:
             self.request.user.profile
         except ObjectDoesNotExist:
-            messages.error(self.request, 'پروفایل شما وجود ندارد. لطفاً با مدیر سیستم تماس بگیرید.')
-            
+            messages.error(self.request, 'پروفایل شما وجود ندارد.')
             return redirect(reverse_lazy('login'))
-
-
 
         return response
 

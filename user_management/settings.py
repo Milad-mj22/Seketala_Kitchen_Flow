@@ -348,20 +348,26 @@ PWA_APP_BACKGROUND_COLOR = Constants.PWA_BACKGROUND_COLOR
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_SCOPE = '/'
 PWA_APP_START_URL = '/'
+
+from django.templatetags.static import static
 PWA_APP_ICONS = [
     {
-        'src': '/static/icons/logo.jpg',
-        'sizes': '192x192'
+        'src': (Constants.LOGO_PATH),
+        'sizes': '192x192',
+        'type': 'image/png'
     },
     {
-        'src': '/static/icons/logo.jpg',
-        'sizes': '512x512'
+        'src': (Constants.LOGO_PATH),
+        'sizes': '512x512',
+        'type': 'image/png'
     }
 ]
+
 PWA_APP_ICONS_APPLE = [
     {
-        'src': '/static/icons/logo.jpg',
-        'sizes': '192x192'
+        'src': (Constants.LOGO_PATH),
+        'sizes': '192x192',
+        'type': 'image/png'
     }
 ]
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')

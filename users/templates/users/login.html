@@ -82,7 +82,7 @@
     aspect-ratio: 15/9;
     background:
       linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
-      url("{% static 'images/hero1.png' %}") center/cover no-repeat;
+      url("{% static LOGIN_BANNER %}") center/cover no-repeat;
   }
   .hero-badges{
     position:absolute; inset:auto 12px 12px auto; display:flex; gap:8px; flex-wrap:wrap;
@@ -231,7 +231,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <link rel="icon" sizes="192x192" href="{% static 'icons/logo.png' %}">
+    <link rel="icon" sizes="192x192" href="{% static SITE_LOGO %}">
 
     <script>
       if ('serviceWorker' in navigator) {
@@ -256,10 +256,10 @@
       <!-- brand -->
       <div class="brand-side">
         <div class="brand-head rtl-right" style="text-align: right;">
-          <img src="{% static 'icons/logo.jpg' %}" alt="لوگوی سکه‌طلا" class="logo" width="60" height="60">
+          <img src="{% static SITE_LOGO %}" alt="لوگو" class="logo" width="60" height="60">
           <div>
-            <div class="brand-title rtl-right" style="text-align: right;">سامانه مدیریت تولید فست‌ فود سکه‌طلا</div>
-            <div class="brand-sub rtl-right" style="text-align: right;">یک ورود؛ همه‌چیز زیر کنترل</div>
+            <div class="brand-title rtl-right" style="text-align: right;">{{PWA_DESCRIPTION}}</div>
+            <div class="brand-sub rtl-right" style="text-align: right;">یک ورود؛ همه‌چیز تحت کنترل</div>
           </div>
         </div>
 
@@ -273,8 +273,7 @@
 
         <div class="slogans rtl-right" style="text-align:right;">
           <span class="active">کیفیت ثابت؛ سرعت برق‌آسا.</span>
-          <span>از سفارش تا ارسال، بی‌دردسر.</span>
-          <span>دقیق مثل وزن سس روی سیب‌زمینی!</span>
+          <span class="active">با یک تیر چند نشان بزن</span>
         </div>
       </div>
 
