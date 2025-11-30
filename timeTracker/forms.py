@@ -66,8 +66,9 @@ class StoryForm(forms.ModelForm):
 class TimeEntryForm(forms.ModelForm):
     class Meta:
         model = TimeEntry
-        fields = ['datetime', 'hours_spent']
-        widgets = {
-            'datetime': forms.DateInput(attrs={'type': 'date'}),
-            'hours_spent': forms.NumberInput(attrs={'step': '0.25'}),
-        }
+        fields = ['hours_spent']  # add other fields if you have, but NOT datetime
+
+    def clean_hours_spent(self):
+        hours = self.cleaned_data.get('hours_spent')
+
+        return hours

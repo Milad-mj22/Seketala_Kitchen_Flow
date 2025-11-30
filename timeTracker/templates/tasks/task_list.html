@@ -4,6 +4,12 @@
 {% load static %}
 {% load custom_tags %}
 
+
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/persian.date.js' %}"></script>
+<script src="{% static 'js/persian.datepicker.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/persian.datepicker.css' %}"/>
+
 <style>
   .tasks-page {
     min-height: calc(100vh - 80px);
@@ -362,18 +368,79 @@
 </div>
 
 <!-- SortableJS -->
-<script src="{% static 'js/Sortable.min.js' %}" defer></script>
+
+
+<!-- SortableJS (must be loaded before we use it) -->
+<script src="{% static 'js/Sortable.min.js' %}"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const csrfToken = '{{ csrf_token }}';
+  // Global CSRF token
+  const csrfToken = '{{ csrf_token }}';
 
+  // Helper: render modal HTML + init JS inside it
+  function renderModal(html, taskId) {
+    const modal = document.getElementById('taskModal');
+    const modalBody = document.getElementById('modal-body');
+
+    // Insert HTML and show modal
+    modalBody.innerHTML = html;
+    modal.style.display = 'block';
+
+    // --- Persian datepicker for doing_date, if present ---
+    if (window.$ && $('#doing_date').length && $.fn.persianDatepicker) {
+      $('#doing_date').persianDatepicker({
+        format: 'YYYY/MM/DD',
+        initialValue: false,
+        autoClose: true,
+      });
+    }
+
+    // --- Limit hours_spent to 32 (inside modal) ---
+    const hoursInput = document.querySelector('#id_hours_spent');
+    if (hoursInput) {
+      hoursInput.addEventListener('input', function () {
+        const val = parseFloat(hoursInput.value);
+        if (val > 32) {
+          hoursInput.value = 32;
+          alert('حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد.');
+        }
+      });
+    }
+
+    // --- Bind log-time form submit (AJAX) ---
+    const form = document.getElementById('log-time-form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        fetch(`/timeTracker/tasks/${taskId}/modal/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: new FormData(form)
+        })
+          .then(resp => resp.json())      // expect { html: "...", ... }
+          .then(data => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            // Re-render modal with updated HTML (including validation errors or new entries)
+            renderModal(data.html, taskId);
+          })
+          .catch(() => {
+            alert('خطایی در ارسال فرم رخ داد.');
+          });
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('taskModal');
     const modalBody = document.getElementById('modal-body');
     const closeBtn = modal.querySelector('.close');
     const kanbanBoard = document.querySelector('.kanban-board');
 
-    // ----- موجود: کلیک روی تسک و مودال -----
+    // ----- Click on task → open modal -----
     if (kanbanBoard) {
       kanbanBoard.addEventListener('click', function (e) {
         const item = e.target.closest('.task-item');
@@ -383,29 +450,9 @@
         if (!taskId) return;
 
         fetch(`/timeTracker/tasks/${taskId}/modal/`)
-          .then(response => response.json())
+          .then(response => response.json())   // expect { html: "..." }
           .then(data => {
-            modalBody.innerHTML = data.html;
-            modal.style.display = 'block';
-
-            const form = document.getElementById('log-time-form');
-            if (form) {
-              form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                fetch(`/timeTracker/tasks/${taskId}/modal/`, {
-                  method: 'POST',
-                  headers: { 'X-CSRFToken': csrfToken },
-                  body: new FormData(form)
-                })
-                  .then(resp => resp.json())
-                  .then(data => {
-                    modalBody.innerHTML = data.html;
-                  })
-                  .catch(() => {
-                    alert('خطایی در ارسال فرم رخ داد.');
-                  });
-              });
-            }
+            renderModal(data.html, taskId);
           })
           .catch(() => {
             alert('خطایی در دریافت اطلاعات تسک رخ داد.');
@@ -413,19 +460,21 @@
       });
     }
 
+    // Close modal with X button
     if (closeBtn) {
       closeBtn.addEventListener('click', function () {
         modal.style.display = 'none';
       });
     }
 
+    // Close modal by clicking on backdrop
     modal.addEventListener('click', function (e) {
       if (e.target === modal) {
         modal.style.display = 'none';
       }
     });
 
-    // ----- موجود: SortableJS -----
+    // ----- SortableJS for columns -----
     ['todo', 'doing', 'done'].forEach(status => {
       const el = document.getElementById(status);
       if (!el || typeof Sortable === 'undefined') return;
@@ -464,6 +513,7 @@
 
                 alert(msg);
 
+                // Rollback position
                 if (oldList && typeof oldIndex === 'number') {
                   if (oldList.children.length > oldIndex) {
                     oldList.insertBefore(item, oldList.children[oldIndex]);
@@ -475,6 +525,7 @@
             })
             .catch(() => {
               alert('خطا در ارتباط با سرور.');
+              // Rollback position
               if (oldList && typeof oldIndex === 'number') {
                 if (oldList.children.length > oldIndex) {
                   oldList.insertBefore(item, oldList.children[oldIndex]);
@@ -487,7 +538,7 @@
       });
     });
 
-    // ----- جدید: اینفینیت اسکرول -----
+    // ----- Infinite scroll -----
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
@@ -543,44 +594,25 @@
       if (!hasMore || isLoading) return;
 
       const scrollPosition = window.innerHeight + window.scrollY;
-      const threshold = document.body.offsetHeight - 300; // 300px مانده به ته صفحه
+      const threshold = document.body.offsetHeight - 300;
 
       if (scrollPosition >= threshold) {
         loadMoreTasks();
       }
     });
   });
-</script>
 
-<script>
   // Close modal with ESC key
-document.addEventListener("keydown", function (e) {
+  document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-        const modal = document.getElementById("taskModal");
-        if (modal.style.display === "block") {
-            modal.style.display = "none";
-        }
+      const modal = document.getElementById("taskModal");
+      if (modal && modal.style.display === "block") {
+        modal.style.display = "none";
+      }
     }
-});
-
-
-document.addEventListener("input", function() {
-    const input = document.querySelector("#id_hours_spent");
-    const btn = document.querySelector("#log-time-form button[type='submit']");
-
-    if (input && btn) {
-        if (input.value > 32) {
-            btn.disabled = true;
-            input.style.border = "2px solid #dc3545";
-        } else {
-            btn.disabled = false;
-            input.style.border = "";
-        }
-    }
-});
-
-
+  });
 </script>
+
 
 
 {% endblock %}

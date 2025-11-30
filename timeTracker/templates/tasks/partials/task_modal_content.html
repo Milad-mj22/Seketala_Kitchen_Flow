@@ -1,5 +1,7 @@
 {% load custom_tags %}
 
+
+
 <div class="task-modal-body" style="direction: rtl; font-family: Vazirmatn, sans-serif; text-align: right;">
 <!-- Header -->
 <div style="text-align:center; margin-bottom:1rem;">
@@ -19,16 +21,25 @@
 
 <hr>
 
+<h4 style="margin-top:0.5rem;">ثبت زمان</h4>
+<form id="log-time-form" method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
 
-  <!-- Log time form -->
-  <h4 style="margin-top:0.5rem;">ثبت زمان</h4>
-  <form id="log-time-form" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">
-      ذخیره زمان
-    </button>
-  </form>
+  <div class="mb-3">
+    <label class="form-label fw-bold">تاریخ انجام (Doing Date)</label>
+    <input id="doing_date"
+           name="doing_date"
+           class="form-control"
+           placeholder="انتخاب تاریخ"
+           autocomplete="off">
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    ذخیره زمان
+  </button>
+</form>
+
 
   <hr>
 

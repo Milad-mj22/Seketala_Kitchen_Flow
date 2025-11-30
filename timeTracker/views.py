@@ -1,5 +1,7 @@
 from django.shortcuts import render
 
+from users.views import convert_georgian2jalali, convert_to_jalali
+
 # Create your views here.
 def is_any_team_admin(user):
     return hasattr(user, 'profile') and user.profile.admin_teams.exists()
@@ -358,62 +360,103 @@ def api_tasks_load_more(request):
 
 
 
-
 @login_required
 def task_detail_modal(request, pk):
-    from django.template.loader import render_to_string
     task = get_object_or_404(Task, pk=pk)
-    form = TimeEntryForm()
-
     user = request.user
+
     is_assigned = (task.assigned_to_id == user.id)
-    # اگر team.admins داری:
     is_team_admin = task.story.team.admins.filter(id=user.id).exists()
-    # اگر superuser هم دسترسی داشته باشد:
     is_super = user.is_superuser
 
-
+    # Only these users can log time / see full modal
+    has_permission = is_assigned or is_team_admin or is_super
 
     if request.method == 'POST':
-
-        hours = int(request.POST.get('hours_spent'))
-        if int(hours) > 32:
-            return JsonResponse({"error": "حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد."}, status=400)
-
-
-
-        if task.assigned_to != request.user:
-            return JsonResponse({'error': 'You are not allowed to log time for this task.'}, status=403)
+        if not has_permission:
+            return JsonResponse(
+                {'error': 'شما مجاز به ثبت زمان برای این تسک نیستید.'},
+                status=403
+            )
 
         form = TimeEntryForm(request.POST)
 
         if form.is_valid():
+            # already validated hours ≤ 32 in form
+            doing_date_str = request.POST.get('doing_date', '').strip()
+
+            if not doing_date_str:
+                form.add_error(None, 'لطفاً تاریخ انجام را انتخاب کنید.')
+            else:
+                try:
+                    gregorian_dt = convert_georgian2jalali(doing_date_str)
+                except Exception:
+                    form.add_error(None, 'تاریخ وارد شده نامعتبر است.')
+
+            if form.errors:
+                # Re-render modal content with errors
+                entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
+                html = render_to_string(
+                    'tasks/partials/task_modal_content.html',
+                    {
+                        'task': task,
+                        'form': form,
+                        'entries': entries,
+                        'user': user,   # needed in template
+                    },
+                    request=request,
+                )
+                return JsonResponse({'html': html}, status=400)
+
+            # All good → save entry
             entry = form.save(commit=False)
             entry.task = task
-            entry.user = request.user
+            entry.user = user
+            entry.datetime = gregorian_dt    # save Gregorian datetime
             entry.save()
-            form = TimeEntryForm()  # Clear form after save
-    if is_assigned or is_team_admin or is_super:
-        entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
 
-        html = render_to_string('tasks/partials/task_modal_content.html', {
-            'task': task,
-            'form': form,
-            'entries': entries,
-        }, request=request)
+            # reset form after save
+            form = TimeEntryForm()
+        else:
+            # invalid form (e.g. hours_spent)
+            entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
+            html = render_to_string(
+                'tasks/partials/task_modal_content.html',
+                {
+                    'task': task,
+                    'form': form,
+                    'entries': entries,
+                    'user': user,
+                },
+                request=request,
+            )
+            return JsonResponse({'html': html}, status=400)
 
     else:
-        # کاربر غیرمجاز → پیام «دسترسی ندارید»
+        # GET
+        form = TimeEntryForm()
+
+    # Build HTML for permitted / not permitted users
+    if has_permission:
+        entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
+        html = render_to_string(
+            'tasks/partials/task_modal_content.html',
+            {
+                'task': task,
+                'form': form,
+                'entries': entries,
+                'user': user,
+            },
+            request=request,
+        )
+    else:
         html = render_to_string(
             "tasks/partials/no_access.html",
             {"task": task, "user": user},
             request=request,
         )
 
-
-
     return JsonResponse({'html': html})
-
 
 @login_required
 def delete_task(request, task_id):
