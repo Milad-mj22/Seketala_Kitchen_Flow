@@ -28,10 +28,7 @@
 body {
   direction: rtl;
   margin: 0;
-  background: 
-    radial-gradient(circle at 20% 10%, rgba(255, 210, 117, 0.45), transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(255, 221, 170, 0.35), transparent 70%),
-    #faf7ef;
+  background:     #faf7ef;
   backdrop-filter: blur(4px);
   font-family: "Vazirmatn", "IRANSans", system-ui, sans-serif;
 }
@@ -41,7 +38,7 @@ body {
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: linear-gradient(135deg, #63635a, #cab331);
+      background: linear-gradient({{TOPBAR_COLOR_START}}, {{TOPBAR_COLOR_END}});
       border-radius: 0 0 9px 9px;
       padding: 8px 16px;
       box-shadow: 0 12px 25px rgba(15,23,42,0.35);
@@ -57,10 +54,7 @@ body {
       
     }
 
-    .topbar-left{
-      overflow-x: auto;  /* اسکرول افقی فعال */
 
-    }
 
     .topbar-left,
     .topbar-right {
@@ -168,7 +162,6 @@ body {
       white-space: nowrap;
       position: relative; /* برای مرجع ساب‌منوها */
       overflow: visible;  /* ساب‌منوها بیرون دیده می‌شن */
-      overflow-x: auto;  /* اسکرول افقی فعال */
     }
 
     .menu-item {

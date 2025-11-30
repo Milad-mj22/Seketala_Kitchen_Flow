@@ -203,35 +203,63 @@ def story_delete(request, pk):
 
 
 
-@login_required
-def task_list(request):
-    from django.contrib.auth.models import User
-
+def _get_filtered_tasks_queryset(request):
+    """بر اساس پروفایل کاربر و فیلترهای فرم، queryset مناسب را برمی‌گرداند."""
     profile = request.user.profile
     teams = profile.teams.all()
+
+    qs = Task.objects.filter(
+        story__team__in=teams,
+        story__sprint__is_active=True,
+        is_delete=False,
+    ).select_related(
+        'story',
+        'assigned_to',
+        'story__team',
+        'story__sprint',
+    ).order_by('-id')
+
+    team_id = request.GET.get('team')
+    user_id = request.GET.get('user')
+    sprint_id = request.GET.get('sprint')
+    priority = request.GET.get('priority')
+
+    if team_id:
+        qs = qs.filter(story__team_id=team_id)
+    if user_id:
+        qs = qs.filter(assigned_to_id=user_id)
+    if sprint_id:
+        qs = qs.filter(story__sprint_id=sprint_id)
+    if priority:
+        qs = qs.filter(priority=priority)
+
+    return qs, teams
+
+
+from django.contrib.auth.models import User
+@login_required
+def task_list(request):
+    profile = request.user.profile
+
+    tasks_qs, teams = _get_filtered_tasks_queryset(request)
+
+    # یوزرها و اسپرینت‌ها همانند قبل
     users = User.objects.filter(profile__teams__in=teams).distinct()
-    sprints = Sprint.objects.filter(story__team__in=teams,is_active=True).distinct()
+    sprints = Sprint.objects.filter(story__team__in=teams, is_active=True).distinct()
 
     selected_team_id = request.GET.get('team')
     selected_user_id = request.GET.get('user')
     selected_sprint_id = request.GET.get('sprint')
     selected_priority = request.GET.get('priority')
 
-    # Filter tasks based on team, user, and sprint (if provided)
-    tasks = Task.objects.filter(story__team__in=teams, story__sprint__is_active=True) \
-        .select_related('story', 'assigned_to', 'story__team', 'story__sprint')
-    
+    # صفحه اول را سرور رندر می‌کند
+    page_size = 30
+    paginator = Paginator(tasks_qs, page_size)
+    page_number = 1
+    tasks_page = paginator.page(page_number)
 
-    if selected_team_id:
-        tasks = tasks.filter(story__team_id=selected_team_id)
-    if selected_user_id:
-        tasks = tasks.filter(assigned_to_id=selected_user_id)
-    if selected_sprint_id:
-        tasks = tasks.filter(story__sprint_id=selected_sprint_id)
-    if selected_priority:
-        tasks = tasks.filter(priority=selected_priority)
-        
-    tasks = tasks.filter(is_delete = False)
+    tasks = tasks_page.object_list
+    has_more = tasks_page.has_next()
 
     return render(request, 'tasks/task_list.html', {
         'tasks': tasks,
@@ -241,7 +269,10 @@ def task_list(request):
         'selected_team_id': selected_team_id,
         'selected_user_id': selected_user_id,
         'selected_sprint_id': selected_sprint_id,
-        'title': 'Task Board'
+        'selected_priority': selected_priority,
+        'title': 'Task Board',
+        'current_page': page_number,
+        'has_more': has_more,
     })
 
 
@@ -256,10 +287,15 @@ def api_update_task_status(request, pk):
         task = Task.objects.get(pk=pk)
     except Task.DoesNotExist:
         return JsonResponse({'error': 'Task not found'}, status=404)
-
+    user = request.user
+    is_assigned = (task.assigned_to_id == user.id)
     # Validate that user belongs to the team
     if request.user.profile not in task.story.team.members.all() :
         return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    if not is_assigned :
+        return JsonResponse({'error': 'این وظیفه برای شما تعریف نشده است.'}, status=403)
+
 
     new_status = request.POST.get('status')
     if new_status not in ['todo', 'doing', 'done']:
@@ -270,6 +306,57 @@ def api_update_task_status(request, pk):
 
     return JsonResponse({'success': True, 'task_id': task.id, 'new_status': task.status})
 
+from django.core.paginator import Paginator, EmptyPage
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def api_tasks_load_more(request):
+    page = int(request.GET.get("page", 1))
+    page_size = 30
+
+    tasks_qs, _ = _get_filtered_tasks_queryset(request)
+
+    paginator = Paginator(tasks_qs, page_size)
+
+    try:
+        tasks_page = paginator.page(page)
+    except EmptyPage:
+        return JsonResponse({
+            "todo_html": "",
+            "doing_html": "",
+            "done_html": "",
+            "has_more": False
+        })
+
+    tasks = tasks_page.object_list
+
+    todo_html = render_to_string(
+        "tasks/partials/tasks_items_todo.html",
+        {"tasks": tasks},
+        request=request,
+    )
+    doing_html = render_to_string(
+        "tasks/partials/tasks_items_doing.html",
+        {"tasks": tasks},
+        request=request,
+    )
+    done_html = render_to_string(
+        "tasks/partials/tasks_items_done.html",
+        {"tasks": tasks},
+        request=request,
+    )
+
+    return JsonResponse({
+        "todo_html": todo_html,
+        "doing_html": doing_html,
+        "done_html": done_html,
+        "has_more": tasks_page.has_next(),
+    })
+
+
+
 
 
 @login_required
@@ -278,27 +365,52 @@ def task_detail_modal(request, pk):
     task = get_object_or_404(Task, pk=pk)
     form = TimeEntryForm()
 
+    user = request.user
+    is_assigned = (task.assigned_to_id == user.id)
+    # اگر team.admins داری:
+    is_team_admin = task.story.team.admins.filter(id=user.id).exists()
+    # اگر superuser هم دسترسی داشته باشد:
+    is_super = user.is_superuser
+
+
+
     if request.method == 'POST':
+
+        hours = int(request.POST.get('hours_spent'))
+        if int(hours) > 32:
+            return JsonResponse({"error": "حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد."}, status=400)
+
+
 
         if task.assigned_to != request.user:
             return JsonResponse({'error': 'You are not allowed to log time for this task.'}, status=403)
 
-
         form = TimeEntryForm(request.POST)
+
         if form.is_valid():
             entry = form.save(commit=False)
             entry.task = task
             entry.user = request.user
             entry.save()
             form = TimeEntryForm()  # Clear form after save
+    if is_assigned or is_team_admin or is_super:
+        entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
 
-    entries = TimeEntry.objects.filter(task=task).order_by('-datetime')
+        html = render_to_string('tasks/partials/task_modal_content.html', {
+            'task': task,
+            'form': form,
+            'entries': entries,
+        }, request=request)
 
-    html = render_to_string('tasks/partials/task_modal_content.html', {
-        'task': task,
-        'form': form,
-        'entries': entries,
-    }, request=request)
+    else:
+        # کاربر غیرمجاز → پیام «دسترسی ندارید»
+        html = render_to_string(
+            "tasks/partials/no_access.html",
+            {"task": task, "user": user},
+            request=request,
+        )
+
+
 
     return JsonResponse({'html': html})
 
@@ -333,251 +445,3 @@ def delete_time_entry(request, entry_id):
 
     # fallback for GET (optional)
     return redirect('task_list')
-
-
-# views.py
-
-from django.db.models import Sum
-from django.shortcuts import render
-from .models import TimeEntry, Sprint, Team, User
-
-# def dashboard_view(request):
-#     selected_sprint_id = request.GET.get("sprint_id")
-
-#     # Filter by sprint if selected
-#     if selected_sprint_id:
-#         entries = TimeEntry.objects.filter(task__story__sprint_id=selected_sprint_id)
-#     else:
-#         entries = TimeEntry.objects.all()
-
-#     # Total time by user
-#     time_by_user = (
-#         entries.values('user__username')
-#         .annotate(total_hours=Sum('hours_spent'))
-#         .order_by('-total_hours')
-#     )
-
-#     # Total time by team
-#     time_by_team = (
-#         entries.values('task__story__team__name')
-#         .annotate(total_hours=Sum('hours_spent'))
-#         .order_by('-total_hours')
-#     )
-
-#     # Goal vs Actual per task
-#     task_progress = (
-#         entries.values('task__title', 'task__goal_time')
-#         .annotate(actual_time=Sum('hours_spent'))
-#         .order_by('-actual_time')
-#     )
-
-#     return render(request, 'data_dashboard.html', {
-#         'time_by_user': time_by_user,
-#         'time_by_team': time_by_team,
-#         'task_progress': task_progress,
-#         'sprints': Sprint.objects.all(),
-#         'selected_sprint_id': selected_sprint_id,
-#     })
-
-
-
-
-
-def team_dashboard(request):
-
-    from collections import defaultdict
-    from django.db.models import Sum
-    from .models import TimeEntry
-
-
-    team_task_data = defaultdict(list)
-
-    entries = TimeEntry.objects.select_related('task__story__team').all()
-
-    for entry in entries:
-        team_name = entry.task.story.team.name
-        task_title = entry.task.title
-        team_task_data[team_name].append((task_title, float(entry.hours_spent)))
-
-    # Aggregate data by task title for each team
-    final_team_data = {}
-    for team, task_entries in team_task_data.items():
-        agg = {}
-        for title, hours in task_entries:
-            agg[title] = agg.get(title, 0) + hours
-        final_team_data[team] = agg
-
-    return render(request, 'data_dashboard.html', {
-        'final_team_data': final_team_data,
-    })
-
-
-
-
-def selective_dashboard(request):
-
-    from collections import defaultdict
-    from django.db.models import Sum
-    from .models import TimeEntry
-    import json
-    sprint_id = request.GET.get('sprint')
-    sprints = Sprint.objects.all()
-    selected_sprint = Sprint.objects.filter(id=sprint_id).first() if sprint_id else sprints.first()
-
-    entries = TimeEntry.objects.select_related('task__story__team', 'user', 'task__story__sprint')
-    if selected_sprint:
-        entries = entries.filter(task__story__sprint=selected_sprint)
-
-    # Structure: {team: {task: {user: hours}}}
-    stacked_data = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-    goal_data = defaultdict(lambda: {})
-
-    for entry in entries:
-        team = entry.task.story.team.name
-        task = entry.task.title
-        user = entry.user.username
-        stacked_data[team][task][user] += float(entry.hours_spent)
-        goal_data[team][task] = float(entry.task.goal_time)
-
-    # Convert nested defaultdicts to normal dicts for safe use in template/JS
-    stacked_data_json = json.dumps(stacked_data)
-    goal_data_json = json.dumps(goal_data)
-
-    return render(request, 'selective_dashboard.html', {
-        'sprints': sprints,
-        'selected_sprint': selected_sprint,
-        'stacked_data_json': stacked_data_json,
-        'goal_data_json': goal_data_json,
-    })
-
-
-
-def data_dashboard_view(request):
-    from collections import defaultdict
-    import json
-
-    sprint_id = request.GET.get('sprint')
-    sprints = Sprint.objects.all()
-    selected_sprint = Sprint.objects.filter(id=sprint_id).first() if sprint_id else sprints.first()
-
-    entries = TimeEntry.objects.select_related('task__story__team', 'user', 'task__story__sprint')
-    if selected_sprint:
-        entries = entries.filter(task__story__sprint=selected_sprint)
-
-    # Structure: {team: {task: {user: hours}}}
-    stacked_data = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-    goal_data = defaultdict(dict)
-
-    for entry in entries:
-        team = entry.task.story.team.name
-        task = entry.task.title
-        user = entry.user.username
-        stacked_data[team][task][user] += float(entry.hours_spent)
-        goal_data[team][task] = float(entry.task.goal_time)
-
-    # Total hours per team
-    team_total_hours = (
-        entries
-        .values('task__story__team__name')
-        .annotate(total_hours=Sum('hours_spent'))
-        .order_by('-total_hours')
-    )
-
-    # Prepare for chart (labels and values)
-    team_hours_chart = {
-        "labels": [entry['task__story__team__name'] for entry in team_total_hours],
-        "values": [float(entry['total_hours']) for entry in team_total_hours],
-    }
-
-    # Convert to normal dicts
-    def convert(d):
-        if isinstance(d, defaultdict):
-            d = {k: convert(v) for k, v in d.items()}
-        return d
-
-    stacked_data_json = json.dumps(convert(stacked_data))
-    goal_data_json = json.dumps(convert(goal_data))
-
-    return render(request, 'data_dashboard.html', {
-        'sprints': sprints,
-        'selected_sprint': selected_sprint,
-        'stacked_data_json': stacked_data_json,
-        'goal_data_json': goal_data_json,
-        'team_hours_chart': json.dumps(team_hours_chart),
-    })
-
-
-
-
-
-def team_overview_view(request):
-    import json
-    # Get all teams
-    teams = Team.objects.all()
-
-    # Prepare structure: {team_name: {users: [{name, time}], total: total_time}}
-    overview_data = {}
-
-    for team in teams:
-        user_times = (
-            TimeEntry.objects
-            .filter(task__story__team=team,task__story__sprint__is_active=True)
-            .values('user__username')
-            .annotate(total=Sum('hours_spent'))
-            .order_by('-total')
-        )
-
-        overview_data[team.name] = {
-            'users': [
-                {'name': u['user__username'], 'time': float(u['total'])}
-                for u in user_times
-            ],
-            'total': sum(float(u['total']) for u in user_times)
-        }
-
-    return render(request, 'team_overview.html', {
-        'overview_data': overview_data,
-        'overview_json': json.dumps(overview_data),
-    })
-
-
-
-
-from django.db.models.functions import TruncDate
-from .models import TimeEntry
-from collections import defaultdict
-import json
-
-def team_timeline_view(request):
-    entries = TimeEntry.objects.select_related('task__story__team', 'user').order_by('datetime')
-
-    # Structure: {team: {date: hours}}
-    timeline_data = defaultdict(lambda: defaultdict(float))
-    all_dates = set()
-
-    for entry in entries:
-        team = entry.task.story.team.name
-        day = entry.datetime.isoformat()
-        timeline_data[team][day] += float(entry.hours_spent)
-        all_dates.add(day)
-
-    sorted_dates = sorted(all_dates)
-
-    # Prepare chart format
-    chart_data = {
-        "labels": sorted_dates,
-        "datasets": []
-    }
-
-    for i, (team, team_values) in enumerate(timeline_data.items()):
-        chart_data["datasets"].append({
-            "label": team,
-            "data": [team_values.get(day, 0) for day in sorted_dates],
-            "fill": False,
-            "borderColor": f"hsl({i * 45 % 360}, 70%, 50%)",
-            "tension": 0.3
-        })
-
-    return render(request, 'team_timeline.html', {
-        'chart_json': json.dumps(chart_data)
-    })

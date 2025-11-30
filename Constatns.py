@@ -18,6 +18,9 @@ class Constants:
         LOGO_PATH = 'icons/logo.gif'
         ALT_LOGO = 'لوگوی سکه طلا'
         LOGIN_BANNER = 'images/hero1.png'
+        TOPBAR_COLOR_START = '#cab331'
+        TOPBAR_COLOR_END = '#63635a'
+
     
     elif Base.name == Base.Name.moallem:
         NAME = 'خانه معلم'
@@ -28,6 +31,8 @@ class Constants:
         LOGO_PATH = 'icons/moallem_logo.png'
         ALT_LOGO = 'لوگوی خانه معلم'
         LOGIN_BANNER = 'images/banner.png'
+        TOPBAR_COLOR_START = '#cab331'
+        TOPBAR_COLOR_END = '#63635a'
 
     elif Base.name == Base.Name.dorsa:
         NAME = 'شرکت درصا'
@@ -39,3 +44,5 @@ class Constants:
         LOGIN_LOGO_PATH = 'icons/d_logo.png'
         ALT_LOGO = 'لوگوی شرکت درصا'
         LOGIN_BANNER = 'images/dorsa_timing.png'
+        TOPBAR_COLOR_START = "#2D5BF1"
+        TOPBAR_COLOR_END = "#151e46"        

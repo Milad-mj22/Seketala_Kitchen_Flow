@@ -175,6 +175,7 @@
     margin-bottom: 8px;
     color: var(--text-main);
   }
+
   .profile-field strong {
     font-weight: 700;
   }
@@ -228,16 +229,42 @@
     font-size: 14px;
   }
 
-  .quick-links a i {
-    font-size: 16px;
-    color: #b8860b;
-  }
-
   .quick-links a:hover {
     background: linear-gradient(135deg, #fff9e6, #fef3c7);
     border-color: rgba(244, 180, 26, 0.8);
     color: #b45309;
     transform: translateY(-1px);
+  }
+
+  /* Shortcut inner UI */
+  .shortcut-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .shortcut-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shortcut-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .shortcut-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .shortcut-category-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    padding-inline: 2px;
+    border-right: 3px solid var(--gold-main);
   }
 
   /* Skills */
@@ -273,11 +300,20 @@
           </div>
         </div>
       </div>
-      <div>
+      <div class="d-flex align-items-center gap-2">
         <span class="chip-small">
           <span class="chip-dot"></span>
           خوش آمدی {{ user.username }}
         </span>
+
+        {# Edit button: opens edit page in new tab/window #}
+        <a href="{% url 'users-profile-edit' %}"
+           target="_blank"
+           rel="noopener"
+           class="btn btn-sm btn-outline-secondary"
+           style="border-radius: 999px;">
+          ✏️ ویرایش پروفایل
+        </a>
       </div>
     </div>
 
@@ -285,8 +321,8 @@
       <!-- Left column: avatar & social -->
       <div class="col-lg-4">
         <div class="card-custom text-center">
-          {% if user.avatar %}
-            <img src="{{ user.avatar.url }}" class="avatar-lg mb-3" alt="Avatar">
+          {% if user.profile.avatar %}
+            <img src="{{ user.profile.avatar.url }}" class="avatar-lg mb-3" alt="Avatar">
           {% else %}
             <img src="{% static 'images/default-avatar.png' %}" class="avatar-lg mb-3" alt="Avatar">
           {% endif %}
@@ -358,58 +394,39 @@
           </div>
         </div>
 
-        <!-- Quick links -->
-        <div class="card-custom mb-4">
-          <div class="profile-section-title">
-            <span class="icon">⚡</span>
-            دسترسی سریع
-          </div>
-          <div class="quick-links">
-            <a href="/profile/daily-report/">
-              <i class="fas fa-calendar-alt"></i>
-              <span>ثبت گزارش روزانه</span>
-            </a>
-            <a href="/formApp/my-forms">
-              <i class="fas fa-file-alt"></i>
-              <span>فرم‌های من</span>
-            </a>
-            <a href="/profile/{{ user.id }}/register_entry/">
-              <i class="fas fa-sign-in-alt"></i>
-              <span>ورود و خروج</span>
-            </a>
-            <a href="/SocialApps/WA/{{ user.id }}/">
-              <i class="fab fa-whatsapp"></i>
-              <span>اتصال واتساپ</span>
-            </a>
-            <a href="/SocialApps/TE/{{ user.id }}/">
-              <i class="fab fa-telegram"></i>
-              <span>اتصال تلگرام</span>
-            </a>
-            <a href="/buyers/add/">
-              <i class="fas fa-user-plus"></i>
-              <span>افزودن مشتری</span>
-            </a>
-            <a href="/utils/import-buyers-csv">
-              <i class="fas fa-box me-1"></i>
-              <span>افزودن مشتری از طریق فایل</span>
-            </a>
-            <a href="/buyers/">
-              <i class="fas fa-users"></i>
-              <span>لیست مشتریان</span>
-            </a>
-            <a href="/stone_flow/preInvoice/">
-              <i class="fas fa-file-invoice-dollar"></i>
-              <span>ایجاد پیش‌فاکتور</span>
-            </a>
-            <a href="/stone_flow/preinvoices_list/">
-              <i class="fas fa-list-alt"></i>
-              <span>پیش‌فاکتورهای صادر شده</span>
-            </a>
-          </div>
-        </div>
+        <!-- Quick links from ProfileShortcuts (grouped by category) -->
+        {% if grouped_shortcuts %}
+          <div class="card-custom mb-4">
+            <div class="profile-section-title">
+              <span class="icon">⚡</span>
+              دسترسی سریع
+            </div>
 
-        {# Optional leave section – if you decide to enable later #}
-      
+            {% for category, items in grouped_shortcuts.items %}
+              <div class="shortcut-category-label">
+                {{ category }}
+              </div>
+
+              <div class="quick-links mb-3">
+                {% for sc in items %}
+                  <a href="{{ sc.url }}">
+                    <span class="shortcut-icon">{{ sc.icon }}</span>
+                    <div class="shortcut-text">
+                      <div class="shortcut-title">{{ sc.title }}</div>
+                      {% if sc.content %}
+                        <div class="shortcut-desc">
+                          {{ sc.content|truncatechars:70 }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Leave & presence -->
         <div class="card-custom mb-4">
           <div class="profile-section-title">
             <span class="icon">🗓️</span>
@@ -436,26 +453,26 @@
             </button>
           </div>
         </div>
-      
 
+        <!-- Skills -->
         {% if user.skills %}
-        <div class="card-custom">
-          <div class="profile-section-title">
-            <span class="icon">🎯</span>
-            مهارت‌ها
-          </div>
-          {% for skill in user.skills %}
-            <div class="mb-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="skill-name">{{ skill.name }}</span>
-                <span class="skill-percent">{{ skill.level }}%</span>
-              </div>
-              <div class="progress rounded" style="height: 9px;">
-                <div class="progress-bar" style="width: {{ skill.level }}%"></div>
-              </div>
+          <div class="card-custom">
+            <div class="profile-section-title">
+              <span class="icon">🎯</span>
+              مهارت‌ها
             </div>
-          {% endfor %}
-        </div>
+            {% for skill in user.skills %}
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="skill-name">{{ skill.name }}</span>
+                  <span class="skill-percent">{{ skill.level }}%</span>
+                </div>
+                <div class="progress rounded" style="height: 9px;">
+                  <div class="progress-bar" style="width: {{ skill.level }}%"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         {% endif %}
       </div>
     </div>

@@ -19,7 +19,7 @@ from users.utils.CalulatedDistance import calculate_distance
 
 from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, CategoryForm, JobForm, MotherMaterialForm, RawMaterialCategoryForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Nationality, Post, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Nationality, Post, ProfileShortcuts, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -256,48 +256,121 @@ def post_login_redirect(request):
 
 
 class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
-    template_name = 'users/password_reset.html'
-    email_template_name = 'users/password_reset_email.html'
-    subject_template_name = 'users/password_reset_subject'
-    success_message = "We've emailed you instructions for setting your password, " \
-                      "if an account exists with the email you entered. You should receive them shortly." \
-                      " If you don't receive an email, " \
-                      "please make sure you've entered the address you registered with, and check your spam folder."
-    success_url = reverse_lazy('users-home')
+    template_name = "users/password_reset.html"
+    email_template_name = "users/password_reset_email.html"
+    subject_template_name = "users/password_reset_subject"
+    success_message = (
+        "اگر حسابی با این ایمیل در سیستم ثبت شده باشد، "
+        "لینک تنظیم رمز عبور جدید برای شما ارسال شده است. "
+        "اگر ایمیلی دریافت نکردید، لطفاً مطمئن شوید آدرس ایمیل را درست وارد کرده‌اید "
+        "و پوشه‌های Spam / Junk را هم بررسی کنید."
+    )
+    success_url = reverse_lazy("users-home")
 
 
 class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
-    template_name = 'users/change_password.html'
-    success_message = "Successfully Changed Your Password"
-    success_url = reverse_lazy('users-home')
+    template_name = "users/change_password.html"
+    success_message = "رمز عبور شما با موفقیت تغییر کرد."
+    success_url = reverse_lazy("users-home")
 
+    def form_invalid(self, form):
+        """
+        تبدیل خطاهای پیش‌فرض جنگو به پیام‌های فارسی خوانا.
+        """
+        translated_errors = []
+
+        # از as_data استفاده می‌کنیم تا به code خطا دسترسی داشته باشیم
+        for field_name, error_list in form.errors.as_data().items():
+            for err in error_list:
+                code = err.code
+
+                if code == "password_incorrect":
+                    msg = "رمز عبور فعلی شما صحیح نیست."
+                elif code == "password_mismatch":
+                    msg = "رمز عبور جدید و تکرار آن با هم مطابقت ندارند."
+                elif code == "password_too_short":
+                    msg = "رمز عبور جدید خیلی کوتاه است."
+                elif code == "password_too_common":
+                    msg = "این رمز عبور خیلی ساده و قابل حدس است. لطفاً رمز قوی‌تری انتخاب کنید."
+                elif code == "password_entirely_numeric":
+                    msg = "رمز عبور نباید فقط از اعداد تشکیل شده باشد."
+                elif code == "password_too_similar":
+                    msg = "رمز عبور جدید بیش از حد شبیه اطلاعات شخصی شماست."
+                else:
+                    # اگر کدی نشناختیم، همان پیام اصلی (احتمالاً انگلیسی) را نگه می‌داریم
+                    msg = err.message
+
+                if msg not in translated_errors:
+                    translated_errors.append(msg)
+
+        if translated_errors:
+            # خطاها را به صورت non_field_errors اضافه می‌کنیم که راحت‌تر در قالب نمایش بدهی
+            form.add_error(None, " ".join(translated_errors))
+
+        return super().form_invalid(form)
+
+
+
+
+
+
+from collections import OrderedDict
 
 @login_required
 def profile(request):
-        if request.method == 'POST':
-            user_form = UpdateUserForm(request.POST, instance=request.user)
-            profile_form = UpdateProfileForm(request.POST, request.FILES, instance=request.user.profile)
+    """Read-only profile page (the one you already have with the edit button)."""
+    raw_shortcuts = ProfileShortcuts.objects.filter(
+        show=True,
+        status="ready",
+    ).order_by("category", "title")
 
-            if user_form.is_valid() and profile_form.is_valid():
-                user_form.save()
-                profile_form.save()
-                messages.success(request, 'Your profile is updated successfully')
-                return redirect(to='users-profile')
-        else:
-            user_form = UpdateUserForm(instance=request.user)
-            # if request.user
-            try:
+    
 
-                user = User.objects.get(user = request.user)
+    grouped_shortcuts = OrderedDict()
+    for sc in raw_shortcuts:
+        url = sc.slug.replace("{user.id}", str(request.user.id))
+        grouped_shortcuts.setdefault(sc.category, []).append(
+            {
+                "title": sc.title,
+                "icon": sc.icon,
+                "content": sc.content,
+                "url": url,
+            }
+        )
+
+    context = {
+        "grouped_shortcuts": grouped_shortcuts,
+    }
+    return render(request, "users/profile.html", context)
 
 
 
-            except Exception as e:
-                #print('Error profile_form :' , e)
-                return render(request, 'users/profile.html', {'user_form': user_form})
+@login_required
+def profile_edit(request):
+    """Separate page for editing profile & user info."""
+    if request.method == "POST":
+        user_form = UpdateUserForm(request.POST, instance=request.user)
+        profile_form = UpdateProfileForm(
+            request.POST, request.FILES, instance=request.user.profile
+        )
 
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, "پروفایل با موفقیت ویرایش شد.")
+            return redirect("users-profile")  # goes back to main profile page
+    else:
+        user_form = UpdateUserForm(instance=request.user)
+        profile_form = UpdateProfileForm(instance=request.user.profile)
 
-        return render(request, 'users/profile.html', {'user_form': user_form, 'user': user})
+    return render(
+        request,
+        "users/profile_edit.html",
+        {
+            "user_form": user_form,
+            "profile_form": profile_form,
+        },
+    )
 
 
 # @login_required

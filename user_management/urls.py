@@ -46,10 +46,11 @@ urlpatterns = [
     path('FoodManagment/', include('FoodPrice.urls')),
     path('vault/', include('vault.urls')),
     path("notifications/", include("Notification.urls")),
-    
+
     path('timeTracker/', include('timeTracker.urls')),
     path('TasksManager/', include('TasksManager.urls')),
     path('Missions/', include('Missions.urls')),
+    path('reports/', include('reports.urls')),
 
 
     

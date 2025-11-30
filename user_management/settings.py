@@ -104,7 +104,8 @@ INSTALLED_APPS = [
     'Missions',
     'Projects',
     'TasksManager',
-    'timeTracker'
+    'timeTracker',
+    'reports'
 
 ]
 

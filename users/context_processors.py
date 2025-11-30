@@ -9,12 +9,15 @@ def menu_items_processor(request):
     SITE_LOGO = Constants.LOGO_PATH
     SITE_NAME = Constants.NAME
     PWA_DESCRIPTION = Constants.PWA_DESCRIPTION
+    TOPBAR_COLOR_START = Constants.TOPBAR_COLOR_START
+    TOPBAR_COLOR_END = Constants.TOPBAR_COLOR_END
+
 
    
     try:
         user = request.user
         if not user.is_authenticated:
-            return {'menu_items': [] , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION}    
+            return {'menu_items': [] , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION,'TOPBAR_COLOR_START':TOPBAR_COLOR_START,'TOPBAR_COLOR_END':TOPBAR_COLOR_END}    
 
 
         # گرفتن نقش‌های کاربر
@@ -33,8 +36,8 @@ def menu_items_processor(request):
         # گرفتن آیتم‌های منو مرتبط با نقش‌ها
         # items = MenuItem.objects.filter(roles__id__in=roles).distinct().order_by('order')
 
-        return {'menu_items': items , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION}    
+        return {'menu_items': items , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION,'TOPBAR_COLOR_START':TOPBAR_COLOR_START,'TOPBAR_COLOR_END':TOPBAR_COLOR_END}    
     
     except:
-        return {'menu_items': None , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION}    
+        return {'menu_items': None , 'SITE_LOGO':SITE_LOGO,'SITE_NAME':SITE_NAME , 'PWA_DESCRIPTION':PWA_DESCRIPTION,'TOPBAR_COLOR_START':TOPBAR_COLOR_START,'TOPBAR_COLOR_END':TOPBAR_COLOR_END}    
 

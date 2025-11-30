@@ -235,6 +235,54 @@ class Tools(models.Model):
     
 
 
+
+
+class ProfileShortcuts(models.Model):
+
+    ICON_CHOICES = [
+        ("⚙️", "⚙️ تنظیمات"),
+        ("📊", "📊 گزارش / داشبورد"),
+        ("🍽️", "🍽️ غذا / منو"),
+        ("📦", "📦 انبار / کالا"),
+        ("💰", "💰 مالی / هزینه"),
+        ("🧮", "🧮 محاسبات / ابزار"),
+        ("📅", "📅 برنامه‌ریزی / زمان‌بندی"),
+        ("🔧", "🔧 ابزار / تنظیمات فنی"),
+        ("🧾", "🧾 فاکتور / سند"),
+        ("🧠", "🧠 هوش / AI"),
+    ]
+
+
+
+    title = models.CharField(max_length=200, unique=True)
+    slug = models.CharField(max_length=300, unique=True) 
+    content = models.TextField()
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    icon = models.CharField(
+        max_length=10,
+        choices=ICON_CHOICES,
+        default="⚙️",
+        verbose_name="آیکون"
+    )
+    category = models.CharField(max_length=100, default="عمومی")
+    status = models.CharField(
+        max_length=50,
+        choices=[("ready", "آماده"), ("dev", "در حال توسعه")],
+        default="ready"
+    )
+
+    show = models.BooleanField(default=True)
+
+
+
+    class Meta:
+        ordering = ['-title']
+
+    def __str__(self):
+        return self.title
+    
+
 class FoodFilter(models.Model):
 
 

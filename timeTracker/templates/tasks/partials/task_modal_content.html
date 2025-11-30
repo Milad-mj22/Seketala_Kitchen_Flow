@@ -1,47 +1,103 @@
 {% load custom_tags %}
 
-<h3>{{ task.title }}</h3>
-<p><b>Story:</b> {{ task.story.title }}</p>
-<p><b>Team:</b> {{ task.story.team.name }}</p>
-<p><b>Assigned to:</b></p>
-{% if task.assigned_to %}
-{{ task.assigned_to.username }}
-{% else %}
-Unassigned
-{% endif %}
+<div class="task-modal-body" style="direction: rtl; font-family: Vazirmatn, sans-serif; text-align: right;">
+<!-- Header -->
+<div style="text-align:center; margin-bottom:1rem;">
+  <h3 style="margin-top:0; margin-bottom:0.5rem;">{{ task.title }}</h3>
 
-
-
-<hr>
-<form id="log-time-form" method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit" class="btn btn-primary">Save Time Entry</button>
-</form>
+  <p style="margin:0.25rem 0; direction: ltr;"><b>Story:</b> {{ task.story.title }}</p>
+  <p style="margin:0.25rem 0; direction: ltr;"><b>Team:</b> {{ task.story.team.name }}</p>
+  <p style="margin:0.25rem 0; direction: ltr;">
+    <b>Assigned to:</b>
+    {% if task.assigned_to %}
+      {{ task.assigned_to.username }}
+    {% else %}
+      Unassigned
+    {% endif %}
+  </p>
+</div>
 
 <hr>
-<h4>Time Logs</h4>
-<ul>
-  {% for entry in entries %}
-    <li>{{ entry.user.username }} | {{ entry.datetime|to_jalali }} — {{ entry.hours_spent }} hours</li>
-  
-  
-      <!-- Delete button for each entry -->
-      <form method="post" action="{% url 'delete_time_entry' entry.id %}" style="display:inline;" onsubmit="return confirm('آیا از حذف این ساعت مطمئن هستید؟');">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger" style="background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 6px;">
-          🗑️ حذف
-        </button>
-  
-    {% empty %}
-    <li>No time logged yet.</li>
-  {% endfor %}
-</ul>
 
 
-<form method="post" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('آیا از حذف این تسک مطمئن هستید؟');" style="margin-top: 1rem;">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger" style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 6px;">
-    🗑️ حذف تسک
-  </button>
-</form>
+  <!-- Log time form -->
+  <h4 style="margin-top:0.5rem;">ثبت زمان</h4>
+  <form id="log-time-form" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">
+      ذخیره زمان
+    </button>
+  </form>
+
+  <hr>
+
+  <!-- Time logs -->
+  <h4 style="margin-top:0.5rem;">گزارش زمان‌ها</h4>
+
+  {% if entries %}
+    <ul style="list-style:none; padding:0; margin:0;">
+      {% for entry in entries %}
+        <li style="margin-bottom:0.5rem; padding:0.4rem 0.6rem; border-radius:8px; background:rgba(15,23,42,0.25); display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+          <div>
+            <div>
+              <strong>{{ entry.user.username }}</strong>
+              | {{ entry.datetime|to_jalali }}
+            </div>
+            <div style="font-size:0.9rem; color:#e5e7eb;">
+              {{ entry.hours_spent }} ساعت
+            </div>
+          </div>
+
+          {% comment %}
+            فقط صاحب لاگ یا سوپریوزر/استاف بتوانند حذف کنند
+          {% endcomment %}
+          {% if entry.user == user or user.is_superuser or user.is_staff %}
+            <form method="post"
+                  action="{% url 'delete_time_entry' entry.id %}"
+                  style="margin:0;"
+                  onsubmit="return confirm('آیا از حذف این ساعت مطمئن هستید؟');">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn btn-danger"
+                      style="background-color:#dc3545; color:white; padding:4px 10px; border:none; border-radius:6px; font-size:0.85rem;">
+                🗑️ حذف
+              </button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="margin-top:0.25rem; color:#9ca3af;">هنوز زمانی برای این تسک ثبت نشده است.</p>
+  {% endif %}
+
+  <!-- Delete task (only for admin/staff/superuser) -->
+  {% if user.is_superuser or user.is_staff %}
+    <hr>
+    <form method="post"
+          action="{% url 'delete_task' task.id %}"
+          onsubmit="return confirm('آیا از حذف این تسک مطمئن هستید؟');"
+          style="margin-top:0.75rem;">
+      {% csrf_token %}
+      <button type="submit"
+              class="btn btn-danger"
+              style="background-color:#dc3545; color:white; padding:8px 16px; border:none; border-radius:6px;">
+        🗑️ حذف تسک
+      </button>
+    </form>
+  {% endif %}
+
+</div>
+
+
+<script>
+  document.addEventListener("input", function(e) {
+    const input = document.querySelector("#id_hours_spent"); // field name in form
+    if (input && input.value > 32) {
+        input.value = 32;
+        alert("حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد.");
+    }
+});
+
+</script>

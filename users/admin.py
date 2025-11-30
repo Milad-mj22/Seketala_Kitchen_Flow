@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from users.forms import LocationForm
-from .models import  BuyerActivity, Location, MaterialCategory, MenuItem, Profile, SubMenuItem
+from .models import  BuyerActivity, Location, MaterialCategory, MenuItem, Profile, ProfileShortcuts, SubMenuItem
 from .models import Tools,Post,Tools,Post_quill , jobs , Projects ,raw_material,create_order\
                     ,mother_material,FoodFilter,SnappFoodList,cities,FoodRawMaterial,mother_food,mode_raw_materials,\
                     Inventory,InventoryLog,Warehouse,RestaurantBranch,NightOrderRemainder,AllowedLocation,\
@@ -60,6 +60,12 @@ class ToolAdmin(admin.ModelAdmin):
     fields = ("title", "slug", "content", "icon", "category", "status")
 
 
+@admin.register(ProfileShortcuts)
+class ProfileShortcuts(admin.ModelAdmin):
+    list_display = ("title", "category", "status", "icon","show")
+    list_filter = ("status", "category")
+    search_fields = ("title", "content")
+    fields = ("title", "slug", "content", "icon", "category", "status","show")
 
 
 

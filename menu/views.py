@@ -2,8 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordChangeView
-from django.contrib.auth import logout
+
 
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin

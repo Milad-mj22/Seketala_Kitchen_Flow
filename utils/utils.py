@@ -58,3 +58,102 @@ def detect_gender(name):
     else:
         return d.get_gender(name)
 
+
+
+
+
+
+
+
+import pandas as pd
+from django.contrib.auth.models import User
+from timeTracker.models import Team, Sprint, Story, Task
+from decimal import Decimal
+from django.shortcuts import render
+from .forms import CSVUploadForm
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def import_tasks_csv(request):
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            team_name = request.POST['team_name']
+            sprint_name = request.POST['sprint_name']
+            csv_file = request.FILES['file']
+
+            try:
+                df = pd.read_csv(csv_file)
+            except Exception as e:
+                return render(request, 'import_tasks.html', {
+                    'form': form,
+                    'error': 'Error reading CSV file: ' + str(e),
+                })
+
+            # Get or create Team and Sprint
+            team, _ = Team.objects.get_or_create(name=team_name)
+            sprint, _ = Sprint.objects.get_or_create(name=sprint_name)
+
+            current_story = None
+            created_stories = 0
+            created_tasks = 0
+
+            for _, row in df.iterrows():
+                title = str(row.get('عنوان داستان / تسک', '')).strip()
+                try:
+                    priority = int(row.get('اولویت'))
+                except:
+                    priority = 0
+                    
+                estimate_raw = str(row.get('تخمین', '')).strip()
+                assigned_name = str(row.get('مجری', '')).strip()
+                status = str(row.get('وضعیت', '')).strip().lower()
+                description = str(row.get('توضیحات', '')).strip()
+
+                # If تخمین is empty, this is a Story
+                if not estimate_raw or estimate_raw == 'nan':
+                    if title:
+                        current_story = Story.objects.create(
+                            title=title,
+                            description=description,
+                            team=team,
+                            sprint=sprint,
+                            priority = priority
+                        )
+                        created_stories += 1
+                    continue
+
+                if not current_story:
+                    continue  # Skip task without a parent story
+
+                try:
+                    goal_time = Decimal(estimate_raw)
+                except:
+                    continue
+
+                user = User.objects.filter(last_name__icontains=assigned_name).first()
+
+                Task.objects.create(
+                    title=title,
+                    description=description,
+                    story=current_story,
+                    priority = current_story.priority,
+                    goal_time=goal_time,
+                    assigned_to=user,
+                    status=status if status in ['todo', 'doing', 'done'] else 'todo',
+                )
+                created_tasks += 1
+
+            return render(request, 'import_result.html', {
+                'created_stories': created_stories,
+                'created_tasks': created_tasks,
+                'team': team,
+                'sprint': sprint,
+            })
+    else:
+        form = CSVUploadForm()
+        teams = Team.objects.all()
+        sprints = Sprint.objects.all()
+
+    return render(request, 'import_tasks.html', {'form': form,'sprints':sprints,'teams':teams})

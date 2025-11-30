@@ -88,25 +88,36 @@ class LoginForm(AuthenticationForm):
 
 
 class UpdateUserForm(forms.ModelForm):
-    username = forms.CharField(max_length=100,
-                               required=True,
-                               widget=forms.TextInput(attrs={'class': 'form-control'}))
-    email = forms.EmailField(required=True,
-                             widget=forms.TextInput(attrs={'class': 'form-control'}))
-
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ["username", "email"]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        }
 
 
 class UpdateProfileForm(forms.ModelForm):
-    avatar = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control-file'}))
-    bio = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}))
-    job_position = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 6}))
     class Meta:
         model = Profile
-        fields = ['avatar', 'bio','job_position']
-
+        fields = [
+            "first_name",
+            "last_name",
+            "phone",
+            "address",
+            "avatar",
+            "bio",
+        ]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "address": forms.TextInput(attrs={"class": "form-control"}),
+            "bio": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            # if job_position is FK/choices:
+            # if it's CharField, change to TextInput instead
+            "avatar": forms.FileInput(attrs={"class": "form-control"}),
+        }
 
 
 

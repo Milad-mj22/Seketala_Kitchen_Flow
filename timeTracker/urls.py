@@ -3,7 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from timeTracker import views
-from timeTracker.views import api_update_task_status, dashboard, data_dashboard_view, delete_task, selective_dashboard, sprint_create, sprint_edit, sprint_list, story_create, story_delete, story_edit, story_list, task_create, task_detail_modal, task_list, team_dashboard, team_overview_view, team_timeline_view
+from timeTracker.views import api_tasks_load_more, api_update_task_status, dashboard , delete_task,  sprint_create, sprint_edit, sprint_list, story_create, story_delete, story_edit, story_list, task_create, task_detail_modal, task_list
 
 
 urlpatterns = [
@@ -24,10 +24,7 @@ urlpatterns = [
     path('tasks/<int:pk>/status/', api_update_task_status, name='api_update_task_status'),
     path('tasks/<int:pk>/modal/', task_detail_modal, name='task_detail_modal'),
     path('tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
+    path("tasks/load-more/", api_tasks_load_more, name="tasks_load_more"),
     path('time_entry/delete/<int:entry_id>/', views.delete_time_entry, name='delete_time_entry'),
-    path('team_dashboard/',team_dashboard , name='team_dashboard'),
-    path('selective_dashboard/',selective_dashboard , name='selective_dashboard'),
-    path('data_dashboard/',data_dashboard_view , name='data_dashboard'),
-    path('team-overview/', team_overview_view, name='team_overview'),  # ✅ new
-    path('team-timeline/', team_timeline_view, name='team_timeline'),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
