@@ -63,16 +63,97 @@ $(document).ready(function () {
     ➕ افزودن فعالیت
 </button>
 
-
-<!-- ------------------------- ACTIVITY LIST ------------------------- -->
 {% for log in logs %}
-<div class="activity-card mb-3">
-    <div class="text-secondary small">{{ log.timestamp|to_jalali }}</div>
-    <div class="fw-bold">{{ log.description }}</div>
+<div class="activity-card mb-3 position-relative">
+
+    <!-- Delete button (top-right) -->
+    <button type="button"
+            class="btn btn-sm btn-outline-danger position-absolute top-0 start-0 m-2"
+            data-bs-toggle="modal"
+            data-bs-target="#deleteActivityModal{{ log.id }}">
+        🗑 حذف
+    </button>
+
+    <!-- زمان ثبت لاگ -->
+    <div class="text-secondary small">
+        ثبت شده در: {{ log.timestamp|to_jalali }}
+    </div>
+
+    {% if log.activity_type %}
+    <div class="small text-muted mt-1">
+        نوع فعالیت: {{ log.activity_type }}
+    </div>
+    {% endif %}
+
+    <div class="fw-bold mt-2">
+        {{ log.description }}
+    </div>
+
+    <div class="mt-2 small">
+        {% if log.created_at %}
+            <div>🔹 تاریخ شروع: {{ log.created_at|to_jalali }}</div>
+        {% endif %}
+        {% if log.next_followup %}
+            <div>🔹 تاریخ پیگیری: {{ log.next_followup|to_jalali }}</div>
+        {% endif %}
+        {% if log.doing_date %}
+            <div>🔹 تاریخ انجام: {{ log.doing_date|to_jalali }}</div>
+        {% endif %}
+    </div>
+
+    {% if log.mentioned_users.exists %}
+    <div class="mt-2 small text-muted">
+        👤 منشن شده برای:
+        {% for u in log.mentioned_users.all %}
+            <span class="badge text-bg-secondary">
+                {% if u.profile.first_name or u.profile.last_name %}
+                    {{ u.profile.first_name }} {{ u.profile.last_name }}
+                {% else %}
+                    {{ u.username }}
+                {% endif %}
+            </span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
 </div>
+
+<!-- Delete confirm modal for this log -->
+<div class="modal fade" id="deleteActivityModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <form method="POST" action="{% url 'delete_buyer_activity' buyer_id log.id %}">
+        {% csrf_token %}
+
+        <div class="modal-header">
+            <h5 class="modal-title">حذف فعالیت</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+            آیا از حذف این فعالیت مطمئن هستید؟
+            <div class="mt-2 small text-muted">
+                {{ log.description|truncatechars:100 }}
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
 {% empty %}
 <p class="text-muted">هیچ فعالیتی ثبت نشده است.</p>
 {% endfor %}
+
+
 
 
 <!-- ------------------------- MODAL ADD ACTIVITY ------------------------- -->
