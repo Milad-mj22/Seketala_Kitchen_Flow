@@ -2784,7 +2784,7 @@ def add_buyer_activity(request, buyer_id):
         if doing_date is not None:
             doing_date = convert_jalali_to_gregorian(doing_date)
 
-
+        buyer = Buyer.objects.filter(id=buyer_id).first()
 
         activity = BuyerActivity.objects.create(
         
@@ -2806,6 +2806,20 @@ def add_buyer_activity(request, buyer_id):
             except (User.DoesNotExist, ValueError):
                 pass
 
+
+        title = 'ثبت رخداد جدید '
+        try:
+            name = request.user.profile.first_name
+            buyer_name = f'{buyer.first_name} {buyer.last_name}'
+            body = f' {name} اقدام به ثبت   گزارش مشتری {buyer_name} کرد.'
+        except:
+            body = 'گزارش جدید از مشتری ثبت شد'
+
+        try:
+            open_url =f"buyers/details/{buyer_id}"
+            send_webpush(request=request,code="BUYER_ACTIVITY_ADDED",title=title,body=body,url=open_url)
+        except:
+            print('Error in sendwebpush in shoratege to buyer')
 
 
         return redirect('buyer_detail', buyer_id=buyer_id)
@@ -2978,7 +2992,7 @@ def new_delete_buyer_activity(request, buyer_id, activity_id):
             buyer_name = f'{buyer.first_name} {buyer.last_name}'
             body = f' {name} اقدام به حذف یکی از گزارشات مشتری {buyer_name} کرد.'
         except:
-            body = 'لیست خرید جدید آماده شد جهت مشاهده کلیک کنید.'
+            body = 'یکی از گزارشات مشتری حذف گردید'
 
         try:
             open_url =f"buyers/details/{buyer_id}"
