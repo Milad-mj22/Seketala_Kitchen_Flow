@@ -20,3 +20,5 @@ cameras/ai/Face/models/
 models/
 
 db.sqlite3
+
+passenger_wsgi.py

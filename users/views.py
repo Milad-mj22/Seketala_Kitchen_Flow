@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from khayyam import JalaliDatetime
 
 from Notification.models import NotificationStep
-from Notification.utils import notify_users_for_step
+from Notification.utils import notify_users_for_step, send_webpush
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
@@ -2366,7 +2366,25 @@ def add_buyer(request):
                         defaults={'value': value, 'image': None}
                     )
             
-        
+
+            try : 
+                first_name = request.user.profile.first_name
+                body=f"مشتری جدید توسط  {first_name}ثبت شد. جهت مشاهده کلیک کنید.",
+
+            except:
+                body="مشتری جدید ثبت شد. جهت مشاهده کلیک کنید.",
+
+
+            try:
+                open_url =f"buyers/details/{buyer.id}"
+
+                send_webpush(request=request,code="BUYER_ADDED",title="ثبت مشتری جدید",body=body,url=open_url)
+
+            except:
+                print('Error in send notification')
+
+
+
             return redirect('buyer_list')  # change to your desired success URL
             
     
@@ -3470,18 +3488,4 @@ def error_page_flow(request, title, message):
 
 
 
-def send_webpush(request,code: str = NotificationStep.code ,title:str='',body:str='',url:str='/'):
-        try:
-            orders_url = request.build_absolute_uri(url)
-            
-            notify_users_for_step(
-                code,
-                title=title,
-                body = body,
-                extra_data={
-                    "url": orders_url
-                }
-            )
-        except:
-            print('Error in send notification')
 

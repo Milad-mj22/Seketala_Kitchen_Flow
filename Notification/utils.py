@@ -116,3 +116,20 @@ def notify_users_for_step(step_code, title, body, extra_data=None):
 
         if pref.channel in ["message", "both"]:
             send_in_app_message(pref.user, title, body)
+
+
+
+def send_webpush(request,code: str = NotificationStep.code ,title:str='',body:str='',url:str='/'):
+        try:
+            orders_url = request.build_absolute_uri(url)
+            
+            notify_users_for_step(
+                code,
+                title=title,
+                body = body,
+                extra_data={
+                    "url": orders_url
+                }
+            )
+        except:
+            print('Error in send notification')
