@@ -2964,12 +2964,29 @@ def new_delete_buyer_activity(request, buyer_id, activity_id):
         buyer_id=buyer_id
     )
 
+    buyer = Buyer.objects.filter(id=buyer_id).first()
+
     # (اختیاری) محدودیت دسترسی: فقط ایجادکننده یا ادمین
     if activity.created_by and activity.created_by != request.user and not request.user.is_superuser:
         return HttpResponseForbidden("شما مجوز حذف این فعالیت را ندارید.")
 
     if request.method == 'POST':
         activity.delete()
+        title = 'حذف گزارش'
+        try:
+            name = request.user.profile.first_name
+            buyer_name = f'{buyer.first_name} {buyer.last_name}'
+            body = f' {name} اقدام به حذف یکی از گزارشات مشتری {buyer_name} کرد.'
+        except:
+            body = 'لیست خرید جدید آماده شد جهت مشاهده کلیک کنید.'
+
+        try:
+            open_url =f"buyers/details/{buyer_id}"
+            send_webpush(request=request,code="BUYER_ACTIVITY_DELETED",title=title,body=body,url=open_url)
+        except:
+            print('Error in sendwebpush in shoratege to buyer')
+
+
         # messages.success(request, "فعالیت با موفقیت حذف شد.")
         return redirect('buyer_detail', buyer_id=buyer_id)
 
