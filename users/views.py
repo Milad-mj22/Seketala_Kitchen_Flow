@@ -2816,7 +2816,7 @@ def add_buyer_activity(request, buyer_id):
             body = 'گزارش جدید از مشتری ثبت شد'
 
         try:
-            open_url =f"buyers/details/{buyer_id}"
+            open_url =f"/buyers/details/{buyer_id}"
             send_webpush(request=request,code="BUYER_ACTIVITY_ADDED",title=title,body=body,url=open_url)
         except:
             print('Error in sendwebpush in shoratege to buyer')
