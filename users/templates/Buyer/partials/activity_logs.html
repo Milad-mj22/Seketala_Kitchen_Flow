@@ -161,7 +161,7 @@ $(document).ready(function () {
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
-      <form method="POST" action="{% url 'add_buyer_activity' buyer_id %}">
+      <form method="POST" action="/buyers/{{ buyer_id }}/add-activity/">
         {% csrf_token %}
 
         <div class="modal-header bg-primary text-white">

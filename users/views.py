@@ -2807,7 +2807,7 @@ def add_buyer_activity(request, buyer_id):
                 pass
 
 
-        title = 'ثبت رخداد جدید '
+        title = 'ثبت رخداد جدید مشتری'
         try:
             name = request.user.profile.first_name
             buyer_name = f'{buyer.first_name} {buyer.last_name}'
