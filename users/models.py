@@ -816,7 +816,7 @@ class BuyerActivity(models.Model):
         blank=True,
         verbose_name="کاربر ثبت‌کننده"
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
+    created_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ ثبت")
     
     next_followup = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پیگیری بعدی")
 
