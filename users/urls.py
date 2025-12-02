@@ -131,6 +131,9 @@ urlpatterns = [
     path('buyers/<int:buyer_id>/add-activity/', add_buyer_activity, name='add_buyer_activity'),
     path('buyers/admin/review_delete_buyers_requests/', review_delete_buyers_requests, name='review_delete_buyers_requests'),
 
+    path('buyers/<int:buyer_id>/activities/<int:activity_id>/delete/',views.new_delete_buyer_activity,name='delete_buyer_activity'),
+
+
     path('buyers/dashboard/', buyer_dashboard, name='buyer_dashboard'),
     path('buyers/dashboard_partial/', buyer_dashboard_partial, name='buyer_dashboard_partial'),
     # path('buyers/login/', auth_views.LoginView.as_view(template_name='Buyer/buyer_login.html'), name='login'),

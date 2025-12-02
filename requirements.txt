@@ -103,3 +103,4 @@ vidgear
 selenium
 
 django-pwa
+pandas
