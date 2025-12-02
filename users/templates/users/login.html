@@ -108,10 +108,10 @@
   .form-control{
     background: #131c2c; border:1px solid #2a3852; color:#e9edf2; border-radius:12px; padding:.9rem .9rem;
   }
-  .form-control:focus{ background:#0f1a2b; border-color: var(--brand-yellow); box-shadow: 0 0 0 .15rem rgba(240,197,64,.2); }
+  .form-control:focus{ background:#455e85; border-color: var(--brand-yellow); box-shadow: 0 0 0 .15rem rgba(240,197,64,.2); color: #cfd6df; }
 
   .input-group-text{
-    background:#131c2c; border:1px solid #2a3852; color:#e9edf2; border-radius:0 12px 12px 0; cursor:pointer;
+    background:#727d91; border:1px solid #2a3852; color:#e9edf2; border-radius:0 12px 12px 0; cursor:pointer;
   }
 
   .btn-login{
@@ -292,14 +292,28 @@
 
 
 
-  {% if form.errors %}
-    <div class="alert alert-danger alert-dismissible fade show mb-3 shake rtl-right" role="alert" style="text-align:right;">
-      {% for key, value in form.errors.items %}
-        <div><strong>{{ value }}</strong></div>
+  {# پیام‌های سیستم (messages) مثل "کاربری با این نام وجود ندارد" #}
+  {% if messages %}
+    <div class="alert alert-danger alert-dismissible fade show mb-3 rtl-right shake" role="alert" style="text-align:right;">
+      {% for message in messages %}
+        <div><strong>{{ message }}</strong></div>
       {% endfor %}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
     </div>
   {% endif %}
+
+  {# خطاهای فرم (مثلاً "نام کاربری یا رمز عبور اشتباه است.") #}
+  {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show mb-3 rtl-right shake" role="alert" style="text-align:right;">
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+          <div><strong>{{ error }}</strong></div>
+        {% endfor %}
+      {% endfor %}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+    </div>
+  {% endif %}
+
 
   <!-- TWO PANELS that slide -->
   <div class="forms-wrap">
