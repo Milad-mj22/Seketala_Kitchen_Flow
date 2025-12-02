@@ -64,27 +64,63 @@ class RegisterForm(UserCreationForm):
 
 
 
+from django import forms
+from django.contrib.auth.forms import AuthenticationForm, UsernameField
 
 
-class LoginForm(AuthenticationForm):
-    username = forms.CharField(max_length=100,
-                               required=True,
-                               widget=forms.TextInput(attrs={'placeholder': 'نام کاربری',
-                                                             'class': 'form-control',
-                                                             }))
-    password = forms.CharField(max_length=50,
-                               required=True,
-                               widget=forms.PasswordInput(attrs={'placeholder': 'رمز عبور',
-                                                                 'class': 'form-control',
-                                                                 'data-toggle': 'password',
-                                                                 'id': 'password',
-                                                                 'name': 'password',
-                                                                 }))
-    remember_me = forms.BooleanField(required=False)
+class PersianErrorMessagesMixin:
+    """
+    فارسی کردن پیام‌های پیش‌فرض تمام فیلدهای فرم
+    """
 
-    class Meta:
-        model = User
-        fields = ['username', 'password', 'remember_me']
+    default_required_message = "پر کردن این فیلد الزامی است."
+    default_invalid_message = "مقدار وارد شده معتبر نیست."
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            # فقط اگر فیلد اجباری است، پیام required را فارسی کن
+            if field.required:
+                field.error_messages["required"] = self.default_required_message
+
+            # اگر برای invalid چیزی ست نشده بود، یک پیام کلی فارسی بگذار
+            if "invalid" not in field.error_messages:
+                field.error_messages["invalid"] = self.default_invalid_message
+                
+class LoginForm(PersianErrorMessagesMixin, AuthenticationForm):
+    """
+    فرم لاگین با پیام‌های فارسی برای همه خطاها
+    """
+
+    username = UsernameField(
+        label="نام کاربری",
+        widget=forms.TextInput(attrs={
+            "autofocus": True,
+            "placeholder": "مثلاً admin",
+        })
+    )
+
+    password = forms.CharField(
+        label="رمز عبور",
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            "placeholder": "••••••••",
+        }),
+    )
+
+    error_messages = {
+        "invalid_login": "نام کاربری یا رمز عبور اشتباه است.",
+        "inactive": "حساب کاربری شما غیرفعال شده است. لطفاً با مدیر سیستم تماس بگیرید.",
+    }
+
+    def confirm_login_allowed(self, user):
+        if not user.is_active:
+            raise forms.ValidationError(
+                self.error_messages["inactive"],
+                code="inactive",
+            )
+
 
 
 class UpdateUserForm(forms.ModelForm):
