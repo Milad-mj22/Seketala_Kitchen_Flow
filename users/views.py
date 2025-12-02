@@ -2775,6 +2775,7 @@ def add_buyer_activity(request, buyer_id):
         start_date = request.POST.get('start_date',None)
         follow_date = request.POST.get('follow_date',None)
         doing_date = request.POST.get('doing_date',None)
+        mentioned_user_id = request.POST.get('mention_user',None)
 
         if start_date is not None:
             start_date = convert_jalali_to_gregorian(start_date)
@@ -2783,9 +2784,9 @@ def add_buyer_activity(request, buyer_id):
         if doing_date is not None:
             doing_date = convert_jalali_to_gregorian(doing_date)
 
+        buyer = Buyer.objects.filter(id=buyer_id).first()
 
-
-        BuyerActivity.objects.create(
+        activity = BuyerActivity.objects.create(
         
             buyer_id=buyer_id,
             activity_type=activity_type,
@@ -2793,8 +2794,34 @@ def add_buyer_activity(request, buyer_id):
             created_by=request.user,  # if your model supports it
             created_at = start_date,
             next_followup = follow_date,
-            doing_date = doing_date
+            doing_date = doing_date,
+        
         )
+
+        # 2) بعداً کاربر منشن شده را به many-to-many اضافه کن
+        if mentioned_user_id:
+            try:
+                user_obj = User.objects.get(id=int(mentioned_user_id))
+                activity.mentioned_users.add(user_obj)
+            except (User.DoesNotExist, ValueError):
+                pass
+
+
+        title = 'ثبت رخداد جدید '
+        try:
+            name = request.user.profile.first_name
+            buyer_name = f'{buyer.first_name} {buyer.last_name}'
+            body = f' {name} اقدام به ثبت   گزارش مشتری {buyer_name} کرد.'
+        except:
+            body = 'گزارش جدید از مشتری ثبت شد'
+
+        try:
+            open_url =f"buyers/details/{buyer_id}"
+            send_webpush(request=request,code="BUYER_ACTIVITY_ADDED",title=title,body=body,url=open_url)
+        except:
+            print('Error in sendwebpush in shoratege to buyer')
+
+
         return redirect('buyer_detail', buyer_id=buyer_id)
 
 
@@ -2942,7 +2969,43 @@ def delete_buyer_activity(request, pk):
         'activity': activity,
     })
 
+from django.http import HttpResponseForbidden
+@login_required
+def new_delete_buyer_activity(request, buyer_id, activity_id):
+    activity = get_object_or_404(
+        BuyerActivity,
+        id=activity_id,
+        buyer_id=buyer_id
+    )
 
+    buyer = Buyer.objects.filter(id=buyer_id).first()
+
+    # (اختیاری) محدودیت دسترسی: فقط ایجادکننده یا ادمین
+    if activity.created_by and activity.created_by != request.user and not request.user.is_superuser:
+        return HttpResponseForbidden("شما مجوز حذف این فعالیت را ندارید.")
+
+    if request.method == 'POST':
+        activity.delete()
+        title = 'حذف گزارش'
+        try:
+            name = request.user.profile.first_name
+            buyer_name = f'{buyer.first_name} {buyer.last_name}'
+            body = f' {name} اقدام به حذف یکی از گزارشات مشتری {buyer_name} کرد.'
+        except:
+            body = 'یکی از گزارشات مشتری حذف گردید'
+
+        try:
+            open_url =f"buyers/details/{buyer_id}"
+            send_webpush(request=request,code="BUYER_ACTIVITY_DELETED",title=title,body=body,url=open_url)
+        except:
+            print('Error in sendwebpush in shoratege to buyer')
+
+
+        # messages.success(request, "فعالیت با موفقیت حذف شد.")
+        return redirect('buyer_detail', buyer_id=buyer_id)
+
+    # اگر کسی مستقیم با GET زد، برگرد به صفحهٔ خریدار
+    return redirect('buyer_detail', buyer_id=buyer_id)
 
 @csrf_exempt
 @login_required
