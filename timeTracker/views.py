@@ -104,7 +104,10 @@ def task_create(request):
 
     # Filter stories to only those in admin's teams
     allowed_stories = Story.objects.filter(team__in=admin_teams)
-
+    allowed_stories = allowed_stories.exclude(
+        title__in=["nan", "NaN", "NAN", ""]
+    ).exclude(title__isnull=True)
+    
     if request.method == 'POST':
         form = TaskForm(request.POST)
         form.fields['story'].queryset = allowed_stories  # Ensure correct filtering on POST

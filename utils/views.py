@@ -528,9 +528,12 @@ def import_tasks_csv(request):
                     goal_time = Decimal(estimate_raw)
                 except:
                     continue
-
-                user = User.objects.filter(profile__last_name__iexact=assigned_name).first()
-
+                    
+                user = User.objects.filter(profile__last_name__iexact=assigned_name)
+                if user.exists():
+                    user = user.first()
+                else:
+                    print('not find assign name')
                 Task.objects.create(
                     title=title,
                     description=description,
