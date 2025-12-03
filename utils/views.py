@@ -529,7 +529,7 @@ def import_tasks_csv(request):
                 except:
                     continue
 
-                user = User.objects.filter(last_name__icontains=assigned_name).first()
+                user = User.objects.filter(profile__last_name__iexact=assigned_name).first()
 
                 Task.objects.create(
                     title=title,
