@@ -2,7 +2,7 @@ import sys
 import os
 
 # تنظیم مسیر پروژه
-sys.path.insert(0, '/home/mykamani/kaman.mykaman.ir/Seketala_Kitchen_Flow/passenger_wsgi.py')
+sys.path.insert(0, '/home/mykamani/dorsa.mykaman.ir/Seketala_Kitchen_Flow/passenger_wsgi.py')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'user_management.settings')
 
