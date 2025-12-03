@@ -1,0 +1,311 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(135deg, #020617, #020617 45%, #020617 100%);
+  }
+
+  .ticket-detail-card {
+    backdrop-filter: blur(14px);
+    background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+    padding: 26px 26px 22px;
+    margin-top: 32px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    position: relative;
+    overflow: hidden;
+    color: #e5e7eb;
+  }
+
+  .ticket-detail-card::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -100px;
+    inset-block-start: -60px;
+    width: 260px;
+    height: 260px;
+    background:
+      radial-gradient(circle at 40% 40%, rgba(34, 197, 94, 0.25), transparent 60%),
+      radial-gradient(circle at 60% 10%, rgba(56, 189, 248, 0.18), transparent 65%);
+    filter: blur(10px);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .ticket-detail-card::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: -120px;
+    inset-block-end: -80px;
+    width: 260px;
+    height: 260px;
+    background:
+      radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.25), transparent 60%),
+      radial-gradient(circle at 70% 70%, rgba(248, 113, 113, 0.18), transparent 70%);
+    filter: blur(12px);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .ticket-header {
+    text-align: right;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ticket-header h2 {
+    color: #f9fafb;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .ticket-status {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    text-align: right;
+    margin-bottom: 20px;
+  }
+
+  .ticket-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(75, 85, 99, 0.9);
+    background: rgba(15, 23, 42, 0.7);
+  }
+
+  .ticket-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+  }
+
+  .message-stream {
+    margin-bottom: 18px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-inline: 4px;
+  }
+
+  .message-bubble {
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    position: relative;
+    font-size: 0.9rem;
+  }
+
+  /* current-user vs others */
+  .message-me {
+    background: rgba(22, 163, 74, 0.16);
+    border: 1px solid rgba(34, 197, 94, 0.7);
+    margin-inline-start: auto;
+    max-width: 80%;
+  }
+
+  .message-them {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    margin-inline-end: auto;
+    max-width: 80%;
+  }
+
+  .message-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 0.78rem;
+    color: #9ca3af;
+  }
+
+  .message-sender {
+    font-weight: 600;
+    color: #e5e7eb;
+  }
+
+  .message-time {
+    font-family: monospace;
+    opacity: 0.85;
+  }
+
+  .message-text {
+    color: #e5e7eb;
+    line-height: 1.6;
+  }
+
+  .message-attachment {
+    margin-top: 6px;
+  }
+
+  .message-attachment a {
+    font-size: 0.78rem;
+  }
+
+  .reply-form {
+    border-top: 1px solid rgba(55, 65, 81, 0.8);
+    padding-top: 16px;
+    margin-top: 8px;
+  }
+
+  .reply-form label {
+    color: #e5e7eb;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .reply-form .form-control,
+  .reply-form .form-select {
+    border-radius: 10px;
+    background: #020617;
+    border: 1px solid rgba(51, 65, 85, 0.9);
+    color: #e5e7eb;
+  }
+
+  .reply-form .form-control:focus,
+  .reply-form .form-select:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 0.15rem rgba(34, 197, 94, 0.3);
+    background: #020617;
+  }
+
+  .btn-reply {
+    background: linear-gradient(to right, #22c55e, #16a34a);
+    border: none;
+    color: #020617;
+    padding: 9px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 14px 30px rgba(34, 197, 94, 0.4);
+  }
+
+  .btn-reply:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 40px rgba(34, 197, 94, 0.5);
+  }
+
+  .btn-reply i {
+    margin-left: 4px;
+  }
+
+  .text-muted {
+    color: #9ca3af !important;
+  }
+
+
+
+
+.reply-form .form-control {
+    border-radius: 10px;
+}
+
+.reply-form .btn-primary {
+    background-color: #0d6efd;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+
+</style>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="ticket-detail-card" style="text-align: right;">
+        <div class="ticket-header">
+          <h2>{{ ticket.title }}</h2>
+          <div class="ticket-status">
+            <span class="ticket-status-badge">
+              <span class="ticket-status-dot"></span>
+              وضعیت: {{ ticket.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="message-stream">
+          {% for msg in messages %}
+            <div class="message-bubble {% if request.user == msg.sender %}message-me{% else %}message-them{% endif %}">
+              <div class="message-meta">
+                <span class="message-sender">
+                  {{ msg.sender.username }}
+                </span>
+                <span class="message-time">
+                  {{ msg.sent_at|date:"Y/m/d H:i" }}
+                </span>
+              </div>
+
+              <div class="message-text">
+                {{ msg.message|linebreaksbr }}
+              </div>
+
+              {% if msg.attachment %}
+                <div class="message-attachment">
+                  <a href="{{ msg.attachment.url }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-paperclip ms-1"></i> دانلود فایل
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="text-muted text-center mb-0">هنوز پیامی در این تیکت ثبت نشده است.</p>
+          {% endfor %}
+        </div>
+
+<!-- Reply Form -->
+<form method="post" enctype="multipart/form-data" class="reply-form" style="direction: rtl;">
+    {% csrf_token %}
+
+    <!-- Message field -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">{{ form.message.label }}</label>
+        {{ form.message|add_class:"form-control" }}
+        {% if form.message.errors %}
+            <small class="text-danger d-block mt-1">
+                {{ form.message.errors.0 }}
+            </small>
+        {% endif %}
+    </div>
+
+    <!-- Attachment field -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">{{ form.attachment.label }}</label>
+
+        <div class="input-group">
+            {{ form.attachment|add_class:"form-control" }}
+            <span class="input-group-text">
+                <i class="fas fa-paperclip"></i>
+            </span>
+        </div>
+
+        {% if form.attachment.errors %}
+            <small class="text-danger d-block mt-1">
+                {{ form.attachment.errors.0 }}
+            </small>
+        {% endif %}
+    </div>
+
+    <div class="text-start text-md-end">
+        <button type="submit" class="btn btn-primary px-4">
+            <i class="fas fa-reply me-1"></i> ارسال پاسخ
+        </button>
+    </div>
+</form>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

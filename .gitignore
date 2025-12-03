@@ -23,3 +23,5 @@ models/
 db.sqlite3
 
 passenger_wsgi.py
+
+media/ticket_attachments/*
