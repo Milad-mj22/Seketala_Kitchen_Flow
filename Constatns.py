@@ -4,10 +4,10 @@ class Base:
 
         seke = 'seke'
         moallem = 'moallem'
-        dorsa = 'drosa'
+        dorsa = 'dorsa'
         kaman = 'kaman'
 
-    name = Name.kaman
+    name = Name.dorsa
 
 class Constants:
     if Base.name == Base.Name.seke:

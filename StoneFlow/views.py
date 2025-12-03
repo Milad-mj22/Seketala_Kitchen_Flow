@@ -1179,6 +1179,10 @@ def export_group_excel(request, group_id):
 
 def convert_excel_to_pdf(excel_path, pdf_path):
     try:
+        import win32com.client
+        import pythoncom
+
+
         pythoncom.CoInitialize()  # 👈 مهم
 
         excel = win32com.client.Dispatch("Excel.Application")
@@ -1223,7 +1227,8 @@ def create_preinvoice_view(request):
 
         # selected_coops = CuttingSaw.objects.filter(id__in=selected_ids)
 
-        selected_coops = coops.objects.filter(id__in=selected_ids,is_active=True,is_sell=False)
+        # selected_coops = coops.objects.filter(id__in=selected_ids,is_active=True,is_sell=False)
+        selected_coops = raw_material.objects.filter(id__in=selected_ids)
 
         # Load template
 
@@ -1285,8 +1290,8 @@ def create_preinvoice_view(request):
 
         for iter,coop in enumerate(selected_coops):
         
-            material_name = coop.material.name
-            quantity = coop.quantity
+            material_name = coop.name
+            quantity = coop.unit
             # try:
             price = (request.POST.get(f'{price_type}{coop.id}', '0'))
             price = convert_str_price2float(price=price)
@@ -1306,9 +1311,11 @@ def create_preinvoice_view(request):
             total_discount+=(float(discount))
             row += 1
 
-            PreInvoiceItem.objects.create(pre_invoice = current_preInvoice,coop=coop,
-                                          unit_price=float(price),discount=float(discount))
-
+            try:
+                PreInvoiceItem.objects.create(pre_invoice = current_preInvoice,coop=coop,
+                                            unit_price=float(price),discount=float(discount))
+            except:
+                print('error in create preinvoce object')
 
 
 
@@ -1355,27 +1362,30 @@ def create_preinvoice_view(request):
 
         if show_all:
             coops_final = coops.objects.filter(is_active=True, is_sell=False)
+            coops_final = raw_material.objects.all()
         else:
             coops_final = coops.objects.filter(
                 state__order=Step.objects.latest('order').order,
                 is_active=True,
                 is_sell=False
             )
+        try:
+            for coop in coops_final:
+                coop.total_price = calculate_total_price(coop=coop)
 
-        for coop in coops_final:
-            coop.total_price = calculate_total_price(coop=coop)
-
-            try:
-                sell_price_attr = coop.attribute_values.filter(attribute__label="قیمت فروش").first()
-                if sell_price_attr and sell_price_attr.value and sell_price_attr.value != 'None':
-                    sell_price = sell_price_attr.value.replace(':', '').replace(' ', '')
-                    # sell_price = Decimal(cleaned_value)
-                else:
+                try:
+                    sell_price_attr = coop.attribute_values.filter(attribute__label="قیمت فروش").first()
+                    if sell_price_attr and sell_price_attr.value and sell_price_attr.value != 'None':
+                        sell_price = sell_price_attr.value.replace(':', '').replace(' ', '')
+                        # sell_price = Decimal(cleaned_value)
+                    else:
+                        sell_price = Decimal(0)
+                except:
                     sell_price = Decimal(0)
-            except:
-                sell_price = Decimal(0)
 
-            coop.sell_price = sell_price
+                coop.sell_price = sell_price
+        except:
+            print('Cant Calculate Total Price')
 
         #     # Add all related stones
         #     for stone in coop.CuttingSaw_values.all():  # Assuming 'stones' is related_name

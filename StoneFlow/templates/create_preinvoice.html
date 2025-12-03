@@ -54,7 +54,7 @@
 
 
     <label for="show_all_coops">
-      <span style="margin-right: 30px; margin-left: 10px;">نمایش تمام کوپ ها</span>
+      <span style="margin-right: 30px; margin-left: 10px;">نمایش تمام محصولات</span>
     </label>
 
 
@@ -95,11 +95,11 @@
 
 
 
-<h5 class="fw-bold mb-3 text-success">🧱 انتخاب کوپ‌ها و قیمت:</h5>
+<h5 class="fw-bold mb-3 text-success"> انتخاب محصولات و قیمت:</h5>
 
 <!-- 🔍 Search box -->
 <div class="mb-3">
-  <input type="text" id="searchInput" class="form-control" placeholder="جستجو نام سنگ...">
+  <input type="text" id="searchInput" class="form-control" placeholder="جستجو نام محصول...">
 </div>
 
 <div class="table-responsive">
@@ -108,9 +108,9 @@
       <thead class="table-light">
         <tr>
           <th>✔️ انتخاب</th>
-          <th>سنگ</th>
+          <th>محصول</th>
           <th>مقدار</th>
-          <th>مرحله</th>
+          <th>واحئ</th>
           <th>💰 قیمت بهای تمام شده</th>
           <th>💰 قیمت فروش</th>
           <th>📉 تخفیف (%)</th>
@@ -122,9 +122,9 @@
           <td>
             <input type="checkbox" name="selected_coops" value="{{ coop.id }}">
           </td>
-          <td class="material-name">{{ coop.material.name }}</td>
+          <td class="material-name">{{ coop.name }}</td>
           <td>{{ coop.quantity }}</td>
-          <td>{{ coop.state }}</td>
+          <td>{{ coop.unit }}</td>
           <td>
             <input type="text" step="0.01" name="price_{{ coop.id }}" class="form-control text-center" value="{{ coop.production_price }}">
           </td>
