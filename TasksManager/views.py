@@ -12,64 +12,99 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from jalali_date import datetime2jalali
 
-from timeTracker.models import CommentTask, Task
+from timeTracker.models import CommentTask, Task, TimeEntry
 
 
 @login_required
 def user_tasks_json(request):
-    tasks = Task.objects.filter(is_delete=False)
-    
+    scope = request.GET.get('scope', '')
+    priority = request.GET.get('priority')  # may be None or ''
+
+    # Parse priority safely
+    if priority:
+        try:
+            priority_int = int(priority)
+        except ValueError:
+            priority_int = None
+    else:
+        priority_int = None
+
+    if scope == 'all':
+        tasks = Task.objects.filter(is_delete=False)
+        times = TimeEntry.objects.all()
+    else:
+        tasks = Task.objects.filter(is_delete=False, assigned_to=request.user)
+        times = TimeEntry.objects.filter(user=request.user)
+
     data = []
     undone_data = []
 
+    # ===== Undone tasks (for the list at bottom) =====
+    # ===== Undone tasks (for the list at bottom) =====
     for task in tasks:
-        comments_qs = CommentTask.objects.filter(task_id=task.id)
-        comment_list = [
-            {
-                'id': comment.id,
-                'description': comment.description,
-                'created_date': datetime2jalali(comment.created_date).strftime('%Y/%m/%d'),# comment.created_date.strftime('%Y-%m-%d'),
-                'created_by': comment.created_by.username
-            }
-            for comment in comments_qs
-        ]
+        # Apply priority filter to tasks too
+        if priority_int is not None and task.priority != priority_int:
+            continue
+
+        if task.status in ('doing', 'done'):
+            continue
+        else:
+            undone_data.append({
+                'id': task.id,
+                'title': task.title,
+                'priority': task.priority,
+                'status': task.status,
+                'due_date': datetime2jalali(task.created_at).strftime('%Y/%m/%d'),
+                'buyer': {
+                    'id': task.buyer.id,
+                    'username': task.buyer.username,
+                } if getattr(task, "buyer", None) else None,
+            })
+
+
+    # Sort undone tasks by due_date (string YYYY/MM/DD works lexicographically)
+    undone_data.sort(key=lambda x: x['priority'])
+
+    # ===== Calendar events built from TimeEntry, with colors =====
+    # Priority → color map (match front legend)
+    PRIORITY_COLORS = {
+        1: "#f97373",  # priority 1 – red
+        2: "#facc15",  # priority 2 – yellow
+        3: "#4ade80",  # priority 3 – green
+    }
+    DEFAULT_COLOR = "#38bdf8"  # fallback
+
+    data = []
+
+    # select_related to avoid extra queries
+    for time in times.select_related("task"):
+        task = time.task
+        if task.is_delete:
+            continue
+
+        # Apply priority filter on time-based events too
+        if priority_int is not None and task.priority != priority_int:
+            continue
+
+        color = PRIORITY_COLORS.get(task.priority, DEFAULT_COLOR)
 
         task_data = {
             'id': task.id,
             'title': task.title,
-            'is_done': task.status,
-            # 'created_by': task.created_by.username,
-            # 'buyer': {
-            #     'id': task.buyer.id if task.buyer else None,
-            #     'username': task.buyer.first_name if task.buyer else None
-            # },
-            'start':  task.created_at.strftime('%Y-%m-%d')  ,
-            'start_jalalian':   datetime2jalali(task.created_at).strftime('%Y/%m/%d'), #task.due_date.strftime('%Y-%m-%d')  ,
-            'color': "#058f1c" ,#if task.is_done else '#e67e22',
+            'is_done': task.status,  # you can keep your string status here
+
+            'start': time.datetime.strftime('%Y-%m-%d'),
+            'start_jalalian': datetime2jalali(time.datetime).strftime('%Y/%m/%d'),
+            'color': color,
             'allDay': True,
-            'comments': comment_list
         }
         data.append(task_data)
-
-        # Collect undone tasks separately
-        if not task.status != 'done' :
-            undone_data.append({
-                'id': task.id,
-                'title': task.title,
-                'due_date':  datetime2jalali(task.created_at).strftime('%Y/%m/%d') ,
-                # 'buyer': {
-                #     'id': task.buyer.id,
-                #     'username': task.buyer.first_name
-                # } if task.buyer else None
-            })
-
-    # Sort undone tasks by due_date
-    undone_data.sort(key=lambda x: x['due_date'])
 
     return JsonResponse({
         'tasks': data,
         'undone_tasks': undone_data
     })
+
 
 @login_required
 def calendar_view(request):
