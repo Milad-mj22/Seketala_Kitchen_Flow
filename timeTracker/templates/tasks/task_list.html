@@ -283,6 +283,7 @@
               <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
                 <strong>{{ task.title }}</strong>
                 <strong>اهمیت: {{ task.priority }}</strong>
+                <strong>زمان تخمینی: {{ task.goal_time }} ساعت</strong>
                 <small><b>تیم:</b> {{ task.story.team.name }}</small>
                 <small><b>اسپرینت:</b> {{ task.story.sprint.name }}</small>
                 <small><b>Story:</b> {{ task.story.title }}</small>
@@ -309,9 +310,10 @@
             {% if task.status == "doing" %}
               <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
                 <strong>{{ task.title }}</strong>
-                <strong>Priority: {{ task.priority }}</strong>
-                <small><b>Team:</b> {{ task.story.team.name }}</small>
-                <small><b>Sprint:</b> {{ task.story.sprint.name }}</small>
+                <strong>اهمیت: {{ task.priority }}</strong>
+                <strong>زمان تخمینی: {{ task.goal_time }} ساعت</strong>
+                <small><b>تیم:</b> {{ task.story.team.name }}</small>
+                <small><b>اسپرینت:</b> {{ task.story.sprint.name }}</small>
                 <small><b>Story:</b> {{ task.story.title }}</small>
                 <small><b>Assigned to:</b>
                   {% if task.assigned_to %}
@@ -336,10 +338,10 @@
             {% if task.status == "done" %}
               <li class="task-item priority-{{ task.priority }}" data-task-id="{{ task.id }}">
                 <strong>{{ task.title }}</strong>
-                <strong>Priority: {{ task.priority }}</strong>
-                <strong>Goal Time: {{ task.goal_time }}</strong>
-                <small><b>Team:</b> {{ task.story.team.name }}</small>
-                <small><b>Sprint:</b> {{ task.story.sprint.name }}</small>
+                <strong>اهمیت: {{ task.priority }}</strong>
+                <strong>زمان تخمینی: {{ task.goal_time }} ساعت</strong>
+                <small><b>تیم:</b> {{ task.story.team.name }}</small>
+                <small><b>اسپرینت:</b> {{ task.story.sprint.name }}</small>
                 <small><b>Story:</b> {{ task.story.title }}</small>
                 <small><b>Assigned to:</b>
                   {% if task.assigned_to %}
@@ -379,60 +381,69 @@
 
   // Helper: render modal HTML + init JS inside it
   function renderModal(html, taskId) {
-    const modal = document.getElementById('taskModal');
-    const modalBody = document.getElementById('modal-body');
+  const modal = document.getElementById('taskModal');
+  const modalBody = document.getElementById('modal-body');
 
-    // Insert HTML and show modal
-    modalBody.innerHTML = html;
-    modal.style.display = 'block';
+  // Insert HTML and show modal
+  modalBody.innerHTML = html;
+  modal.style.display = 'block';
 
-    // --- Persian datepicker for doing_date, if present ---
-    if (window.$ && $('#doing_date').length && $.fn.persianDatepicker) {
-      $('#doing_date').persianDatepicker({
-        format: 'YYYY/MM/DD',
-        initialValue: false,
-        autoClose: true,
-      });
-    }
+  // ⬅️ Scroll to top smoothly when modal opens
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 
-    // --- Limit hours_spent to 32 (inside modal) ---
-    const hoursInput = document.querySelector('#id_hours_spent');
-    if (hoursInput) {
-      hoursInput.addEventListener('input', function () {
-        const val = parseFloat(hoursInput.value);
-        if (val > 32) {
-          hoursInput.value = 32;
-          alert('حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد.');
-        }
-      });
-    }
+  // (Optional) prevent background scroll while modal is open
+  // document.body.style.overflow = 'hidden';
 
-    // --- Bind log-time form submit (AJAX) ---
-    const form = document.getElementById('log-time-form');
-    if (form) {
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        fetch(`/timeTracker/tasks/${taskId}/modal/`, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': csrfToken },
-          body: new FormData(form)
-        })
-          .then(resp => resp.json())      // expect { html: "...", ... }
-          .then(data => {
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-            // Re-render modal with updated HTML (including validation errors or new entries)
-            renderModal(data.html, taskId);
-          })
-          .catch(() => {
-            alert('خطایی در ارسال فرم رخ داد.');
-          });
-      });
-    }
+  // --- Persian datepicker for doing_date, if present ---
+  if (window.$ && $('#doing_date').length && $.fn.persianDatepicker) {
+    $('#doing_date').persianDatepicker({
+      format: 'YYYY/MM/DD',
+      initialValue: false,
+      autoClose: true,
+    });
   }
+
+  // --- Limit hours_spent to 32 (inside modal) ---
+  const hoursInput = document.querySelector('#id_hours_spent');
+  if (hoursInput) {
+    hoursInput.addEventListener('input', function () {
+      const val = parseFloat(hoursInput.value);
+      if (val > 32) {
+        hoursInput.value = 32;
+        alert('حداکثر زمان قابل ثبت ۳۲ ساعت می‌باشد.');
+      }
+    });
+  }
+
+  // --- Bind log-time form submit (AJAX) ---
+  const form = document.getElementById('log-time-form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      fetch(`/timeTracker/tasks/${taskId}/modal/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: new FormData(form)
+      })
+        .then(resp => resp.json())      // expect { html: "...", ... }
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+          // Re-render modal with updated HTML
+          renderModal(data.html, taskId);
+        })
+        .catch(() => {
+          alert('خطایی در ارسال فرم رخ داد.');
+        });
+    });
+  }
+}
 
   document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('taskModal');
@@ -460,19 +471,50 @@
       });
     }
 
-    // Close modal with X button
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function () {
-        modal.style.display = 'none';
-      });
-    }
 
-    // Close modal by clicking on backdrop
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) {
-        modal.style.display = 'none';
-      }
-    });
+    
+
+
+// Close modal with X button
+if (closeBtn) {
+  closeBtn.addEventListener('click', function () {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';   // ⬅️ restore scroll
+  });
+}
+
+// Close modal by clicking on backdrop
+modal.addEventListener('click', function (e) {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';   // ⬅️ restore scroll
+  }
+});
+
+// Close modal with ESC key
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    const modal = document.getElementById("taskModal");
+    if (modal && modal.style.display === "block") {
+      modal.style.display = "none";
+      document.body.style.overflow = ''; // ⬅️ restore scroll
+    }
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ----- SortableJS for columns -----
     ['todo', 'doing', 'done'].forEach(status => {

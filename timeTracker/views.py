@@ -107,7 +107,7 @@ def task_create(request):
     allowed_stories = allowed_stories.exclude(
         title__in=["nan", "NaN", "NAN", ""]
     ).exclude(title__isnull=True)
-    
+
     if request.method == 'POST':
         form = TaskForm(request.POST)
         form.fields['story'].queryset = allowed_stories  # Ensure correct filtering on POST
@@ -257,14 +257,23 @@ def task_list(request):
     selected_sprint_id = request.GET.get('sprint')
     selected_priority = request.GET.get('priority')
 
-    # صفحه اول را سرور رندر می‌کند
-    page_size = 30
-    paginator = Paginator(tasks_qs, page_size)
+    full_mode = True
     page_number = 1
-    tasks_page = paginator.page(page_number)
 
-    tasks = tasks_page.object_list
-    has_more = tasks_page.has_next()
+
+    if not full_mode :
+
+        # صفحه اول را سرور رندر می‌کند
+        page_size = 30
+        paginator = Paginator(tasks_qs, page_size)
+        tasks_page = paginator.page(page_number)
+
+        tasks = tasks_page.object_list
+        has_more = tasks_page.has_next()
+    else:
+        tasks = tasks_qs
+        has_more = False
+    
 
     return render(request, 'tasks/task_list.html', {
         'tasks': tasks,
