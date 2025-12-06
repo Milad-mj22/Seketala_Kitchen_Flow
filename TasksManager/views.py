@@ -59,6 +59,10 @@ def user_tasks_json(request):
                     'id': task.buyer.id,
                     'username': task.buyer.username,
                 } if getattr(task, "buyer", None) else None,
+                'assigned': {
+                    'id': task.assigned_to.id if getattr(task, "assigned_to", None) else None,
+                    'username': task.assigned_to.username if getattr(task, "assigned_to", None) else None,
+                },
             })
 
 

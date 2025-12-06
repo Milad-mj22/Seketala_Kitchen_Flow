@@ -634,6 +634,18 @@ function renderUndoneTasks(tasks) {
             </span>
           </div>
 
+
+           <p class="card-text mb-1">
+            <span class="text-secondary">تاریخ ایجاد:</span>
+            <span class="fw-semibold"style="color: #000;">${task.due_date}</span>
+          </p>
+
+          <p class="card-text mb-0">
+            <span class="text-secondary">مسئول انجام:</span>
+            <span class="fw-semibold"style="color: #000;">
+              ${task.assigned['username'] || 'ثبت نشده'}
+            </span>
+          </p>
          
         </div>
       </div>
