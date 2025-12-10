@@ -10,6 +10,7 @@ from decimal import Decimal
 
 
 
+DEFAULT_PROJECT_ID = 1
 
 
 
@@ -30,16 +31,22 @@ class Sprint(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 class Story(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE)
-    priority = models.IntegerField(default=0)  # New field for priority
 
-    def __str__(self):
-        return f"تیم : {self.team.name} - اسپرینت :{self.sprint.name} - استوری:  {self.title}"
+    project = models.ForeignKey(
+        'Projects.Project',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
+    priority = models.IntegerField(default=0)
+
 
 class Task(models.Model):
     STATUS_CHOICES = [

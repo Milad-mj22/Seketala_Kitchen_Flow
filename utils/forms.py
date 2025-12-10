@@ -1,6 +1,6 @@
 from django import forms
 
-from utils.models import TicketMessage,Ticket
+from utils.models import ProjectTicket, ProjectTicketMessage, TicketMessage,Ticket
 
 
 class CSVUploadForm(forms.Form):
@@ -25,3 +25,28 @@ class TicketMessageForm(forms.ModelForm):
     class Meta:
         model = TicketMessage
         fields = ['message', 'attachment']
+
+
+
+
+
+
+class ProjectTicketForm(forms.ModelForm):
+    class Meta:
+        model = ProjectTicket
+        fields = ['phone','title', 'message', 'category']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 5}),
+        }
+        labels = {
+            'phone': 'شماره تماس',
+            'title': 'عنوان',
+            'message': 'پیام',
+            'category': 'دسته‌بندی'
+        }
+
+class ProjectTicketMessageForm(forms.ModelForm):
+    class Meta:
+        model = ProjectTicketMessage
+        fields = ['message', 'attachment']
+

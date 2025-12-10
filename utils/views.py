@@ -7,11 +7,13 @@ from django.shortcuts import render
 # Create your views here.
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
+
+from users.views import error_page_flow
 from .utils import detect_gender, fix_persian_text
 
 import pandas as pd
 from django.shortcuts import render
-from .forms import CSVUploadForm
+from .forms import CSVUploadForm, ProjectTicketForm, ProjectTicketMessageForm
 from users.models import Buyer, Inventory, MaterialComposition, Warehouse , mother_material , raw_material , mode_raw_materials
 
 
@@ -565,7 +567,7 @@ def import_tasks_csv(request):
 
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Ticket, TicketCategory, TicketMessage
+from .models import ProjectTicket, Ticket, TicketCategory, TicketMessage
 from .forms import TicketForm, TicketMessageForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -594,7 +596,7 @@ def ticket_create(request):
             message.save()
             return redirect('ticket_detail', ticket.id)
     else:
-        categories = TicketCategory.objects.all()
+        categories = TicketCategory.objects.filter(is_project=False)
         form = TicketForm()
         msg_form = TicketMessageForm()
         return render(request, 'tickets/ticket_create.html', {'form': form, 'msg_form': msg_form,'categories':categories})
@@ -618,3 +620,64 @@ def ticket_detail(request, ticket_id):
     else:
         form = TicketMessageForm()
     return render(request, 'tickets/ticket_detail.html', {'ticket': ticket, 'messages': messages, 'form': form})
+
+
+
+
+
+
+
+from Projects.models import Project
+
+
+@login_required
+def project_ticket_create(request,project_id):
+
+
+    title = 'خطا در تشخیص پروژه'
+    message = 'خطا در شناساسیی پروژه مجدد تلاش کنید'
+
+    try:
+        project = Project.objects.filter(id=project_id).first()
+    except:
+
+        return render(request, 'users/error_page_flow_not_extend.html', {
+            'title': title,
+            'message': message,
+            'show_topbar':False
+        })
+
+    if request.method == 'POST':
+        form = ProjectTicketForm(request.POST)
+        msg_form = ProjectTicketMessageForm(request.POST, request.FILES)
+        if form.is_valid() and msg_form.is_valid():
+            ticket = form.save(commit=False)
+            ticket.user = request.user
+            ticket.save()
+            message = msg_form.save(commit=False)
+            message.ticket = ticket
+            message.sender = request.user
+            message.save()
+            ticket_number = ticket.id  # Assuming 'id' is the ticket number
+            return redirect('ticket_created', ticket_number=ticket_number)  # Redirect to ticket confirmation page
+        
+
+    else:
+        categories = TicketCategory.objects.filter(is_project=True)
+        form = TicketForm()
+        msg_form = TicketMessageForm()
+        return render(request, 'Project_tickets/ticket_create.html', {'form': form, 'msg_form': msg_form,'categories':categories,'project': project })
+    return render(request, 'users/error_page_flow_not_extend.html', {
+            'title': title,
+            'message': message,
+            'show_topbar':False
+        })
+
+
+
+
+
+def ticket_created(request, ticket_number):
+    # Fetch the ticket using the ticket_number (which is the ticket ID)
+    ticket = ProjectTicket.objects.get(id=ticket_number)
+    return render(request, 'Project_tickets/ticket_created.html', {'ticket': ticket})

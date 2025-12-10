@@ -1,0 +1,289 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-soft: rgba(79, 70, 229, 0.08);
+    --accent: #f97316;
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+  }
+
+  .tickets-page {
+    max-width: 1000px;
+    margin: 32px auto 40px;
+    padding: 0 16px;
+    direction: rtl;
+    text-align: right;
+  }
+
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .ticket-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .ticket-header-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .ticket-header-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+
+  .ticket-header-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #4b5563;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+  }
+
+  .ticket-header a.ticket-new-btn {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: #f9fafb;
+    padding: 0.55rem 1.4rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4);
+    border: none;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+
+  .ticket-header a.ticket-new-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
+
+  .ticket-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .ticket-link {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ticket-card {
+    background-color: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 16px 16px 14px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 110px;
+  }
+
+  .ticket-card::before {
+    content: "";
+    position: absolute;
+    inset-inline-end: -40px;
+    top: -40px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle at 30% 30%, rgba(79, 70, 229, 0.06), transparent 60%);
+    pointer-events: none;
+  }
+
+  .ticket-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.16);
+    border-color: rgba(79, 70, 229, 0.35);
+  }
+
+  .ticket-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.3rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .ticket-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  .ticket-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #4b5563;
+    white-space: nowrap;
+  }
+
+  /* اگر status فیلد کد داشته باشد، می‌توانی با کلاس‌ها رنگ دهی کنی:
+     .status-open, .status-closed و ... */
+  .ticket-status-pill.status-open {
+    background: rgba(22, 163, 74, 0.08);
+    color: #15803d;
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+
+  .ticket-status-pill.status-pending {
+    background: rgba(249, 115, 22, 0.08);
+    color: #c05621;
+    border-color: rgba(249, 115, 22, 0.5);
+  }
+
+  .ticket-status-pill.status-closed {
+    background: rgba(148, 163, 184, 0.15);
+    color: #4b5563;
+    border-color: rgba(148, 163, 184, 0.7);
+  }
+
+  .ticket-dates {
+    text-align: left;
+    direction: ltr;
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .empty-state {
+    margin-top: 24px;
+    padding: 20px 18px;
+    border-radius: var(--radius-lg);
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  .empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: 0.3rem;
+  }
+
+  @media (max-width: 768px) {
+    .tickets-page {
+      margin-top: 20px;
+    }
+
+    .ticket-header {
+      align-items: flex-start;
+    }
+
+    .ticket-header a.ticket-new-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ticket-dates {
+      text-align: right;
+      direction: rtl;
+    }
+  }
+</style>
+
+<div class="tickets-page">
+  <div class="ticket-header">
+    <div class="ticket-header-main">
+      <div class="ticket-header-title">
+        🎫 لیست تیکت‌های من
+      </div>
+      <div class="ticket-header-subtitle">
+        وضعیت درخواست‌ها و پیام‌های پشتیبانی خود را یک‌جا ببینید.
+      </div>
+      <div class="ticket-header-meta">
+        <span>تعداد تیکت‌ها:</span>
+        <strong>{{ tickets|length }}</strong>
+      </div>
+    </div>
+
+    <a href="{% url 'ticket_create' %}" class="ticket-new-btn">
+      <i class="fas fa-plus-circle"></i>
+      <span>ارسال تیکت جدید</span>
+    </a>
+  </div>
+
+  {% if tickets %}
+    <div class="ticket-list">
+      {% for ticket in tickets %}
+        <a href="{% url 'ticket_detail' ticket.id %}" class="ticket-link">
+          <div class="ticket-card">
+            <div class="ticket-title">
+              {{ ticket.title }}
+            </div>
+
+            <div class="ticket-meta-row">
+              <div class="ticket-status-pill
+                {% if ticket.status == 'open' %}status-open{% elif ticket.status == 'pending' %}status-pending{% elif ticket.status == 'closed' %}status-closed{% endif %}
+              ">
+                <span>وضعیت:</span>
+                <strong>{{ ticket.get_status_display }}</strong>
+              </div>
+
+              {# در صورت داشتن تاریخ ایجاد/آخرین بروزرسانی، این‌ها نمایش داده می‌شوند #}
+              <div class="ticket-dates">
+                {% if ticket.created_at %}
+                  <div>ساخته‌شده: {{ ticket.created_at|date:"Y/m/d H:i" }}</div>
+                {% endif %}
+                {% if ticket.updated_at %}
+                  <div>آخرین تغییر: {{ ticket.updated_at|date:"Y/m/d H:i" }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📭</div>
+      <div>هنوز هیچ تیکتی ثبت نکرده‌اید.</div>
+      <div class="mt-2">
+        برای طرح سؤال، گزارش مشکل یا پیگیری موضوع جدید، روی
+        <a href="{% url 'ticket_create' %}" class="text-primary" style="text-decoration:none;">
+          «ارسال تیکت جدید»
+        </a>
+        کلیک کنید.
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -27,4 +27,7 @@ urlpatterns = [
     path("tasks/load-more/", api_tasks_load_more, name="tasks_load_more"),
     path('time_entry/delete/<int:entry_id>/', views.delete_time_entry, name='delete_time_entry'),
 
+    path('assign_stories_to_project/', views.assign_stories_to_project, name='assign_stories_to_project'),
+    path('select_sprint/', views.select_sprint, name='select_sprint'),
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
