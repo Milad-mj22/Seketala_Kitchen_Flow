@@ -3543,9 +3543,10 @@ def confirm_all_items(request, order_id):
 
 
 def error_page_flow(request, title, message):
-    return render(request, 'error_page_flow.html', {
+    return render(request, 'users/error_page_flow.html', {
         'title': title,
-        'message': message
+        'message': message,
+        'show_topbar':False
     })
 
 

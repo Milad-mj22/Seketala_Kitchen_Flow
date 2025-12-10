@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+from Projects.models import Project
 from users.views import convert_georgian2jalali, convert_to_jalali
 
 # Create your views here.
@@ -500,3 +501,57 @@ def delete_time_entry(request, entry_id):
 
     # fallback for GET (optional)
     return redirect('task_list')
+
+
+
+
+
+from django.shortcuts import render, redirect
+from .models import Story, Sprint
+
+from django.shortcuts import render, get_object_or_404
+from .models import Story, Sprint
+@csrf_exempt
+def assign_stories_to_project(request):
+    # Fetch the sprint by ID, if it doesn't exist return 404
+    data = request.GET.dict()
+    sprint = data.get('sprint_id',None)
+    try:
+        sprint = int(sprint)
+    except:
+        sprint = None
+    if sprint is None:
+        return render('error_page')
+   
+    sprint = get_object_or_404(Sprint, id=sprint)
+    
+    # Get all stories for the selected sprint
+    stories = Story.objects.filter(sprint=sprint)
+    stories.filter(title='nan').delete()
+    
+    # Get all projects to display in the dropdown
+    projects = Project.objects.all()
+
+    if request.method == 'POST':
+        # Process each story and assign the selected project
+        for story in stories:
+            project_id = request.POST.get(f'project_{story.id}')  # Get the selected project for this story
+            if project_id:
+                project = Project.objects.get(id=project_id)  # Find the selected project
+                story.project = project  # Assign the project to the story
+                story.save()
+
+        return redirect('success_page')  # Redirect to a success page after saving the assignments
+
+
+
+    return render(request, 'assign_stories_to_project.html', {
+        'sprint': sprint,
+        'stories': stories,
+        'projects': projects,
+    })
+
+
+def select_sprint(request):
+    sprints = Sprint.objects.all()  # تمام اسپرینت‌ها را می‌گیریم
+    return render(request, 'select_sprint.html', {'sprints': sprints})

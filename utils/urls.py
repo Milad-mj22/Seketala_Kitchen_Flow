@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import import_buyers_csv, import_composition_materials_csv, import_raw_materials_csv, manage_inventory,import_tasks_csv, ticket_create, ticket_detail, ticket_list
+from .views import import_buyers_csv, import_composition_materials_csv, import_raw_materials_csv, manage_inventory,import_tasks_csv, ticket_create, ticket_created, ticket_detail, ticket_list, project_ticket_create
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -15,8 +15,9 @@ urlpatterns = [
 
     path('tickets/', ticket_list, name='ticket_list'),
     path('tickets/create/', ticket_create, name='ticket_create'),
+    path('tickets/create/<int:project_id>', project_ticket_create, name='ticket_project_create'),
     path('tickets/<int:ticket_id>/', ticket_detail, name='ticket_detail'),
-
+    path('ticket_created/<int:ticket_number>/', ticket_created, name='ticket_created'),
 
 
 

@@ -72,3 +72,13 @@ class TimeEntryForm(forms.ModelForm):
         hours = self.cleaned_data.get('hours_spent')
 
         return hours
+    
+
+
+from django import forms
+from .models import Story
+
+class AssignStoryForm(forms.ModelForm):
+    class Meta:
+        model = Story
+        fields = ['project']  # Only include the project field to assign a project to the story
