@@ -376,7 +376,7 @@ def profile_edit(request):
 # @login_required
 @job_required(['Manager', 'Admin','Programmer','CEO'])
 def tools(request):
-    queryset = Tools.objects.all().order_by('-title').reverse()
+    queryset = Tools.objects.filter(show=True).order_by('-title').reverse()
 
     return render(request, 'users/tools_new.html',{'tools':queryset})
 

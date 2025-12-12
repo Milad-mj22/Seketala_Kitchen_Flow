@@ -21,5 +21,8 @@ urlpatterns = [
     path('foods/<int:pk>/edit/', views.update_food, name='update_food'),
     path('foods/add/', views.add_food, name='add_food'),
 
-
+    path('mother-foods/', views.mother_food_list, name='mother_food_list'),
+    path('mother-foods/add/', views.mother_food_add, name='mother_food_add'),
+    path('mother-foods/<int:pk>/edit/', views.mother_food_edit, name='mother_food_edit'),
+    path('mother-foods/<int:pk>/delete/', views.mother_food_delete, name='mother_food_delete'),
 ]

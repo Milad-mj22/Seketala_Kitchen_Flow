@@ -577,7 +577,14 @@ def ticket_list(request):
     tickets = Ticket.objects.filter(
         Q(user=user) | Q(category__viewers=user)
     ).distinct().order_by('-created_at')
-    return render(request, 'tickets/ticket_list.html', {'tickets': tickets})
+    categories = TicketCategory.objects.all()
+    return render(request, 'tickets/ticket_list.html', {'tickets': tickets,"categories": categories})
+
+
+
+
+
+
 
 
 
