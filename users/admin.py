@@ -5,7 +5,7 @@ from .models import  BuyerActivity, Location, MaterialCategory, MenuItem, Profil
 from .models import Tools,Post,Tools,Post_quill , jobs , Projects ,raw_material,create_order\
                     ,mother_material,FoodFilter,SnappFoodList,cities,FoodRawMaterial,mother_food,mode_raw_materials,\
                     Inventory,InventoryLog,Warehouse,RestaurantBranch,NightOrderRemainder,AllowedLocation,\
-                    EntryExitLog,CapturedImage,MaterialComposition,ProductionLog,Nationality,Buyer,ReportTitles,DailyReports
+                    EntryExitLog,CapturedImage,MaterialComposition,ProductionLog,Nationality,Buyer,ReportTitles,DailyReports,ServerErrorLog
 
 
 
@@ -160,6 +160,7 @@ admin.site.register(EntryExitLog)
 
 admin.site.register(Location)
 admin.site.register(MaterialCategory)
+admin.site.register(ServerErrorLog)
 
 
 
