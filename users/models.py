@@ -1114,3 +1114,18 @@ class buyer_order_list(models.Model):
             self.save()
         else:
             raise ValueError("Count must be greater than 0")
+        
+
+
+    
+# models.py
+class ServerErrorLog(models.Model):
+    path = models.CharField(max_length=500)
+    user = models.CharField(max_length=150)
+    user_agent = models.TextField()
+    error_type = models.TextField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.path} - {self.created_at}"
