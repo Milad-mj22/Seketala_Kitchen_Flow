@@ -54,10 +54,10 @@ admin.site.register(BuyerActivity)
 
 @admin.register(Tools)
 class ToolAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "status", "icon")
-    list_filter = ("status", "category")
+    list_display = ("title", "category", "status", "icon","show")
+    list_filter = ("status", "category","show")
     search_fields = ("title", "content")
-    fields = ("title", "slug", "content", "icon", "category", "status")
+    fields = ("title", "slug", "content", "icon", "category", "status","show")
 
 
 @admin.register(ProfileShortcuts)

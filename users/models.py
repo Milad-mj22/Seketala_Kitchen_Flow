@@ -28,6 +28,8 @@ class MenuItem(models.Model):
     url = models.CharField(max_length=200, verbose_name="آدرس URL")
     order = models.PositiveIntegerField(default=0, verbose_name="ترتیب نمایش")
 
+    show = models.BooleanField(default=True)
+
     def __str__(self):
         return self.title
 
@@ -226,6 +228,9 @@ class Tools(models.Model):
         default="ready"
     )
 
+
+
+    show = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-title']
