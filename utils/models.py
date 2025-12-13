@@ -58,6 +58,8 @@ class ProjectTicket(models.Model):
     message = models.TextField(verbose_name="پیام")
     category = models.ForeignKey(TicketCategory, on_delete=models.SET_NULL, null=True, verbose_name="دسته‌بندی")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', verbose_name="وضعیت")
+    attachment = models.FileField(upload_to='project_ticket_attachments/', null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین بروزرسانی")
     project = models.ForeignKey(
