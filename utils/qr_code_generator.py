@@ -1,7 +1,7 @@
 import qrcode
 
 # Your URL
-url = "https://dorsa.mykaman.ir/utils/tickets/create/1"  # Replace with your desired URL
+url = "https://dorsa.mykaman.ir/utils/tickets/create/2"  # Replace with your desired URL
 
 # Generate the QR code
 qr = qrcode.QRCode(
