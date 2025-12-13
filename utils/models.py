@@ -81,4 +81,4 @@ class ProjectTicketMessage(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Message by {self.sender.username} on {self.ticket.title}"
+        return f"Message by {self.phone} on {self.ticket.title}"
