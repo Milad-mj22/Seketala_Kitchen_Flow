@@ -638,7 +638,7 @@ def ticket_detail(request, ticket_id):
 
 from Projects.models import Project
 
-
+@login_required
 def project_ticket_list(request):
     tickets = ProjectTicket.objects.all().order_by('-created_at')
     categories = TicketCategory.objects.filter(is_project = True)
@@ -649,7 +649,6 @@ def project_ticket_list(request):
 
 
 
-@login_required
 def project_ticket_create(request,project_id):
 
 
