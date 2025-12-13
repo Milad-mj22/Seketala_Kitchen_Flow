@@ -45,10 +45,13 @@
           </div>
         </div>
 
-        <a href="{% url 'ticket_create' %}" class="btn btn-primary btn-modern">
-          <i class="fa-solid fa-plus ms-1"></i>
-          ارسال تیکت جدید
-        </a>
+          <a href="javascript:void(0)"
+            class="btn btn-primary btn-modern disabled"
+            aria-disabled="true"
+            tabindex="-1">
+            <i class="fa-solid fa-plus ms-1"></i>
+            ارسال تیکت جدید
+          </a>
       </div>
     </div>
 
@@ -137,10 +140,8 @@
           </div>
           <div class="fw-bold mb-1">هنوز هیچ تیکتی ثبت نکرده‌اید</div>
           <div class="text-muted small mb-3">برای گزارش مشکل یا درخواست جدید، یک تیکت بسازید.</div>
-          <a href="{% url 'ticket_create' %}" class="btn btn-primary btn-modern">
-            <i class="fa-solid fa-plus ms-1"></i>
-            ارسال تیکت جدید
-          </a>
+
+
         </div>
       </div>
     {% endif %}
