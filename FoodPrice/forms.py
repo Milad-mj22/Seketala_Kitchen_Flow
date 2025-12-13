@@ -44,3 +44,26 @@ class FoodForm(forms.ModelForm):
             'priority': forms.NumberInput(attrs={'class': 'form-control'}),
             'details': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
+
+
+
+
+
+
+# forms.py
+from django import forms
+from users.models import mother_food
+
+class MotherFoodForm(forms.ModelForm):
+    class Meta:
+        model = mother_food
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'نام غذای دسته بندی مادر'
+            })
+        }
+        labels = {
+            'name': 'نام غذای دسته بندی مادر'
+        }

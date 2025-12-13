@@ -5,7 +5,7 @@ from .models import  BuyerActivity, Location, MaterialCategory, MenuItem, Profil
 from .models import Tools,Post,Tools,Post_quill , jobs , Projects ,raw_material,create_order\
                     ,mother_material,FoodFilter,SnappFoodList,cities,FoodRawMaterial,mother_food,mode_raw_materials,\
                     Inventory,InventoryLog,Warehouse,RestaurantBranch,NightOrderRemainder,AllowedLocation,\
-                    EntryExitLog,CapturedImage,MaterialComposition,ProductionLog,Nationality,Buyer,ReportTitles,DailyReports
+                    EntryExitLog,CapturedImage,MaterialComposition,ProductionLog,Nationality,Buyer,ReportTitles,DailyReports,ServerErrorLog
 
 
 
@@ -54,10 +54,10 @@ admin.site.register(BuyerActivity)
 
 @admin.register(Tools)
 class ToolAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "status", "icon")
-    list_filter = ("status", "category")
+    list_display = ("title", "category", "status", "icon","show")
+    list_filter = ("status", "category","show")
     search_fields = ("title", "content")
-    fields = ("title", "slug", "content", "icon", "category", "status")
+    fields = ("title", "slug", "content", "icon", "category", "status","show")
 
 
 @admin.register(ProfileShortcuts)
@@ -160,6 +160,7 @@ admin.site.register(EntryExitLog)
 
 admin.site.register(Location)
 admin.site.register(MaterialCategory)
+admin.site.register(ServerErrorLog)
 
 
 

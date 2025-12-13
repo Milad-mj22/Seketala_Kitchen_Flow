@@ -19,7 +19,7 @@ from users.utils.CalulatedDistance import calculate_distance
 
 from .forms import BuyerActivityForm, BuyerAttributeForm, BuyerCategoryForm, CategoryForm, JobForm, MotherMaterialForm, RawMaterialCategoryForm, RawMaterialForm, RegisterForm, LoginForm, UpdateUserForm, UpdateProfileForm
 from django.views import generic
-from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Nationality, Post, ProfileShortcuts, RemainingMaterialsUsage,Tools, buyer_order_list,full_post,Profile
+from .models import AllowedLocation, BuyerActivity, BuyerAttribute, BuyerAttributeValue, BuyerCategory, CapturedImage, Inventory, InventoryLog, MaterialCategory, MaterialComposition, MenuItem, Nationality, Post, ProfileShortcuts, RemainingMaterialsUsage, ServerErrorLog,Tools, buyer_order_list,full_post,Profile
 from django.shortcuts import get_object_or_404
 import numpy as np
 from django.http import HttpResponse
@@ -376,7 +376,7 @@ def profile_edit(request):
 # @login_required
 @job_required(['Manager', 'Admin','Programmer','CEO'])
 def tools(request):
-    queryset = Tools.objects.all().order_by('-title').reverse()
+    queryset = Tools.objects.filter(show=True).order_by('-title').reverse()
 
     return render(request, 'users/tools_new.html',{'tools':queryset})
 
@@ -3553,3 +3553,31 @@ def error_page_flow(request, title, message):
 
 
 
+
+
+@csrf_exempt  # چون از 500.html میاد
+def report_server_error(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False}, status=405)
+    
+
+
+    data = {
+        "path": request.POST.get("path"),
+        "user_agent": request.POST.get("user_agent"),
+        "created_at": request.POST.get("timestamp"),
+        "user": request.user.username if request.user.is_authenticated else "anonymous",
+        "ip": request.META.get("REMOTE_ADDR"),
+        "error_type" : request.POST.get("error_type", "500")
+    }
+
+    # 🔹 اینجا انتخاب با توست:
+    # 1) ذخیره در دیتابیس
+    # 2) ارسال ایمیل
+    # 3) تبدیل به تیکت
+
+    print("SERVER ERROR REPORT:", data)
+    ServerErrorLog.objects.create(**data)
+
+
+    return JsonResponse({"ok": True})

@@ -1,311 +1,374 @@
 {% extends "users/base.html" %}
 {% load static %}
 {% load widget_tweaks %}
-
 {% block content %}
-<style>
-  body {
-    background: linear-gradient(135deg, #020617, #020617 45%, #020617 100%);
-  }
 
-  .ticket-detail-card {
-    backdrop-filter: blur(14px);
-    background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
-    border-radius: 20px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
-    padding: 26px 26px 22px;
-    margin-top: 32px;
-    border: 1px solid rgba(55, 65, 81, 0.9);
-    position: relative;
-    overflow: hidden;
-    color: #e5e7eb;
-  }
+<div class="page-wrap py-5" dir="rtl" lang="fa">
+  <div class="container" style="text-align: right;">
 
-  .ticket-detail-card::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: -100px;
-    inset-block-start: -60px;
-    width: 260px;
-    height: 260px;
-    background:
-      radial-gradient(circle at 40% 40%, rgba(34, 197, 94, 0.25), transparent 60%),
-      radial-gradient(circle at 60% 10%, rgba(56, 189, 248, 0.18), transparent 65%);
-    filter: blur(10px);
-    opacity: 0.8;
-    pointer-events: none;
-  }
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-10">
 
-  .ticket-detail-card::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: -120px;
-    inset-block-end: -80px;
-    width: 260px;
-    height: 260px;
-    background:
-      radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.25), transparent 60%),
-      radial-gradient(circle at 70% 70%, rgba(248, 113, 113, 0.18), transparent 70%);
-    filter: blur(12px);
-    opacity: 0.8;
-    pointer-events: none;
-  }
+        <!-- Card -->
+        <div class="card ticket-card border-0">
+          <div class="card-body p-4 p-md-5">
 
-  .ticket-header {
-    text-align: right;
-    margin-bottom: 18px;
-    position: relative;
-    z-index: 1;
-  }
+            <!-- Header -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+              <div class="min-w-0">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                  <span class="pill">تیکت</span>
+                  <span class="pill pill-soft">جزئیات</span>
+                  <span class="pill pill-muted">#{{ ticket.id }}</span>
+                </div>
 
-  .ticket-header h2 {
-    color: #f9fafb;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
+                <h1 class="h4 fw-black mb-1 text-dark text-truncate">{{ ticket.title }}</h1>
 
-  .ticket-status {
-    font-size: 0.9rem;
-    color: #9ca3af;
-    text-align: right;
-    margin-bottom: 20px;
-  }
+                <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
+                  <span class="status-pill
+                    {% if ticket.status == 'open' %}status-open{% elif ticket.status == 'pending' %}status-pending{% elif ticket.status == 'closed' %}status-closed{% endif %}
+                  ">
+                    <i class="fa-solid fa-circle-dot ms-1"></i>
+                    وضعیت: {{ ticket.get_status_display }}
+                  </span>
 
-  .ticket-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    border: 1px solid rgba(75, 85, 99, 0.9);
-    background: rgba(15, 23, 42, 0.7);
-  }
+                  {% if ticket.created_at %}
+                    <span class="meta-chip">
+                      <i class="fa-regular fa-clock ms-1"></i>
+                      ساخته‌شده: <span class="mono">{{ ticket.created_at|date:"Y/m/d H:i" }}</span>
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
 
-  .ticket-status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
-    background: #22c55e;
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
-  }
+              <div class="d-flex gap-2">
+                <a href="{% url 'ticket_list' %}" class="btn btn-light btn-modern btn-soft">
+                  <i class="fa-solid fa-arrow-right ms-1"></i>
+                  بازگشت
+                </a>
+              </div>
+            </div>
 
-  .message-stream {
-    margin-bottom: 18px;
-    max-height: 420px;
-    overflow-y: auto;
-    padding-inline: 4px;
-  }
+            <!-- Messages -->
+            <div class="stream-wrap mb-4" id="stream">
+              {% for msg in messages %}
+                <div class="bubble {% if request.user == msg.sender %}me{% else %}them{% endif %}">
+                  <div class="bubble-meta">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="avatar">
+                        {{ msg.sender.username|slice:":1"|upper }}
+                      </span>
+                      <span class="sender">{{ msg.sender.username }}</span>
+                    </div>
+                    <span class="time mono">{{ msg.sent_at|date:"Y/m/d H:i" }}</span>
+                  </div>
 
-  .message-bubble {
-    border-radius: 12px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    position: relative;
-    font-size: 0.9rem;
-  }
+                  <div class="bubble-text">
+                    {{ msg.message|linebreaksbr }}
+                  </div>
 
-  /* current-user vs others */
-  .message-me {
-    background: rgba(22, 163, 74, 0.16);
-    border: 1px solid rgba(34, 197, 94, 0.7);
-    margin-inline-start: auto;
-    max-width: 80%;
-  }
+                  {% if msg.attachment %}
+                    <div class="mt-2">
+                      <a href="{{ msg.attachment.url }}" class="btn btn-sm btn-outline-secondary btn-attach">
+                        <i class="fa-solid fa-paperclip ms-1"></i>
+                        دانلود فایل
+                      </a>
+                    </div>
+                  {% endif %}
+                </div>
+              {% empty %}
+                <div class="empty-stream">
+                  <div class="empty-icon">
+                    <i class="fa-regular fa-envelope-open"></i>
+                  </div>
+                  <div class="fw-bold mb-1">هنوز پیامی ثبت نشده است</div>
+                  <div class="text-muted small">اولین پیام را ارسال کنید.</div>
+                </div>
+              {% endfor %}
+            </div>
 
-  .message-them {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(55, 65, 81, 0.9);
-    margin-inline-end: auto;
-    max-width: 80%;
-  }
+            <!-- Reply -->
+            <form method="post" enctype="multipart/form-data" class="reply-wrap">
+              {% csrf_token %}
 
-  .message-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-    font-size: 0.78rem;
-    color: #9ca3af;
-  }
+              <div class="reply-head d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div class="fw-bold text-dark">
+                  <i class="fa-solid fa-reply ms-1"></i>
+                  ارسال پاسخ
+                </div>
+                <div class="text-muted small">می‌توانید فایل هم ضمیمه کنید</div>
+              </div>
 
-  .message-sender {
-    font-weight: 600;
-    color: #e5e7eb;
-  }
+              <!-- Message -->
+              <div class="mb-3">
+                <label class="form-label fw-bold text-dark">{{ form.message.label }}</label>
+                {% if form.message.errors %}
+                  {{ form.message|add_class:"form-control is-invalid text-end" }}
+                  <div class="invalid-feedback d-block">{{ form.message.errors.0 }}</div>
+                {% else %}
+                  {{ form.message|add_class:"form-control text-end" }}
+                {% endif %}
+              </div>
 
-  .message-time {
-    font-family: monospace;
-    opacity: 0.85;
-  }
+              <!-- Attachment -->
+              <div class="mb-3">
+                <label class="form-label fw-bold text-dark">{{ form.attachment.label }}</label>
+                <div class="input-group">
+                  {% if form.attachment.errors %}
+                    {{ form.attachment|add_class:"form-control is-invalid text-end" }}
+                  {% else %}
+                    {{ form.attachment|add_class:"form-control text-end" }}
+                  {% endif %}
+                  <span class="input-group-text bg-white">
+                    <i class="fa-solid fa-paperclip"></i>
+                  </span>
+                </div>
+                {% if form.attachment.errors %}
+                  <div class="invalid-feedback d-block">{{ form.attachment.errors.0 }}</div>
+                {% endif %}
+              </div>
 
-  .message-text {
-    color: #e5e7eb;
-    line-height: 1.6;
-  }
+              <div class="d-flex flex-column flex-sm-row gap-2 justify-content-between align-items-stretch align-items-sm-center mt-3 pt-3 border-top">
+                <a href="{% url 'ticket_list' %}" class="btn btn-light btn-modern btn-soft">
+                  بازگشت
+                </a>
+                <button type="submit" class="btn btn-primary btn-modern px-4">
+                  <i class="fa-solid fa-paper-plane ms-1"></i>
+                  ارسال پاسخ
+                </button>
+              </div>
+            </form>
 
-  .message-attachment {
-    margin-top: 6px;
-  }
-
-  .message-attachment a {
-    font-size: 0.78rem;
-  }
-
-  .reply-form {
-    border-top: 1px solid rgba(55, 65, 81, 0.8);
-    padding-top: 16px;
-    margin-top: 8px;
-  }
-
-  .reply-form label {
-    color: #e5e7eb;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .reply-form .form-control,
-  .reply-form .form-select {
-    border-radius: 10px;
-    background: #020617;
-    border: 1px solid rgba(51, 65, 85, 0.9);
-    color: #e5e7eb;
-  }
-
-  .reply-form .form-control:focus,
-  .reply-form .form-select:focus {
-    border-color: #22c55e;
-    box-shadow: 0 0 0 0.15rem rgba(34, 197, 94, 0.3);
-    background: #020617;
-  }
-
-  .btn-reply {
-    background: linear-gradient(to right, #22c55e, #16a34a);
-    border: none;
-    color: #020617;
-    padding: 9px 26px;
-    border-radius: 999px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 14px 30px rgba(34, 197, 94, 0.4);
-  }
-
-  .btn-reply:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 18px 40px rgba(34, 197, 94, 0.5);
-  }
-
-  .btn-reply i {
-    margin-left: 4px;
-  }
-
-  .text-muted {
-    color: #9ca3af !important;
-  }
-
-
-
-
-.reply-form .form-control {
-    border-radius: 10px;
-}
-
-.reply-form .btn-primary {
-    background-color: #0d6efd;
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-
-</style>
-
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="ticket-detail-card" style="text-align: right;">
-        <div class="ticket-header">
-          <h2>{{ ticket.title }}</h2>
-          <div class="ticket-status">
-            <span class="ticket-status-badge">
-              <span class="ticket-status-dot"></span>
-              وضعیت: {{ ticket.get_status_display }}
-            </span>
           </div>
         </div>
 
-        <!-- Messages -->
-        <div class="message-stream">
-          {% for msg in messages %}
-            <div class="message-bubble {% if request.user == msg.sender %}message-me{% else %}message-them{% endif %}">
-              <div class="message-meta">
-                <span class="message-sender">
-                  {{ msg.sender.username }}
-                </span>
-                <span class="message-time">
-                  {{ msg.sent_at|date:"Y/m/d H:i" }}
-                </span>
-              </div>
-
-              <div class="message-text">
-                {{ msg.message|linebreaksbr }}
-              </div>
-
-              {% if msg.attachment %}
-                <div class="message-attachment">
-                  <a href="{{ msg.attachment.url }}" class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-paperclip ms-1"></i> دانلود فایل
-                  </a>
-                </div>
-              {% endif %}
-            </div>
-          {% empty %}
-            <p class="text-muted text-center mb-0">هنوز پیامی در این تیکت ثبت نشده است.</p>
-          {% endfor %}
-        </div>
-
-<!-- Reply Form -->
-<form method="post" enctype="multipart/form-data" class="reply-form" style="direction: rtl;">
-    {% csrf_token %}
-
-    <!-- Message field -->
-    <div class="mb-3">
-        <label class="form-label fw-bold">{{ form.message.label }}</label>
-        {{ form.message|add_class:"form-control" }}
-        {% if form.message.errors %}
-            <small class="text-danger d-block mt-1">
-                {{ form.message.errors.0 }}
-            </small>
-        {% endif %}
-    </div>
-
-    <!-- Attachment field -->
-    <div class="mb-3">
-        <label class="form-label fw-bold">{{ form.attachment.label }}</label>
-
-        <div class="input-group">
-            {{ form.attachment|add_class:"form-control" }}
-            <span class="input-group-text">
-                <i class="fas fa-paperclip"></i>
-            </span>
-        </div>
-
-        {% if form.attachment.errors %}
-            <small class="text-danger d-block mt-1">
-                {{ form.attachment.errors.0 }}
-            </small>
-        {% endif %}
-    </div>
-
-    <div class="text-start text-md-end">
-        <button type="submit" class="btn btn-primary px-4">
-            <i class="fas fa-reply me-1"></i> ارسال پاسخ
-        </button>
-    </div>
-</form>
-
-
       </div>
     </div>
+
   </div>
 </div>
+
+<style>
+  :root{
+    --stroke: rgba(15, 23, 42, .10);
+    --radius: 22px;
+    --shadow: 0 18px 40px rgba(2,6,23,.12);
+  }
+
+  .page-wrap{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,.22), transparent 55%),
+      radial-gradient(900px 500px at 90% 0%, rgba(34,197,94,.16), transparent 55%),
+      radial-gradient(900px 600px at 50% 110%, rgba(59,130,246,.14), transparent 55%),
+      linear-gradient(180deg, #f8fafc 0%, #eef2ff 45%, #f8fafc 100%);
+    min-height: calc(100vh - 80px);
+  }
+
+  .ticket-card{
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .fw-black{ font-weight: 900; }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+  /* Pills */
+  .pill{
+    font-size: .72rem;
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    background: rgba(15,23,42,.06);
+    border: 1px solid rgba(15,23,42,.10);
+    color: #0f172a;
+    white-space: nowrap;
+  }
+  .pill-soft{
+    background: rgba(99,102,241,.10);
+    border-color: rgba(99,102,241,.20);
+    color: #3730a3;
+  }
+  .pill-muted{ background: rgba(15,23,42,.04); }
+
+  .meta-chip{
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    background: rgba(15,23,42,.05);
+    border: 1px solid rgba(15,23,42,.08);
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  /* Status */
+  .status-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 900;
+    border: 1px solid rgba(15,23,42,.10);
+    background: rgba(15,23,42,.04);
+    color: #0f172a;
+    white-space: nowrap;
+  }
+  .status-open{
+    background: rgba(34,197,94,.10);
+    border-color: rgba(34,197,94,.22);
+    color: #166534;
+  }
+  .status-pending{
+    background: rgba(249,115,22,.10);
+    border-color: rgba(249,115,22,.22);
+    color: #9a3412;
+  }
+  .status-closed{
+    background: rgba(148,163,184,.16);
+    border-color: rgba(148,163,184,.30);
+    color: #475569;
+  }
+
+  /* Stream */
+  .stream-wrap{
+    max-height: 520px;
+    overflow: auto;
+    padding: 10px;
+    border-radius: 20px;
+    background: rgba(15,23,42,.03);
+    border: 1px solid rgba(15,23,42,.08);
+  }
+
+  .bubble{
+    border-radius: 18px;
+    padding: 12px 12px 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(15,23,42,.10);
+    background: rgba(255,255,255,.85);
+  }
+  .bubble.me{
+    background: rgba(34,197,94,.10);
+    border-color: rgba(34,197,94,.18);
+    margin-right: auto;
+    margin-left: 0;
+  }
+  .bubble.them{
+    background: rgba(255,255,255,.92);
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .bubble-meta{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 6px;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 800;
+  }
+
+  .avatar{
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(99,102,241,.12);
+    border: 1px solid rgba(99,102,241,.18);
+    color: #3730a3;
+    font-weight: 900;
+    flex: 0 0 auto;
+  }
+
+  .sender{ color:#0f172a; font-weight: 900; }
+  .time{ color:#64748b; direction:ltr; text-align:left; }
+
+  .bubble-text{
+    color:#0f172a;
+    line-height: 1.85;
+    font-weight: 600;
+  }
+
+  .btn-attach{
+    border-radius: 14px;
+    font-weight: 800;
+  }
+
+  /* Reply */
+  .reply-wrap{
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(15,23,42,.10);
+  }
+  .reply-head{
+    padding: 10px 12px;
+    border-radius: 18px;
+    background: rgba(15,23,42,.03);
+    border: 1px solid rgba(15,23,42,.08);
+  }
+
+  .form-control{
+    border-radius: 14px;
+    border: 1px solid var(--stroke);
+    padding: .65rem .85rem;
+    transition: .15s ease;
+    text-align: right;
+  }
+  .form-control:focus{
+    border-color: #6366f1;
+    box-shadow: 0 0 0 .15rem rgba(99,102,241,.15);
+  }
+
+  .btn-modern{
+    border-radius: 14px;
+    font-weight: 800;
+    box-shadow: 0 10px 18px rgba(2,6,23,.08);
+    white-space: nowrap;
+  }
+  .btn-soft{
+    background: rgba(255,255,255,.75);
+    border: 1px solid var(--stroke);
+    box-shadow: none;
+  }
+
+  /* Empty */
+  .empty-stream{
+    text-align:center;
+    padding: 24px 12px;
+  }
+  .empty-icon{
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
+    margin: 0 auto 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(99,102,241,.10);
+    border: 1px solid rgba(99,102,241,.18);
+    color: #4f46e5;
+    font-size: 26px;
+  }
+
+  /* RTL icon spacing fix */
+  [dir="rtl"] .ms-1{ margin-right: .25rem !important; margin-left: 0 !important; }
+</style>
+
+<script>
+  // Auto-scroll to bottom of message stream
+  (function(){
+    const stream = document.getElementById("stream");
+    if(stream) stream.scrollTop = stream.scrollHeight;
+  })();
+</script>
+
 {% endblock %}

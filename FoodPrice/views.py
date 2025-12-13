@@ -6,9 +6,9 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
-from users.models import raw_material, FoodRawMaterial
+from users.models import mother_food, raw_material, FoodRawMaterial
 from .models import FoodIngredient, RawMaterialPrice
-from .forms import FoodIngredientForm, FoodForm   # تو باید این دو فرم را بسازی
+from .forms import FoodIngredientForm, FoodForm, MotherFoodForm   # تو باید این دو فرم را بسازی
 
 
 # -------------------------------
@@ -237,3 +237,60 @@ def delete_ingredient(request, ingredient_id):
     ingredient.delete()
     messages.success(request, f'ماده اولیه {ingredient.raw_material_price.raw_material.name} حذف شد.')
     return redirect('food_ingredients', food_id=food_id)
+
+
+
+
+
+
+
+# LIST
+def mother_food_list(request):
+    mothers = mother_food.objects.all()
+    return render(request, 'mother_food/list.html', {
+        'mothers': mothers
+    })
+
+
+# CREATE
+def mother_food_add(request):
+    if request.method == 'POST':
+        form = MotherFoodForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'غذای مادر با موفقیت اضافه شد')
+            return redirect('mother_food_list')
+    else:
+        form = MotherFoodForm()
+
+    return render(request, 'mother_food/form.html', {
+        'form': form,
+        'title': 'افزودن غذای مادر'
+    })
+
+
+# UPDATE
+def mother_food_edit(request, pk):
+    obj = get_object_or_404(mother_food, pk=pk)
+
+    if request.method == 'POST':
+        form = MotherFoodForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'غذای مادر با موفقیت ویرایش شد')
+            return redirect('mother_food_list')
+    else:
+        form = MotherFoodForm(instance=obj)
+
+    return render(request, 'mother_food/form.html', {
+        'form': form,
+        'title': 'ویرایش غذای مادر'
+    })
+
+
+# DELETE
+def mother_food_delete(request, pk):
+    obj = get_object_or_404(mother_food, pk=pk)
+    obj.delete()
+    messages.success(request, 'غذای مادر حذف شد')
+    return redirect('mother_food_list')

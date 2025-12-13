@@ -27,7 +27,7 @@ def menu_items_processor(request):
     # 
         job = user.profile.job_position.name
 
-        items = user.profile.job_position.items.all()
+        items = user.profile.job_position.items.filter(show=True).order_by('order')
 
         # To efficiently fetch related submenus of these items (assuming submenus is a related_name)
         items = items.prefetch_related('submenus')
