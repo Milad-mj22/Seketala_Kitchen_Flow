@@ -40,14 +40,6 @@ DEBUG = False
 
 
 
-MEDIA_URL = '/media/'  # URL for accessing media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Directory where uploaded files are stored
-
-STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # در سرور
-# STATIC_ROOT = r'C:\Users\Administrator\Desktop\Kitchen_Flow\staticfiles'
-
-
 
 
 ALLOWED_HOSTS = ['37.191.77.130','192.168.1.107','172.20.10.4','127.0.0.1','0.0.0.0','192.168.1.30','94.183.166.188','192.168.1.211','37.255.213.180',"seketalamanager.ir", "www.seketalamanager.ir", "*"]
@@ -68,60 +60,82 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Application definition
 
+
+# --------------------------------------------------
+# APPLICATIONS
+# --------------------------------------------------
 INSTALLED_APPS = [
-    'django.contrib.humanize',
-    'daphne',
-    'channels',
-    'webpush',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'users.apps.UserConfig',
-    'social_django',
-    'django_quill',
-    'tinymce',
-    'phone_field',
-    'django_extensions',
-    'menu',
-    'order_flow',
-    'api',
-    'SocialApps',
-    'formApp',
-    'widget_tweaks',
-    'StoneFlow',
-    'mines',
-    'dashboard',
-    'utils',
-    'cameras',
-    'DataAnalysis',
-    'FoodPrice',
-    'vault',
-    'pwa',
-    'Notification',
-    'Missions',
-    'Projects',
-    'TasksManager',
-    'timeTracker',
-    'reports'
+    "daphne",
+    "channels",
 
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+
+    "whitenoise.runserver_nostatic",
+
+    "webpush",
+    "social_django",
+    "django_quill",
+    "tinymce",
+    "phone_field",
+    "django_extensions",
+    "widget_tweaks",
+    "pwa",
+
+    # Your apps
+    "users",
+    "menu",
+    "order_flow",
+    "api",
+    "SocialApps",
+    "formApp",
+    "StoneFlow",
+    "mines",
+    "dashboard",
+    "utils",
+    "cameras",
+    "DataAnalysis",
+    "FoodPrice",
+    "vault",
+    "Notification",
+    "Missions",
+    "Projects",
+    "TasksManager",
+    "timeTracker",
+    "reports",
 ]
 
+# --------------------------------------------------
+# MIDDLEWARE
+# --------------------------------------------------
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # اضافه کردن این خط
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# --------------------------------------------------
+# STATIC & MEDIA  ⭐ FIXED ⭐
+# --------------------------------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 ROOT_URLCONF = 'user_management.urls'
 
@@ -198,26 +212,15 @@ USE_TZ = False
 
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
-STATIC_URL = 'static/'
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
-# #print('MEDIA_ROOT',MEDIA_ROOT)
 
 
-# Define the directory where static files will be collected
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
 
 
 # settings.py
 
-# STATIC_URL = '/static/'
 
-# Ensure that this path is where your static files will be collected
-# STATIC_ROOT = r'C:\Users\Administrator\Desktop\Kitchen_Flow\staticfiles'
 
 
 LOGIN_REDIRECT_URL = '/'
