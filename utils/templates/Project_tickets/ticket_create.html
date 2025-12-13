@@ -1,397 +1,650 @@
-<!-- templates/error_page.html -->
-
 {% load static %}
 {% load widget_tweaks %}
 
-<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-<link rel="stylesheet" href="{% static 'css/all.min.css' %}">
-<link rel="stylesheet" href="{% static 'css/base.css' %}">
-<link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-<style>
-  :root {
-    --primary: #4f46e5;
-    --primary-soft: rgba(79, 70, 229, 0.08);
-    --accent: #f97316;
-    --danger: #ef4444;
-    --radius-xl: 22px;
-    --radius-lg: 18px;
-    --radius-md: 12px;
-    --shadow-soft: 0 20px 50px rgba(15, 23, 42, 0.16);
-  }
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
 
-  body {
-    background:
-      radial-gradient(circle at top right, #e5edff, #f3f4f6 40%, #eef2ff 100%);
-  }
-
-  .ticket-page {
-    max-width: 960px;
-    margin: 32px auto 48px;
-    padding: 0 16px;
-    direction: rtl;
-    text-align: right;
-  }
-
-  .ticket-card {
-    backdrop-filter: blur(18px);
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    overflow: hidden;
-  }
-
-  .ticket-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 26px 70px rgba(15, 23, 42, 0.22);
-    border-color: rgba(79, 70, 229, 0.5);
-  }
-
-  .ticket-header-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 18px 22px 6px;
-    flex-wrap: wrap;
-  }
-
-  .ticket-header-main {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .icon-circle {
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
-    color: white;
-    padding: 10px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.6);
-  }
-
-  .ticket-title-text {
-    font-weight: 800;
-    color: #111827;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
-
-  .ticket-subtitle-text {
-    font-size: 0.85rem;
-    color: #6b7280;
-  }
-
-  .ticket-meta-pill {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    background: var(--primary-soft);
-    color: #4338ca;
-    border: 1px solid rgba(129, 140, 248, 0.7);
-    white-space: nowrap;
-  }
-
-  .ticket-body {
-    padding: 10px 22px 22px;
-  }
-
-  .form-label {
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.9rem;
-  }
-
-  .form-control,
-  .form-select {
-    border-radius: var(--radius-md);
-    text-align: right;
-  }
-
-  .form-control::placeholder,
-  textarea::placeholder {
-    font-size: 0.85rem;
-    color: #9ca3af;
-  }
-
-  .form-control:focus,
-  .form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem var(--primary-soft);
-  }
-
-  .field-error {
-    font-size: 0.8rem;
-    color: var(--danger);
-    margin-top: 3px;
-  }
-
-  .non-field-errors {
-    margin-bottom: 0.75rem;
-  }
-
-  .helper-text {
-    font-size: 0.8rem;
-    color: #9ca3af;
-  }
-
-  .divider-soft {
-    height: 1px;
-    background: linear-gradient(to left, transparent, #e5e7eb, transparent);
-    margin: 10px 0 14px;
-  }
-
-  .btn-submit {
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
-    border: none;
-    color: white;
-    padding: 0.6rem 1.8rem;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    box-shadow: 0 14px 34px rgba(79, 70, 229, 0.5);
-    transition: transform 0.15s ease, filter 0.15s ease;
-  }
-
-  .btn-submit:hover {
-    filter: brightness(1.04);
-    transform: translateY(-1px);
-  }
-
-  .btn-submit i {
-    font-size: 0.95rem;
-  }
-
-  .ticket-footer-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .ticket-foot-note {
-    font-size: 0.8rem;
-    color: #9ca3af;
-  }
-
-  @media (max-width: 768px) {
-    .ticket-page {
-      margin-top: 20px;
+  <style>
+    :root{
+      --bg1:#eef2ff;
+      --bg2:#f8fafc;
+      --card: rgba(255,255,255,.86);
+      --stroke: rgba(148,163,184,.35);
+      --text:#0f172a;
+      --muted:#64748b;
+      --primary:#4f46e5;
+      --primary2:#6366f1;
+      --danger:#ef4444;
+      --radius-xl:24px;
+      --radius-lg:18px;
+      --radius-md:14px;
+      --shadow: 0 26px 80px rgba(15, 23, 42, .18);
     }
-    .ticket-card {
-      padding-inline: 4px;
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 400px at 90% 5%, rgba(99,102,241,.25), transparent 60%),
+        radial-gradient(700px 360px at 10% 15%, rgba(79,70,229,.18), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+      -webkit-text-size-adjust: 100%;
+      color:var(--text);
     }
-    .ticket-header-bar {
-      padding-inline: 18px;
+
+    .page-wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px 12px 34px;
     }
-    .ticket-body {
-      padding-inline: 18px;
+
+    /* ✅ همیشه تک ستونه => کارت نکات همیشه پایین */
+    .shell{
+      width: min(980px, 100%);
+      display:flex;
+      flex-direction:column;
+      gap: 18px;
     }
-    .ticket-footer-row {
-      flex-direction: column-reverse;
-      align-items: flex-start;
+
+    .cardx{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+      position:relative;
     }
-  }
-</style>
+    .cardx::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(420px 220px at 90% 5%, rgba(99,102,241,.22), transparent 60%),
+        radial-gradient(360px 200px at 10% 0%, rgba(79,70,229,.16), transparent 65%);
+      opacity:.9;
+    }
+    .cardx > *{ position:relative; }
 
-<div class="ticket-page">
-  <div class="ticket-card">
-    <div class="ticket-header-bar">
-      <div class="ticket-header-main">
-        <div class="ticket-title-text">
-          <span class="icon-circle">
-            <i class="fas fa-ticket-alt"></i>
-          </span>
-          <span>ارسال تیکت پشتیبانی</span>
-        </div>
-        <div class="ticket-subtitle-text">
-          مشکل، سؤال یا درخواست خود را دقیق توضیح دهید تا تیم پشتیبانی سریع‌تر راهنمایی‌تان کند.
-        </div>
-      </div>
+    .header{
+      padding: 18px 18px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      flex-wrap:wrap;
+    }
 
-      <div class="ticket-meta-pill">
-        ⏱ زمان تقریبی پاسخ: حداکثر ۲۴ ساعت کاری
-      </div>
-    </div>
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      min-width:0;
+      flex: 1 1 520px;
+    }
 
-    <div class="ticket-body">
-      {# اگر فرم خطای کلی داشته باشد #}
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger non-field-errors rtl-right" role="alert" style="text-align:right;">
-          {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
+    .logo-badge{
+      width:48px;height:48px;
+      border-radius: 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      box-shadow: 0 16px 40px rgba(79,70,229,.45);
+      flex:0 0 auto;
+    }
 
-      <form method="post" enctype="multipart/form-data" novalidate>
-        {% csrf_token %}
+    .h1{ margin:0; font-size: 1.15rem; font-weight: 900; line-height: 1.25; }
+    .sub{ margin-top:6px; color: var(--muted); font-size: .92rem; line-height: 1.7; }
 
-        <!-- Project Name -->
-        <div class="mb-3">
-          <label for="id_project_name" class="form-label">نام پروژه <span style="color:#ef4444">*</span></label>
-          <input
-            type="text"
-            name="project_name"
-            class="form-control"
-            id="id_project_name"
-            placeholder="نام پروژه را وارد کنید"
-            value="{{ project.name|default_if_none:'' }}"
-            required
-          >
-          {% if form.project_name.errors %}
-            <div class="field-error">{{ form.project_name.errors.0 }}</div>
-          {% endif %}
-        </div>
+    .pill{
+      font-size:.82rem;
+      color:#4338ca;
+      background: rgba(79,70,229,.10);
+      border:1px solid rgba(129,140,248,.55);
+      padding: 7px 10px;
+      border-radius: 999px;
+      white-space:nowrap;
+      align-self:flex-start;
+    }
 
-        <!-- Phone Number -->
-        <div class="mb-3">
-          <label for="id_phone_number" class="form-label">شماره تلفن <span style="color:#ef4444">*</span></label>
-          <input
-            type="tel"
-            name="phone_number"
-            class="form-control"
-            id="id_phone_number"
-            placeholder="مثال: 09123456789"
-            pattern="[0-9]{11}"
-            value="{{ form.phone_number.value|default_if_none:'' }}"
-            required
-          >
-          {% if form.phone_number.errors %}
-            <div class="field-error">{{ form.phone_number.errors.0 }}</div>
-          {% endif %}
-        </div>
+    .body{ padding: 16px 18px 18px; }
 
-        <!-- Category -->
-        <div class="mb-3">
-          <label for="id_category" class="form-label">دسته‌بندی <span style="color:#ef4444">*</span></label>
-          <select name="category" class="form-select" id="id_category" required>
-            <option value="">انتخاب دسته‌بندی</option>
-            {% for cat in categories %}
-              <option value="{{ cat.id }}" {% if form.category.value == cat.id|stringformat:'s' %}selected{% endif %}>
-                {{ cat.name }}
-              </option>
-            {% endfor %}
-          </select>
-          {% if form.category.errors %}
-            <div class="field-error">{{ form.category.errors.0 }}</div>
-          {% endif %}
-        </div>
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
-        <!-- Title -->
-        <div class="mb-3">
-          <label for="id_title" class="form-label">عنوان تیکت <span style="color:#ef4444">*</span></label>
-          <input
-            type="text"
-            name="title"
-            class="form-control"
-            id="id_title"
-            placeholder="مثلاً: خاموش شدن سیستم، خطا در شناسایی یا اندازه گیری عیب و یا اشکال در ارتباطات"
-            value="{{ form.title.value|default_if_none:'' }}"
-            required
-          >
-          {% if form.title.errors %}
-            <div class="field-error">{{ form.title.errors.0 }}</div>
-          {% endif %}
-        </div>
+    .field{ margin-bottom: 12px; }
+    .label{
+      font-weight: 700;
+      font-size: .9rem;
+      margin-bottom: 6px;
+      color:#334155;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .req{ color: var(--danger); font-weight:900; }
 
-        <!-- Message -->
-        <div class="mb-3">
-          <label for="id_message" class="form-label">متن پیام <span style="color:#ef4444">*</span></label>
-          <textarea
-            name="message"
-            rows="5"
-            class="form-control"
-            id="id_message"
-            placeholder="جزئیات مشکل، زمان وقوع، پیام خطا (در صورت وجود) و هر اطلاعات مفید دیگری را بنویسید..."
-            required
-          >{{ form.message.value|default_if_none:'' }}</textarea>
-          {% if form.message.errors %}
-            <div class="field-error">{{ form.message.errors.0 }}</div>
-          {% endif %}
-          <div class="helper-text mt-1">
-            هر چه توضیحات شما کامل‌تر باشد، سریع‌تر می‌توانیم مشکل را پیدا و رفع کنیم.
+    .ctrl, .sel{
+      width:100%;
+      border-radius: var(--radius-md);
+      border:1px solid rgba(148,163,184,.55);
+      background: rgba(255,255,255,.92);
+      padding: 10px 12px;
+      outline:none;
+      transition:.15s;
+      text-align:right;
+    }
+    .ctrl:focus, .sel:focus{
+      border-color: rgba(79,70,229,.75);
+      box-shadow: 0 0 0 .2rem rgba(79,70,229,.12);
+    }
+
+    .help{ font-size:.82rem; color: var(--muted); line-height: 1.6; margin-top: 6px; }
+    .err{ font-size:.82rem; color: var(--danger); margin-top: 6px; line-height: 1.6; }
+
+    .divider{
+      height:1px;
+      background: linear-gradient(to left, transparent, rgba(226,232,240,.9), transparent);
+      margin: 12px 0 14px;
+    }
+
+    /* Upload */
+    .uploader{
+      border: 1.5px dashed rgba(79,70,229,.35);
+      background: rgba(79,70,229,.05);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      transition:.15s;
+      user-select:none;
+    }
+    .uploader.dragover{
+      border-color: rgba(79,70,229,.75);
+      background: rgba(79,70,229,.08);
+      box-shadow: 0 0 0 .2rem rgba(79,70,229,.10);
+    }
+    .upl-ic{
+      width:44px;height:44px;
+      border-radius: 14px;
+      background: rgba(79,70,229,.14);
+      color:#3730a3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .upl-main{ flex:1; min-width:0; }
+    .upl-title{ font-weight: 800; font-size:.95rem; margin:0; }
+    .upl-sub{ margin-top:6px; color:var(--muted); font-size:.82rem; line-height:1.6; }
+
+    .upl-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+
+    .btnx{
+      border:none;
+      border-radius: 999px;
+      padding: .55rem .95rem;
+      font-weight: 800;
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      cursor:pointer;
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn-primaryx{
+      color:white;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      box-shadow: 0 16px 40px rgba(79,70,229,.42);
+    }
+    .btn-primaryx:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    .btn-ghostx{
+      background: rgba(15,23,42,.06);
+      color:#0f172a;
+    }
+    .btn-ghostx:hover{ background: rgba(15,23,42,.09); }
+
+    .preview{
+      margin-top: 12px;
+      display:none;
+      gap: 12px;
+      align-items:center;
+      padding: 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(255,255,255,.72);
+    }
+    .preview.show{ display:flex; }
+
+    .thumb{
+      width:64px;height:64px;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,.35);
+      overflow:hidden;
+      background: rgba(15,23,42,.04);
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; }
+
+    .filemeta{ min-width:0; flex:1; }
+    .fname{
+      font-weight: 800;
+      font-size: .9rem;
+      margin:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .finfo{ margin-top:6px; font-size:.82rem; color: var(--muted); }
+
+    .remove-link{ color: var(--danger); font-weight: 800; cursor:pointer; user-select:none; white-space:nowrap; }
+
+    .footer{
+      padding-top: 6px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .note{
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.7;
+      flex: 1 1 320px;
+      min-width:0;
+    }
+
+    .is-invalid{
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 .2rem rgba(239,68,68,.12) !important;
+    }
+
+    /* ✅ کارت نکات */
+    .side{
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .side h3{ margin:0; font-size: 1rem; font-weight: 900; }
+    .tips{
+      margin:0;
+      padding:0;
+      list-style:none;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .tip{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding: 10px;
+      border-radius: 16px;
+      border:1px solid rgba(148,163,184,.30);
+      background: rgba(255,255,255,.70);
+    }
+    .tip i{
+      width:34px;height:34px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(79,70,229,.12);
+      color:#3730a3;
+      flex:0 0 auto;
+      margin-top:1px;
+    }
+    .tip div{ color: var(--muted); font-size:.86rem; line-height:1.65; }
+
+    /* ✅ Toast بدون Bootstrap */
+    .toastx{
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1080;
+      display:none;
+      background: rgba(15,23,42,.92);
+      color:#fff;
+      border: 1px solid rgba(148,163,184,.25);
+      border-radius: 16px;
+      box-shadow: 0 18px 55px rgba(15,23,42,.25);
+      padding: 12px 14px;
+      direction: rtl;
+      text-align: right;
+      line-height: 1.7;
+      font-weight: 800;
+    }
+    .toastx.show{ display:block; animation: pop .18s ease-out; }
+    @keyframes pop{ from{ transform: translateY(10px); opacity:.0 } to{ transform: translateY(0); opacity:1 } }
+
+    @media (max-width: 576px){
+      .page-wrap{ padding: 16px 10px 26px; }
+      .header{ padding: 16px 14px 10px; }
+      .body{ padding: 14px; }
+      .grid{ grid-template-columns: 1fr; }
+      .pill{ width:100%; white-space:normal; line-height:1.6; }
+      .btn-primaryx{ width:100%; justify-content:center; padding:.85rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-wrap" style="text-align: right;">
+    <div class="shell">
+
+      <!-- Main Card -->
+      <div class="cardx">
+        <div class="header">
+          <div class="title-row">
+            <div class="logo-badge"><i class="fas fa-bug"></i></div>
+            <div style="min-width:0">
+              <p class="h1">گزارش خطا / درخواست ویژگی</p>
+              <p class="sub">اطلاعات را کامل وارد کنید و اگر تصویر خطا دارید، ضمیمه کنید تا سریع‌تر بررسی کنیم.</p>
+            </div>
           </div>
+          <div class="pill">⏱ زمان پاسخ: حداکثر ۲۴ ساعت کاری</div>
         </div>
 
-        <div class="divider-soft"></div>
-
-        {# فیلدهای دیگر فرم (مثلاً فایل ضمیمه) را به‌صورت خودکار رندر کن #}
-        {% for field in form.visible_fields %}
-          {% if field.name != "category" and field.name != "title" and field.name != "message" %}
-            <div class="mb-3">
-              <label for="{{ field.id_for_label }}" class="form-label">
-                {{ field.label }}{% if field.field.required %} <span style="color:#ef4444">*</span>{% endif %}
-              </label>
-              {% if field.field.widget.input_type == "file" %}
-                {{ field|add_class:"form-control" }}
-                <div class="helper-text mt-1">در صورت نیاز می‌توانید تصویر خطا یا فایل مرتبط را ضمیمه کنید.</div>
-              {% else %}
-                {{ field|add_class:"form-control" }}
-              {% endif %}
-              {% if field.errors %}
-                <div class="field-error">
-                  {% for error in field.errors %}
-                    <div>{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% endif %}
+        <div class="body">
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert" style="text-align:right;">
+              {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
             </div>
           {% endif %}
-        {% endfor %}
 
-        <div class="ticket-footer-row mt-3">
-          <div class="ticket-foot-note">
-            پس از ثبت، وضعیت تیکت و پاسخ‌ها را می‌توانید در بخش «لیست تیکت‌های من» پیگیری کنید.
-          </div>
-          <button type="submit" class="btn btn-submit">
-            <i class="fas fa-paper-plane"></i>
-            <span>ارسال تیکت</span>
-          </button>
+          <form id="ticketForm" method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="grid">
+              <div class="field">
+                <div class="label">نام پروژه <span class="req">*</span></div>
+                <input type="text" name="project_name" id="id_project_name" class="ctrl"
+                       placeholder="مثال: سنس اسیدشویی"
+                       value="{{ project.name|default_if_none:'' }}" required>
+                {% if form.project_name.errors %}<div class="err">{{ form.project_name.errors.0 }}</div>{% endif %}
+              </div>
+
+              <div class="field">
+                <div class="label">شماره تلفن <span class="req">*</span></div>
+                <input type="tel" name="phone_number" id="id_phone_number" class="ctrl"
+                       placeholder="مثال: 09123456789" pattern="[0-9]{11}"
+                       value="{{ form.phone_number.value|default_if_none:'' }}"
+                       required inputmode="numeric" autocomplete="tel">
+                <div class="help">فقط اعداد، ۱۱ رقم.</div>
+                {% if form.phone_number.errors %}<div class="err">{{ form.phone_number.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">دسته‌بندی <span class="req">*</span></div>
+              <select name="category" id="id_category" class="sel" required>
+                <option value="">انتخاب دسته‌بندی</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.id }}" {% if form.category.value == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+              {% if form.category.errors %}<div class="err">{{ form.category.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+              <div class="label">عنوان تیکت <span class="req">*</span></div>
+              <input type="text" name="title" id="id_title" class="ctrl"
+                     placeholder="مثلاً: خطا در تشخیص عیب / قطع ارتباط / کرش نرم‌افزار"
+                     value="{{ form.title.value|default_if_none:'' }}" required>
+              {% if form.title.errors %}<div class="err">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="field">
+              <div class="label">شرح خطا <span class="req">*</span></div>
+              <textarea name="message" id="id_message" class="ctrl" rows="5"
+                        placeholder="زمان وقوع، گام‌های تکرار خطا، پیام خطا، و هر نکته‌ای که کمک کند..." required>{{ form.message.value|default_if_none:'' }}</textarea>
+              <div class="help">هرچه دقیق‌تر بنویسید، سریع‌تر حل می‌کنیم.</div>
+              {% if form.message.errors %}<div class="err">{{ form.message.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Upload -->
+            <div class="field">
+              <div class="label">تصویر خطا (اختیاری)</div>
+
+              <div id="uploader" class="uploader">
+                <div class="upl-ic"><i class="fas fa-image"></i></div>
+                <div class="upl-main">
+                  <p class="upl-title">تصویر را اینجا رها کنید یا انتخاب کنید</p>
+                  <p class="upl-sub">فرمت‌های مجاز: JPG / PNG / WEBP — پیشنهاد: حداکثر 10MB</p>
+
+                  <div class="upl-actions">
+                    <button type="button" class="btnx btn-primaryx" id="pickFileBtn">
+                      <i class="fas fa-upload"></i> انتخاب تصویر
+                    </button>
+                    <button type="button" class="btnx btn-ghostx" id="clearFileBtn" style="display:none;">
+                      <i class="fas fa-trash"></i> حذف تصویر
+                    </button>
+                  </div>
+
+                  <input type="file" name="image" id="id_image" accept="image/*" class="d-none">
+
+                  <div id="preview" class="preview">
+                    <div class="thumb" id="thumb">
+                      <i class="fas fa-image" style="color:rgba(15,23,42,.35)"></i>
+                    </div>
+                    <div class="filemeta">
+                      <p class="fname" id="fname">—</p>
+                      <div class="finfo" id="finfo">—</div>
+                    </div>
+                    <div class="remove-link" id="removeLink">حذف</div>
+                  </div>
+
+                  {% if form.image.errors %}<div class="err">{{ form.image.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="help mt-2">اگر خطا مربوط به UI است، اسکرین‌شات ارسال کنید.</div>
+            </div>
+
+            <div class="footer">
+              <div class="note">پس از ثبت، می‌توانید وضعیت تیکت را از بخش «لیست تیکت‌ها» پیگیری کنید.</div>
+              <button type="submit" class="btnx btn-primaryx">
+                <i class="fas fa-paper-plane"></i> ارسال تیکت
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
 
-      </form>
+      <!-- ✅ همیشه پایین -->
+      <div class="cardx">
+        <div class="side">
+        <h3>چطور خطای پیش آمده را دقیق توضیح دهیم؟</h3>
+          <ul class="tips">
+            <li class="tip"><i class="fas fa-list-check"></i><div>مراحل تکرار خطا را مرحله‌به‌مرحله بنویسید.</div></li>
+            <li class="tip"><i class="fas fa-triangle-exclamation"></i><div>اگر پیام خطا دارید، متن دقیق یا عکس آن را ضمیمه کنید.</div></li>
+            <li class="tip"><i class="fas fa-clock"></i><div>زمان وقوع و شرایط (مثلاً بعد از اتصال/بعد از ریفرش) را ذکر کنید.</div></li>
+            <li class="tip"><i class="fas fa-shield-halved"></i><div>اطلاعات حساس مثل رمز عبور را داخل تیکت ننویسید.</div></li>
+          </ul>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 
+  <!-- Toast (no bootstrap) -->
+  <div id="toastx" class="toastx">—</div>
 
-<script>
-  document.querySelector("form").addEventListener("submit", function(event) {
-    // Get all required fields
-    const requiredFields = document.querySelectorAll("input[required], select[required], textarea[required]");
-    let isValid = true;
-    let showAlert = false; // Flag to track if alert is shown
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-    // Check if any required field is empty
-    requiredFields.forEach(function(field) {
-      if (!field.value.trim()) {
-        isValid = false;
-        field.classList.add("is-invalid"); // Optional: Add custom styling for invalid fields
-        if (!showAlert) {
-          alert("لطفا تمامی فیلدهای الزامی را پر کنید.");
-          showAlert = true; // Set the flag to true after showing the alert
-        }
-      } else {
-        field.classList.remove("is-invalid");
+      // ===== Toast (بدون Bootstrap) =====
+      const toastEl = document.getElementById("toastx");
+      let toastTimer = null;
+
+      function showToast(msg, ms=2600){
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove("show"), ms);
       }
-    });
 
-    // If any required field is empty, prevent form submission
-    if (!isValid) {
-      event.preventDefault();
-    }
-  });
-</script>
+      // ===== Validation =====
+      const form = document.getElementById("ticketForm");
+
+      function scrollToFirstInvalid() {
+        const first = form.querySelector(".is-invalid");
+        if (!first) return;
+        const y = first.getBoundingClientRect().top + window.scrollY - 120;
+        window.scrollTo({ top: y, behavior: "smooth" });
+        setTimeout(() => {
+          try { first.focus({ preventScroll: true }); } catch (e) { first.focus(); }
+        }, 250);
+      }
+
+      form.addEventListener("submit", function (event) {
+        const required = form.querySelectorAll("input[required], select[required], textarea[required]");
+        let ok = true;
+
+        required.forEach((el) => {
+          const val = (el.value || "").trim();
+          if (!val) { ok = false; el.classList.add("is-invalid"); }
+          else { el.classList.remove("is-invalid"); }
+        });
+
+        if (!ok) {
+          event.preventDefault();
+          showToast("لطفاً فیلدهای الزامی را کامل کنید.");
+          scrollToFirstInvalid();
+        }
+      });
+
+      form.addEventListener("input", (e) => {
+        const el = e.target;
+        if (el && el.matches("input[required], textarea[required]")) {
+          if ((el.value || "").trim()) el.classList.remove("is-invalid");
+        }
+      });
+      form.addEventListener("change", (e) => {
+        const el = e.target;
+        if (el && el.matches("select[required]")) {
+          if ((el.value || "").trim()) el.classList.remove("is-invalid");
+        }
+      });
+
+      // ===== Upload (pick + drag/drop + preview) =====
+      const uploader = document.getElementById("uploader");
+      const pickBtn = document.getElementById("pickFileBtn");
+      const clearBtn = document.getElementById("clearFileBtn");
+      const removeLink = document.getElementById("removeLink");
+      const fileInput = document.getElementById("id_image");
+
+      const preview = document.getElementById("preview");
+      const thumb = document.getElementById("thumb");
+      const fname = document.getElementById("fname");
+      const finfo = document.getElementById("finfo");
+
+      const MAX_MB = 3;
+
+      function bytesToSize(bytes){
+        const sizes = ["B","KB","MB","GB"];
+        let i = 0, v = bytes || 0;
+        while (v >= 1024 && i < sizes.length - 1) { v /= 1024; i++; }
+        return `${v.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
+      }
+
+      function clearFile(){
+        fileInput.value = "";
+        preview.classList.remove("show");
+        thumb.innerHTML = `<i class="fas fa-image" style="color:rgba(15,23,42,.35)"></i>`;
+        fname.textContent = "—";
+        finfo.textContent = "—";
+        clearBtn.style.display = "none";
+      }
+
+      function setPreview(file){
+        fname.textContent = file.name;
+        finfo.textContent = `${bytesToSize(file.size)} • ${file.type || "image"}`;
+        clearBtn.style.display = "inline-flex";
+
+        const url = URL.createObjectURL(file);
+        thumb.innerHTML = `<img src="${url}" alt="preview">`;
+        preview.classList.add("show");
+      }
+
+      function acceptFile(file){
+        if (!file) return;
+
+        if (!file.type || !file.type.startsWith("image/")){
+          showToast("فقط فایل تصویری مجاز است.");
+          return;
+        }
+
+        const sizeMb = file.size / (1024*1024);
+        if (sizeMb > MAX_MB){
+          showToast(`حجم تصویر زیاد است (بیشتر از ${MAX_MB}MB). لطفاً تصویر را کوچک‌تر کنید.`);
+          return;
+        }
+
+        // set input files (برای drop)
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+
+        setPreview(file);
+      }
+
+      // ✅ اینجا خطا شما حل میشه: اگر قبلاً اسکریپت کرش می‌کرد، این وصل نمی‌شد.
+      pickBtn.addEventListener("click", () => fileInput.click());
+      clearBtn.addEventListener("click", clearFile);
+      removeLink.addEventListener("click", clearFile);
+
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return clearFile();
+        acceptFile(f);
+      });
+
+      ["dragenter","dragover"].forEach(evt => {
+        uploader.addEventListener(evt, (e) => {
+          e.preventDefault(); e.stopPropagation();
+          uploader.classList.add("dragover");
+        });
+      });
+      ["dragleave","drop"].forEach(evt => {
+        uploader.addEventListener(evt, (e) => {
+          e.preventDefault(); e.stopPropagation();
+          uploader.classList.remove("dragover");
+        });
+      });
+      uploader.addEventListener("drop", (e) => {
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) acceptFile(f);
+      });
+
+    });
+  </script>
+</body>
+</html>

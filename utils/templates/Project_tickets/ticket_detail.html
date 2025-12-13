@@ -53,22 +53,23 @@
 
   .ticket-header {
     text-align: right;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
     position: relative;
     z-index: 1;
   }
 
   .ticket-header h2 {
     color: #f9fafb;
-    font-weight: 700;
-    margin-bottom: 4px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    line-height: 1.4;
   }
 
   .ticket-status {
     font-size: 0.9rem;
     color: #9ca3af;
     text-align: right;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .ticket-status-badge {
@@ -90,6 +91,41 @@
     box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
   }
 
+  /* ✅ Ticket image block */
+  .ticket-hero {
+    margin: 8px 0 18px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: rgba(2, 6, 23, 0.55);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .ticket-hero img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 420px;
+    object-fit: cover;
+  }
+
+  .ticket-hero-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .ticket-hero-meta {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Messages */
   .message-stream {
     margin-bottom: 18px;
     max-height: 420px;
@@ -105,7 +141,6 @@
     font-size: 0.9rem;
   }
 
-  /* current-user vs others */
   .message-me {
     background: rgba(22, 163, 74, 0.16);
     border: 1px solid rgba(34, 197, 94, 0.7);
@@ -127,29 +162,45 @@
     margin-bottom: 4px;
     font-size: 0.78rem;
     color: #9ca3af;
+    gap: 10px;
   }
 
   .message-sender {
-    font-weight: 600;
+    font-weight: 700;
     color: #e5e7eb;
   }
 
   .message-time {
     font-family: monospace;
     opacity: 0.85;
+    white-space: nowrap;
   }
 
   .message-text {
     color: #e5e7eb;
-    line-height: 1.6;
+    line-height: 1.7;
   }
 
   .message-attachment {
-    margin-top: 6px;
+    margin-top: 10px;
   }
 
-  .message-attachment a {
-    font-size: 0.78rem;
+  /* ✅ Image preview for message attachments */
+  .attachment-preview-link{
+    display:block;
+    margin-top:8px;
+    border-radius: 14px;
+    overflow:hidden;
+    border: 1px solid rgba(148,163,184,.25);
+    background: rgba(2,6,23,.55);
+    max-width: 360px;
+  }
+  .attachment-preview-img{
+    width:100%;
+    height:auto;
+    display:block;
+    max-height: 320px;
+    object-fit: cover;
   }
 
   .reply-form {
@@ -160,7 +211,7 @@
 
   .reply-form label {
     color: #e5e7eb;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9rem;
   }
 
@@ -179,50 +230,28 @@
     background: #020617;
   }
 
-  .btn-reply {
-    background: linear-gradient(to right, #22c55e, #16a34a);
-    border: none;
-    color: #020617;
-    padding: 9px 26px;
-    border-radius: 999px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 14px 30px rgba(34, 197, 94, 0.4);
-  }
-
-  .btn-reply:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 18px 40px rgba(34, 197, 94, 0.5);
-  }
-
-  .btn-reply i {
-    margin-left: 4px;
+  .reply-form .btn-primary {
+    background-color: #0d6efd;
+    border-radius: 10px;
+    font-weight: 700;
   }
 
   .text-muted {
     color: #9ca3af !important;
   }
 
-
-
-
-.reply-form .form-control {
-    border-radius: 10px;
-}
-
-.reply-form .btn-primary {
-    background-color: #0d6efd;
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-
+  @media (max-width: 768px) {
+    .ticket-detail-card { padding: 18px 16px 16px; }
+    .message-me, .message-them { max-width: 100%; }
+    .attachment-preview-link { max-width: 100%; }
+  }
 </style>
 
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-lg-10">
       <div class="ticket-detail-card" style="text-align: right;">
+
         <div class="ticket-header">
           <h2>{{ ticket.title }}</h2>
           <div class="ticket-status">
@@ -233,28 +262,65 @@
           </div>
         </div>
 
+        {# ✅ Ticket image (اگر خود تیکت تصویر دارد) #}
+        {% if ticket.image %}
+          <div class="ticket-hero">
+            <a href="{{ ticket.image.url }}" target="_blank" title="مشاهده تصویر تیکت">
+              <img src="{{ ticket.image.url }}" alt="ticket image">
+            </a>
+            <div class="ticket-hero-footer">
+              <div class="ticket-hero-meta">
+                <i class="fas fa-image"></i>
+                <span>تصویر ضمیمه تیکت</span>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ ticket.image.url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                  <i class="fas fa-up-right-from-square ms-1"></i> مشاهده
+                </a>
+                <a href="{{ ticket.image.url }}" download class="btn btn-sm btn-outline-light">
+                  <i class="fas fa-download ms-1"></i> دانلود
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
         <!-- Messages -->
         <div class="message-stream">
           {% for msg in messages %}
             <div class="message-bubble {% if request.user == msg.sender %}message-me{% else %}message-them{% endif %}">
               <div class="message-meta">
-                <span class="message-sender">
-                  {{ msg.sender.username }}
-                </span>
-                <span class="message-time">
-                  {{ msg.sent_at|date:"Y/m/d H:i" }}
-                </span>
+                <span class="message-sender">{{ msg.sender.username }}</span>
+                <span class="message-time">{{ msg.sent_at|date:"Y/m/d H:i" }}</span>
               </div>
 
               <div class="message-text">
                 {{ msg.message|linebreaksbr }}
               </div>
 
+              {# ✅ Message attachment: if image show preview, else download #}
               {% if msg.attachment %}
                 <div class="message-attachment">
-                  <a href="{{ msg.attachment.url }}" class="btn btn-sm btn-outline-light">
-                    <i class="fas fa-paperclip ms-1"></i> دانلود فایل
-                  </a>
+                  {% with url=msg.attachment.url name=msg.attachment.name %}
+                    {% if name|lower|slice:"-4:" == ".jpg" or name|lower|slice:"-4:" == ".png" or name|lower|slice:"-5:" == ".jpeg" or name|lower|slice:"-5:" == ".webp" or name|lower|slice:"-4:" == ".gif" %}
+                      <a href="{{ url }}" target="_blank" class="attachment-preview-link" title="نمایش تصویر">
+                        <img src="{{ url }}" alt="attachment" class="attachment-preview-img">
+                      </a>
+
+                      <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <a href="{{ url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                          <i class="fas fa-up-right-from-square ms-1"></i> مشاهده
+                        </a>
+                        <a href="{{ url }}" download class="btn btn-sm btn-outline-light">
+                          <i class="fas fa-download ms-1"></i> دانلود
+                        </a>
+                      </div>
+                    {% else %}
+                      <a href="{{ url }}" class="btn btn-sm btn-outline-light" download>
+                        <i class="fas fa-paperclip ms-1"></i> دانلود فایل
+                      </a>
+                    {% endif %}
+                  {% endwith %}
                 </div>
               {% endif %}
             </div>
@@ -263,46 +329,37 @@
           {% endfor %}
         </div>
 
-<!-- Reply Form -->
-<form method="post" enctype="multipart/form-data" class="reply-form" style="direction: rtl;">
-    {% csrf_token %}
+        <!-- Reply Form -->
+        <form method="post" enctype="multipart/form-data" class="reply-form" style="direction: rtl;">
+          {% csrf_token %}
 
-    <!-- Message field -->
-    <div class="mb-3">
-        <label class="form-label fw-bold">{{ form.message.label }}</label>
-        {{ form.message|add_class:"form-control" }}
-        {% if form.message.errors %}
-            <small class="text-danger d-block mt-1">
-                {{ form.message.errors.0 }}
-            </small>
-        {% endif %}
-    </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">{{ form.message.label }}</label>
+            {{ form.message|add_class:"form-control" }}
+            {% if form.message.errors %}
+              <small class="text-danger d-block mt-1">{{ form.message.errors.0 }}</small>
+            {% endif %}
+          </div>
 
-    <!-- Attachment field -->
-    <div class="mb-3">
-        <label class="form-label fw-bold">{{ form.attachment.label }}</label>
-
-        <div class="input-group">
-            {{ form.attachment|add_class:"form-control" }}
-            <span class="input-group-text">
+          <div class="mb-3">
+            <label class="form-label fw-bold">{{ form.attachment.label }}</label>
+            <div class="input-group">
+              {{ form.attachment|add_class:"form-control" }}
+              <span class="input-group-text">
                 <i class="fas fa-paperclip"></i>
-            </span>
-        </div>
+              </span>
+            </div>
+            {% if form.attachment.errors %}
+              <small class="text-danger d-block mt-1">{{ form.attachment.errors.0 }}</small>
+            {% endif %}
+          </div>
 
-        {% if form.attachment.errors %}
-            <small class="text-danger d-block mt-1">
-                {{ form.attachment.errors.0 }}
-            </small>
-        {% endif %}
-    </div>
-
-    <div class="text-start text-md-end">
-        <button type="submit" class="btn btn-primary px-4">
-            <i class="fas fa-reply me-1"></i> ارسال پاسخ
-        </button>
-    </div>
-</form>
-
+          <div class="text-start text-md-end">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fas fa-reply me-1"></i> ارسال پاسخ
+            </button>
+          </div>
+        </form>
 
       </div>
     </div>

@@ -27,3 +27,5 @@ passenger_wsgi.py
 media/ticket_attachments/*
 
 media/
+
+passenger_wsgi.py

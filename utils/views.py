@@ -608,6 +608,7 @@ def ticket_create(request):
         msg_form = TicketMessageForm()
         return render(request, 'tickets/ticket_create.html', {'form': form, 'msg_form': msg_form,'categories':categories})
     return redirect('error_page.html')
+
 @login_required
 def ticket_detail(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
@@ -634,10 +635,20 @@ def ticket_detail(request, ticket_id):
 
 
 
+
 from Projects.models import Project
 
-
 @login_required
+def project_ticket_list(request):
+    tickets = ProjectTicket.objects.all().order_by('-created_at')
+    categories = TicketCategory.objects.filter(is_project = True)
+    return render(request, 'Project_tickets/ticket_list.html', {'tickets': tickets,"categories": categories})
+
+
+
+
+
+
 def project_ticket_create(request,project_id):
 
 
@@ -655,11 +666,26 @@ def project_ticket_create(request,project_id):
         })
 
     if request.method == 'POST':
-        form = ProjectTicketForm(request.POST)
+        form = ProjectTicketForm(request.POST, request.FILES)
         msg_form = ProjectTicketMessageForm(request.POST, request.FILES)
         if form.is_valid() and msg_form.is_valid():
+
+            try:
+                data = request.POST.dict()
+                project_name = data['project_name']
+                project = Project.objects.filter(name=project_name).first()
+            except:
+                title  ='خطا در شناسایی پروژه'
+                message = 'چنین پروژه ای در دیتابیس تعریف نشده است.'
+                return render(request, 'users/error_page_flow_not_extend.html', {
+                    'title': title,
+                    'message': message,
+                    'show_topbar':False
+                })
+
+
             ticket = form.save(commit=False)
-            ticket.user = request.user
+            ticket.project = project
             ticket.save()
             message = msg_form.save(commit=False)
             message.ticket = ticket
@@ -684,7 +710,30 @@ def project_ticket_create(request,project_id):
 
 
 
-def ticket_created(request, ticket_number):
+def project_ticket_created(request, ticket_number):
     # Fetch the ticket using the ticket_number (which is the ticket ID)
     ticket = ProjectTicket.objects.get(id=ticket_number)
     return render(request, 'Project_tickets/ticket_created.html', {'ticket': ticket})
+
+
+@login_required
+def project_ticket_detail(request, ticket_id):
+    ticket = get_object_or_404(ProjectTicket, id=ticket_id)
+    messages = ticket.messages_project_ticket.all().order_by('sent_at')
+    if request.method == 'POST':
+
+        # if request.user != ticket.user and request.user not in ticket.category.viewers.all():
+        #     return HttpResponseForbidden("شما اجازه مشاهده این تیکت را ندارید.")
+
+        form = ProjectTicketMessageForm(request.POST, request.FILES)
+        if form.is_valid():
+            msg = form.save(commit=False)
+            msg.ticket = ticket
+            msg.sender = request.user
+            msg.save()
+            return redirect('ticket_detail', ticket.id)
+    else:
+        form = ProjectTicketMessageForm()
+    return render(request, 'Project_tickets/ticket_detail.html', {'ticket': ticket, 'messages': messages, 'form': form})
+
+

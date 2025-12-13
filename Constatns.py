@@ -7,7 +7,7 @@ class Base:
         dorsa = 'dorsa'
         kaman = 'kaman'
 
-    name = Name.moallem
+    name = Name.dorsa
 
 class Constants:
     if Base.name == Base.Name.seke:
@@ -48,7 +48,8 @@ class Constants:
         ALT_LOGO = 'لوگوی شرکت درصا'
         LOGIN_BANNER = 'images/dorsa_timing.png'
         TOPBAR_COLOR_START = "#2D5BF1"
-        TOPBAR_COLOR_END = "#151e46"        
+        TOPBAR_COLOR_END = "#151e46"     
+           
 
 
     elif Base.name == Base.Name.kaman:

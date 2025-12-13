@@ -58,11 +58,20 @@ class ProjectTicket(models.Model):
     message = models.TextField(verbose_name="پیام")
     category = models.ForeignKey(TicketCategory, on_delete=models.SET_NULL, null=True, verbose_name="دسته‌بندی")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', verbose_name="وضعیت")
+    image = models.ImageField(upload_to="project_tickets/images/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین بروزرسانی")
+    project = models.ForeignKey(
+        'Projects.Project',   # 👈 STRING REFERENCE
+        on_delete=models.CASCADE,
+        related_name='tickets',
+        verbose_name='پروژه',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
-        return f"{self.title} - {self.user.username}"
+        return f"{self.title} - {self.project}"
     
 
 class ProjectTicketMessage(models.Model):
@@ -73,4 +82,4 @@ class ProjectTicketMessage(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Message by {self.sender.username} on {self.ticket.title}"
+        return f"Message by {self.phone} on {self.ticket.title}"

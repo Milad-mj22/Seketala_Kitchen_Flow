@@ -34,7 +34,7 @@ class TicketMessageForm(forms.ModelForm):
 class ProjectTicketForm(forms.ModelForm):
     class Meta:
         model = ProjectTicket
-        fields = ['phone','title', 'message', 'category']
+        fields = ['phone','title', 'message', 'category','image']
         widgets = {
             'message': forms.Textarea(attrs={'rows': 5}),
         }
@@ -42,7 +42,8 @@ class ProjectTicketForm(forms.ModelForm):
             'phone': 'شماره تماس',
             'title': 'عنوان',
             'message': 'پیام',
-            'category': 'دسته‌بندی'
+            'category': 'دسته‌بندی',
+            'image': 'تصویر'
         }
 
 class ProjectTicketMessageForm(forms.ModelForm):
