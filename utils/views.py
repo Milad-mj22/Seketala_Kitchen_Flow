@@ -666,7 +666,7 @@ def project_ticket_create(request,project_id):
         })
 
     if request.method == 'POST':
-        form = ProjectTicketForm(request.POST)
+        form = ProjectTicketForm(request.POST, request.FILES)
         msg_form = ProjectTicketMessageForm(request.POST, request.FILES)
         if form.is_valid() and msg_form.is_valid():
 
@@ -734,6 +734,6 @@ def project_ticket_detail(request, ticket_id):
             return redirect('ticket_detail', ticket.id)
     else:
         form = ProjectTicketMessageForm()
-    return render(request, 'tickets/ticket_detail.html', {'ticket': ticket, 'messages': messages, 'form': form})
+    return render(request, 'Project_tickets/ticket_detail.html', {'ticket': ticket, 'messages': messages, 'form': form})
 
 

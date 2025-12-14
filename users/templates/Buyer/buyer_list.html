@@ -587,7 +587,7 @@
         <div class="buyer-page-title">
             <div class="buyer-page-title-main">
                 <span class="icon">📋</span>
-                <span>لیست خریداران</span>
+                <span>لیست مشتریان</span>
             </div>
             <div class="buyer-page-title-sub">
                 <span class="buyer-page-badge">تعداد ثبت‌شده: {{ counts }}</span>
@@ -599,7 +599,7 @@
 
         <a href="{% url 'add_buyer' %}" class="btn btn-success btn-add">
             <span>➕</span>
-            <span>خریدار جدید</span>
+            <span>مشتری جدید</span>
         </a>
     </div>
 
@@ -608,7 +608,7 @@
         <div class="search-header-row">
             <div class="search-title">
                 <span class="icon">🔎</span>
-                <span>جستجوی سریع خریداران</span>
+                <span>جستجوی سریع مشتریان</span>
             </div>
             <div class="search-hint">
                 با ترکیب متن، دسته‌بندی و ملیت، نتایج خود را دقیق‌تر کنید.
@@ -741,11 +741,11 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel{{ buyer.id }}">تأیید حذف خریدار</h5>
+                            <h5 class="modal-title" id="deleteModalLabel{{ buyer.id }}">تأیید حذف مشتری</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            آیا مطمئن هستید که می‌خواهید خریدار <strong>{{ buyer.short_name }}</strong> را حذف کنید؟
+                            آیا مطمئن هستید که می‌خواهید مشتری <strong>{{ buyer.short_name }}</strong> را حذف کنید؟
                             این عمل غیرقابل بازگشت است.
                         </div>
                         <div class="modal-footer">
@@ -759,14 +759,14 @@
     {% else %}
         <div class="empty-state-card">
             <div class="empty-state-icon">🧾</div>
-            <div class="empty-state-title">هیچ خریداری ثبت نشده است</div>
+            <div class="empty-state-title">هیچ مشتریی ثبت نشده است</div>
             <div class="empty-state-text">
-                از دکمه <strong>«خریدار جدید»</strong> برای ثبت اولین خریدار استفاده کنید
+                از دکمه <strong>«مشتری جدید»</strong> برای ثبت اولین مشتری استفاده کنید
                 یا معیارهای جستجو را تغییر دهید.
             </div>
             <a href="{% url 'add_buyer' %}" class="btn btn-success btn-add">
                 <span>➕</span>
-                <span>ثبت اولین خریدار</span>
+                <span>ثبت اولین مشتری</span>
             </a>
         </div>
     {% endif %}
