@@ -96,7 +96,7 @@ class UserWorkTimeManager:
 
 
 
-    def user_work_time(self,username=None):
+    def user_work_time(self,username=None,selected_project = None):
         # Get the current date and the start date for the past month
         today = timezone.now().date()
         tomorrow = today + timedelta(days=1)
@@ -166,6 +166,8 @@ class UserWorkTimeManager:
 
 
                         daily_work_times[cnt-1]['total_work_time'] =self.format_timedelta(total_work_time)
+                        
+                        daily_work_times[cnt-1]['project'] =log.project
 
                     
 
@@ -175,6 +177,7 @@ class UserWorkTimeManager:
                 
                     daily_work_times[cnt] = {
                         'date' : log_date,
+                        'project' : log.project,
                         'total_work_time': total_work_time,
                         'time_in': entry_time,
                         'jalali_time_in':jalali_time_in,
@@ -196,5 +199,15 @@ class UserWorkTimeManager:
 
             self.total_time_work[user] = self.convert_seconds_to_hms(self.total_time_work[user])
         
+        if selected_project is not None:
+            final_data = {}
+            filter_data = {}
+            for key in user_time_data[user.username].keys():
+                data = user_time_data[user.username][key]
+                if data['project'] == selected_project.name:
+                    filter_data.update(data)      
+            final_data[user.username] = filter_data
+
+
 
         return user_time_data , self.total_time_work

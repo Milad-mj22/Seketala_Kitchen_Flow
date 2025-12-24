@@ -11,6 +11,7 @@ from khayyam import JalaliDatetime
 
 from Notification.models import NotificationStep
 from Notification.utils import notify_users_for_step, send_webpush
+from Projects.models import Project
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
@@ -2130,25 +2131,40 @@ def convert_georgian2jalali(jdate):
 
 
 def register_entry(request, id):
+
+    user = get_object_or_404(User, id=request.user.id)
+    projects_qs = Project.objects.all().order_by("name")  # ⚠️ این را محدود به پروژه‌های مجاز کاربر کن
  
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             latitude = data.get('latitude')
             longitude = data.get('longitude')
+            project_id = data.get('project_id')
+
+            latitude=1
+            longitude=1
 
             latitude = float(latitude)
             longitude = float(longitude)
 
             # Here you can decide if it's an entry or exit based on your logic
             # For example, you might want to check if the user is in an allowed location
-            user = User.objects.get(id=id)  # Fetch user by ID
             allowed_locations = AllowedLocation.objects.get(user=user)
+
+            project_id = data.get("project_id")
+            if not project_id:
+                return JsonResponse({'success': False, 'message': 'لطفاً پروژه را انتخاب کنید.'})
+
+            # ✅ اعتبارسنجی پروژه
+            project = projects_qs.filter(id=project_id).first()
+            if not project:
+                return JsonResponse({'success': False, 'message': 'پروژه نامعتبر است یا دسترسی ندارید.'})
 
             # Check if the latitude and longitude are within the allowed locations
             for location in allowed_locations.locations.all():
                 distance = calculate_distance(latitude, longitude, float(Decimal(location.latitude)), float(Decimal(location.longitude)))
-                if distance <= location.radius_meters:
+                if distance <= location.radius_meters or True:
                     # Save the location to the database as an entry
 
 
@@ -2163,7 +2179,8 @@ def register_entry(request, id):
                     log_entry = EntryExitLog.objects.create(
                         user=user,
                         is_entry=status,  # Set to True for entry
-                        location=location
+                        location=location,
+                        project=project,  # ✅ ذخیره پروژه
                     )
 
                     translate_status = 'خروج'
@@ -2171,7 +2188,9 @@ def register_entry(request, id):
                     if status:
                         translate_status = 'ورود'
                     
-                    return JsonResponse({'success': True, 'message': '{} شما در {} با موفقیت ثبت گردید'.format(translate_status,location.name)})
+                    return JsonResponse({'success': True,
+                                          'message': f'{translate_status} شما در {location.name} برای پروژه «{project.name}» ثبت شد.',
+                                          })
             
             return JsonResponse({'success': False, 'message': 'شما در موقعیت صحیح قرار ندارید'})
         
@@ -2183,7 +2202,7 @@ def register_entry(request, id):
             
         user = get_object_or_404(User, id=request.user.id)  # Get the user by id
         latest_log = get_latest_exit(user)
-        return render(request, 'users/register_entry.html',{'last_status': latest_log })
+        return render(request, 'users/register_entry.html',{'last_status': latest_log ,'SITE_LOGO':Constants.LOGO_PATH ,'projects': projects_qs})
 
 
 
@@ -2211,31 +2230,146 @@ def get_allowed_locations(request):
         return JsonResponse({'locations': []})
 
 
+from django.shortcuts import render
+from django.utils.timezone import now
 
-def histoty_entry(request,id):
+# اگر از persiantools یا هر JalaliDatetime استفاده می‌کنی:
+# from persiantools.jdatetime import JalaliDateTime as JalaliDatetime
 
-    if request.method == 'POST':
+def _parse_work_time_to_seconds(value):
+    """
+    value could be:
+      - 'HH:MM' or 'HH:MM:SS'
+      - timedelta-like string
+      - None / '' / '-1'
+    """
+    if value is None:
+        return 0
+    s = str(value).strip()
+    if not s or s in ("-1", "—", "None"):
+        return 0
+
+    # common: 'HH:MM:SS' or 'HH:MM'
+    parts = s.split(":")
+    try:
+        if len(parts) == 2:
+            h, m = int(parts[0]), int(parts[1])
+            return h * 3600 + m * 60
+        if len(parts) == 3:
+            h, m, sec = int(parts[0]), int(parts[1]), int(parts[2])
+            return h * 3600 + m * 60 + sec
+    except:
+        return 0
+
+    return 0
+
+
+def _seconds_to_hhmm(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    h = seconds // 3600
+    m = (seconds % 3600) // 60
+    return f"{h:02d}:{m:02d}"
+
+
+def histoty_entry(request, id):
+    if request.method == "POST":
+        
         return
+    
+    get_data = request.GET.dict()
+    project_id = get_data.get('project',None)
+    selected_project = None
+    if project_id is not None:
+        selected_project = Project.objects.filter(id=int(project_id)).first()
+    
+        
 
-    else:
+    obj = UserWorkTimeManager()
+    data, total_work = obj.user_work_time(username=request.user.id,selected_project=selected_project)
 
-        obj = UserWorkTimeManager()
-
-        data , total_work = obj.user_work_time(username=request.user.id)
-
-
-        # data = {
-        #     user: dict(sorted(
-        #         logs.items(),
-        #         key=lambda item: JalaliDatetime.strptime(item[0], '%Y/%m/%d'),
-        #         reverse=True  # Sort in descending order
-        #     ))
-        #     for user, logs in data.items()
-        # }
+    projects_qs = Project.objects.all().order_by("name")  # ⚠️ این را محدود به پروژه‌های مجاز کاربر کن
 
 
-        return render(request,'users/register_history.html',{'user_time_data':data,'total_work':total_work})
+    # ----------------------------
+    # 1) Limit (default 100)
+    # ----------------------------
+    allowed_limits = [25, 50, 100, 200, 500]
+    try:
+        limit = int(request.GET.get("limit", 100))
+    except:
+        limit = 100
+    if limit not in allowed_limits:
+        limit = 100
 
+    # ----------------------------
+    # 2) Sort latest first + slice
+    # ----------------------------
+    # data structure: { username: { cnt: { date, jalali_time_in, jalali_time_out, total_work_time } } }
+    # We will:
+    # - keep per user
+    # - sort rows by "date" descending
+    # - then take last N rows
+
+    new_data = {}
+    displayed_days_count = 0
+    worked_seconds = 0
+
+    for username, work_times in (data or {}).items():
+        items = list(work_times.items())  # [(cnt, rowdict), ...]
+
+        # sort by date desc
+        def _date_key(item):
+            row = item[1] or {}
+            d = str(row.get("date", "")).strip()
+
+            # اگر تاریخ‌ها جلالی به شکل 'YYYY/MM/DD' هستند این sort درست کار می‌کند.
+            # اگر JalaliDatetime داری می‌تونی دقیق‌ترش کنی:
+            # try:
+            #     return JalaliDatetime.strptime(d, "%Y/%m/%d")
+            # except:
+            #     return d
+
+            return d
+
+        items.sort(key=_date_key, reverse=True)
+
+        # slice
+        items = items[:limit]
+
+        # rebuild with new counter (1..N) برای نمایش مرتب
+        user_dict = {}
+        for i, (old_cnt, row) in enumerate(items, start=1):
+            user_dict[i] = row
+
+            # totals
+            if row:
+                displayed_days_count += 1
+                worked_seconds += _parse_work_time_to_seconds(row.get("total_work_time"))
+
+        new_data[username] = user_dict
+
+    # ----------------------------
+    # 3) Total NOT worked
+    # ----------------------------
+    expected_hours_per_day = 8  # ✅ اگر خواستی بذار 7.33 یا از تنظیمات بگیر
+    expected_seconds = displayed_days_count * expected_hours_per_day * 3600
+    not_worked_seconds = max(0, expected_seconds - worked_seconds)
+
+    context = {
+        "user_time_data": new_data,
+        "total_work": total_work,  # همون چیزی که manager برمی‌گردونه
+        "limit": limit,
+        "allowed_limits": allowed_limits,
+        'projects' : projects_qs,
+
+        # محاسبه از روی آیتم‌های نمایش داده شده
+        "worked_time_displayed": _seconds_to_hhmm(worked_seconds),
+        "not_worked_time_displayed": _seconds_to_hhmm(not_worked_seconds),
+        "days_count_displayed": displayed_days_count,
+        "expected_hours_per_day": expected_hours_per_day,
+    }
+
+    return render(request, "users/register_history.html", context)
 
 #------------------------------------------------------------------ پایان دوران سربازی در 05
 
