@@ -6,8 +6,9 @@ class Base:
         moallem = 'moallem'
         dorsa = 'dorsa'
         kaman = 'kaman'
+        fastfood_demo = 'fastfood_demo'
 
-    name = Name.dorsa
+    name = Name.fastfood_demo
 
 class Constants:
     if Base.name == Base.Name.seke:
@@ -22,6 +23,7 @@ class Constants:
         LOGIN_BANNER = 'images/hero1.png'
         TOPBAR_COLOR_START = '#cab331'
         TOPBAR_COLOR_END = '#63635a'
+        SMS_LOGIN_TEMPLATE = 859705
 
     
     elif Base.name == Base.Name.moallem:
@@ -64,3 +66,18 @@ class Constants:
         LOGIN_BANNER = 'images/kamannew.png'
         TOPBAR_COLOR_START = "#9b4fff"
         TOPBAR_COLOR_END = "#d581ee"
+
+
+    elif Base.name == Base.Name.fastfood_demo:
+        NAME = 'دمو رستوران'
+        PWA_NAME = 'دمو رستوران '
+        PWA_DESCRIPTION = 'مدیریت انبار و دستیار هوشمند رستوران'
+        PWA_COLOR = "#FFD900"
+        PWA_BACKGROUND_COLOR = '#FFFFFF'
+        LOGO_PATH = 'icons/logo_old.svg'
+        LOGIN_LOGO_PATH = 'icons/logo_old.svg'
+        ALT_LOGO = 'لوگوی رستوران'
+        LOGIN_BANNER = 'images/fastfood_demo.png'
+        TOPBAR_COLOR_START = "#f37b19"
+        TOPBAR_COLOR_END = '#63635a'
+        SMS_LOGIN_TEMPLATE = 859705

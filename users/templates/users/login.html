@@ -282,7 +282,7 @@
 <div class="form-side" id="formSide">
   <div class="mode-switch" role="tablist" aria-label="login modes">
 <button id="btnStaff" class="pill active" type="button" role="tab" aria-selected="true">ورود مدیریت/پرسنل</button>
-<button id="btnCustomer" class="pill" type="button" role="tab" aria-selected="false">ورود مشتری</button>
+<button id="btnCustomer" class="pill" type="button" role="tab" aria-selected="false">ورود پیامکی</button>
 
   </div>
 
@@ -526,8 +526,8 @@ function setModeCustomer(on){
     btnCustomer?.classList.toggle('active', !!on);
     btnStaff?.setAttribute('aria-selected', (!on).toString());
     btnCustomer?.setAttribute('aria-selected', (!!on).toString());
-    title.textContent = on ? 'ورود مشتری' : 'ورود به حساب';
-    desc.textContent  = on ? 'اطلاعات ورود مشتری را وارد کنید.' : 'لطفاً اطلاعات ورود خود را وارد کنید.';
+    title.textContent = on ? 'ورود پیامکی' : 'ورود به حساب';
+    desc.textContent  = on ? 'اطلاعات ورود پیامکی را وارد کنید.' : 'لطفاً اطلاعات ورود خود را وارد کنید.';
     setTimeout(()=> formSide.classList.remove('sliding'), 520);
   });
 }

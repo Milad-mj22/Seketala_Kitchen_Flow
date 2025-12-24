@@ -209,7 +209,6 @@ class CustomLoginView(LoginView):
         context["SITE_LOGO"] = Constants.LOGIN_LOGO_PATH  # path inside static/
         context["LOGIN_BANNER"] = Constants.LOGIN_BANNER  # path inside static/
 
-        context["FOOTER_MESSAGE"] = "Powered by Sekke Tala"  # example
 
         return context
 
@@ -3508,13 +3507,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.contrib.auth import get_user_model, login
 from django.utils import timezone
-
-User = get_user_model()
+from custom_send_sms import verify_send_sms
 
 def send_sms(phone, text):
     # TODO: integrate your SMS gateway here
     # print(f"[SMS to {phone}] {text}")
-    pass
+    ret = verify_send_sms(number=str(phone),code=str(text),template_id=Constants.SMS_LOGIN_TEMPLATE)
 
 def cache_key(phone): return f"otp:{phone}"
 
@@ -3535,8 +3533,8 @@ def otp_send(request):
 
     code = f"{random.randint(0,999999):06d}"
     cache.set(key, {'code':code, 'exp': now+180, 'next_at': now+60}, timeout=300)
-
-    send_sms(phone, f"کد ورود شما: {code}")
+    print(code)
+    send_sms(phone, code)
     return JsonResponse({'ok':True, 'retry_in':60})
 
 @require_POST
@@ -3553,13 +3551,26 @@ def otp_verify(request):
     if otp != rec['code']: return JsonResponse({'detail':'کد نادرست است.'}, status=400)
 
     # get or create a customer user by phone
-    user, _ = User.objects.get_or_create(username=f"cust_{phone}", defaults={'is_active':True})
-    # optionally store phone in a field: user.phone = phone; user.save(update_fields=['phone'])
+    profile_qs = Profile.objects.filter(phone=phone)
+    if not profile_qs.exists():
+        return JsonResponse({'detail': 'اکانت با این شماره ثبت نشده است'}, status=400)
 
-    login(request, user)
+    user = profile_qs.first().user
+    if not user.is_active:
+        return JsonResponse({'detail': 'اکانت فعال نیست.'}, status=400)
+
+    # **Critical:** set backend before login
+    # Use the first backend (or choose the appropriate one)
+    backend_path = settings.AUTHENTICATION_BACKENDS[0]  # first backend in settings
+    login(request, user, backend=backend_path)
+
+    request.session.set_expiry(0)  # optional: do not remember
+
     cache.delete(cache_key(phone))
-    return JsonResponse({'ok':True, 'next': '/customer/dashboard/'})
 
+    from django.urls import reverse
+    next_url = reverse('post_login_redirect')
+    return JsonResponse({'ok': True, 'next': next_url})
 
 
 
