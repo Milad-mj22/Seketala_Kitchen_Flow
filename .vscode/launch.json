@@ -11,7 +11,7 @@
             "request": "launch",
             "args": [
                 "runserver",
-                "127.0.0.1:8454"
+                "127.0.0.1:8451"
             ],
             "django": true,
             "autoStartBrowser": false,
