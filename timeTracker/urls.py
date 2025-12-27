@@ -3,7 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from timeTracker import views
-from timeTracker.views import api_tasks_load_more, api_update_task_status, dashboard , delete_task,  sprint_create, sprint_edit, sprint_list, story_create, story_delete, story_edit, story_list, task_create, task_detail_modal, task_list
+from timeTracker.views import api_tasks_load_more, api_update_task_status, dashboard , delete_task, export_tasks_report_excel,  sprint_create, sprint_edit, sprint_list, story_create, story_delete, story_edit, story_list, task_create, task_detail_modal, task_list
 
 
 urlpatterns = [
@@ -29,5 +29,11 @@ urlpatterns = [
 
     path('assign_stories_to_project/', views.assign_stories_to_project, name='assign_stories_to_project'),
     path('select_sprint/', views.select_sprint, name='select_sprint'),
+
+
+    path('export/tasks-excel/', export_tasks_report_excel, name='export_tasks_excel'),
     
+
+
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
