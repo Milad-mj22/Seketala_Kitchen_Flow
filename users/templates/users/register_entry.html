@@ -1,363 +1,497 @@
 {% extends "users/base.html" %}
 {% load static %}
-
-
 {% block content %}
 
-<html lang="fa">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-      /* Base body styling */
+/* -------------------- */
+/* 1. متغیرهای ریشه و فونت */
+/* -------------------- */
+:root {
+    --primary: #4f46e5;   /* بنفش (اصلی) */
+    --success: #22c55e;   /* سبز (ورود) */
+    --info: #3b82f6;      /* آبی (خروج) */
+    --danger: #ef4444;    /* قرمز (خطا) */
+    --warning: #f59e0b;   /* زرد/نارنجی (هشدار) */
+}
+
+/* CSS جدید برای انیمیشن چرخش */
+@keyframes fa-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.fa-spin-active {
+    animation: fa-spin 1s infinite linear;
+}
 
 
-
-
-/* Container for the buttons and messages */
-#btn-container {
-    display: flex;
-    margin-top: 20px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+/* -------------------- */
+/* 2. استایل کارت اصلی (Container) */
+/* -------------------- */
+.card-smart {
+    max-width: 420px;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, .95);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, .15);
     text-align: center;
-    padding: 20px;
-    background-color: white; /* Optional: to make it stand out */
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for depth */
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* Centering and styling adjustments */
-#entry-btn {
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    background-color: #c7e7145d;
-    color: white;
-    border: none;
-    font-size: 24px;
+.logo {
+    width: 80px;
+    margin-bottom: 25px;
+
+}
+
+/* -------------------- */
+/* 3. باکس وضعیت (شامل ساعت) */
+/* -------------------- */
+.status-box {
+    padding: 15px 20px;
+    border-radius: 18px;
+    background: #f0f4ff; /* پس‌زمینه روشن */
+    font-weight: bold;
+    margin-bottom: 30px;
+    border-left: 6px solid var(--primary);
+    text-align: right;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.status-icon {
+    font-size: 28px;
+    margin-left: 15px;
+}
+
+.status-text-wrapper {
+    flex-grow: 1;
+}
+
+.status-time {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: normal;
+    display: block;
+    margin-top: 4px;
+}
+
+/* -------------------- */
+/* 4. استایل دکمه HOLD با دایره پیشرفت */
+/* -------------------- */
+.hold-wrapper {
     position: relative;
+    width: 240px;
+    height: 240px;
+    margin: auto;
 }
 
-#entry-btn img {
-    max-width: 80%;
-    max-height: 80%;
-    border-radius: 20%; /* Ensure the logo is circular */
-}
-
-
-#entry-btn:disabled {
-    background-color: #aaa; /* Disabled button color */
-}
-
-/* Status message styling */
-#status-message {
-    margin-top: 20px;
-    color: #dc3545; /* Default to red for warnings */
-    font-size: 1.2rem;
-}
-
-/* Refresh button styling */
-#refresh-btn {
-    margin-top: 15px;
-    background-color: #007bff;
-    color: white;
+.hold-btn {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
     border: none;
-    padding: 10px 20px;
+    color: #fff;
+    font-size: 22px;
     cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
-#refresh-btn:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+/* حالت‌های پویا برای ورود و خروج */
+.mode-entry {
+    background: linear-gradient(135deg, var(--success), #4ade80);
+}
+.mode-exit {
+    background: linear-gradient(135deg, var(--info), #60a5fa);
 }
 
-/* Entry button hover effect */
-#entry-btn:hover {
-    background-color: #218838; /* Darker green on hover */
+.hold-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
-
-
-
-
-
-
-
-
-
-
-/* Hide the fallback text initially if the logo loads successfully */
-#fallback-text {
-    display: none;
-}
-
-
-#fallback-text {
+.progress-circle {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
+    inset: 0;
+    border-radius: 50%;
+    /* استفاده از متغیر --deg برای انیمیشن */
+    background: conic-gradient(rgba(255, 255, 255, 0.7) var(--deg), transparent 0);
+    pointer-events: none;
 }
 
-
-
-
-#last-status-container {
-    text-align: center; /* Center the text */
-    margin-bottom: 20px; /* Space below the container */
-    padding: 10px; /* Inner padding for the container */
-    border-radius: 8px; /* Rounded corners */
-    background-color: #f8f9fa; /* Light background color for contrast */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    font-family: 'B nazanin', sans-serif; /* Change font to Arial or any other */
-    color: #333; /* Text color */
+/* -------------------- */
+/* 5. پیام و بازنشانی */
+/* -------------------- */
+#status-message {
+    margin-top: 30px;
+    font-size: 17px;
+    font-weight: bold;
+    min-height: 25px; /* برای جلوگیری از پرش محتوا */
+    color: #475569;
 }
 
-#last-status-container h2 {
-    font-size: 24px; /* Font size for the status text */
-    font-weight: bold; /* Bold text for emphasis */
-    margin: 0; /* Remove default margin */
+.refresh {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #fff;
+    border: 2px solid var(--primary);
+    border-radius: 15px;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
 }
-
-#last-status-container h2::after {
-    content: ''; /* Add a decorative line after the text */
-    display: block; /* Make it a block element */
-    height: 4px; /* Height of the line */
-    width: 50px; /* Width of the line */
-    background-color: #007bff; /* Blue color for the line */
-    margin: 10px auto 0; /* Center it with margin above */
+.refresh:hover {
+    background: var(--primary);
+    color: #fff;
 }
-
-
-
-
-/* Add some padding for small screens */
-@media (max-width: 576px) {
-    #entry-btn {
-        width: 150px;
-        height: 150px;
-        font-size: 18px;
-    }
-
-    #refresh-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-}
-
-/* Additional styles for medium screens */
-@media (min-width: 768px) {
-    #entry-btn {
-        width: 250px;
-        height: 250px;
-        font-size: 28px;
-    }
-}
-
 </style>
 
-<body>
-    <div id="btn-container">
-        {% csrf_token %}
+<div class="card-smart">
+    {% csrf_token %}
     
-        <div id="last-status-container" style="text-align: center; margin-bottom: 20px;">
-            <h2>آخرین وضعیت : {{ last_status }}</h2>
+    <img src="{% static SITE_LOGO %}" class="logo" alt="لوگو">
+
+    <div class="status-box">
+        <div class="status-icon" id="current-status-icon">
+            </div>
+        <div class="status-text-wrapper">
+            آخرین وضعیت:
+            <span id="current-status-text">
+                {% if last_status == 'IN' %}
+                **داخل**
+                {% else %}
+                **خروج**
+                {% endif %}
+            </span>
+            <span class="status-time" id="last-action-time">
+                {% if last_time %}
+                در ساعت {{ last_time }}
+                {% else %}
+                (هنوز عملی ثبت نشده است)
+                {% endif %}
+            </span>
         </div>
-
-        <button id="entry-btn" class="btn btn-success">
-            <img id="logo" src="{% static 'icons/moallem_logo.png' %}" alt="جهت ورود نگه دارید" onerror="showText()" />
-            <span id="fallback-text">جهت ورود نگه دارید</span>
-        </button>
-    
-        <p id="status-message"></p>
-        <button id="refresh-btn" class="btn btn-primary">بازنشانی موقعیت</button>
     </div>
-    
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="hold-wrapper">
+        <div class="progress-circle" id="progress-circle"></div>
+        <button id="action-btn" class="hold-btn" disabled>
+            <span id="btn-text">در حال بارگیری...</span>
+        </button>
+    </div>
 
-    <script>
-        let holdTimer;
-        let holding = false;
-        let latitude, longitude;
-        let allowedLocations = []; // Locations from backend
+    <p id="status-message">در حال بارگیری موقعیت...</p>
+
+    <button class="refresh" id="refresh-btn">
+        <i class="fas fa-redo-alt" id="refresh-icon"></i>
+        بازنشانی موقعیت
+    </button>
+</div>
+
+
+<audio id="success-sound" src="{% static 'sounds/success.mp3' %}"></audio>
+<audio id="error-sound" src="{% static 'sounds/error.mp3' %}"></audio>
+
+<script>
+// ---------------------------------
+// متغیرهای اولیه
+// ---------------------------------
+let timer = null;
+let deg = 0;
+let latitude, longitude;
+let allowedLocations = [];
+const HOLD_DURATION = 2000; // 2 ثانیه زمان نگه داشتن
+const INTERVAL = 33;        // نرخ بروزرسانی (تقریباً 30 فریم در ثانیه)
+
+// وضعیت اولیه از جنگو
+let currentStatus = '{{ last_status }}'; // 'IN' یا 'OUT'
+let nextAction = currentStatus === 'IN' ? 'EXIT' : 'ENTRY';
+
+const btn = document.getElementById('action-btn');
+const progress = document.getElementById('progress-circle');
+const msg = document.getElementById('status-message');
+const refreshBtn = document.getElementById('refresh-btn');
+const refreshIcon = document.getElementById('refresh-icon'); // آیکون رفرش
+
+const statusTextEl = document.getElementById('current-status-text');
+const statusIconEl = document.getElementById('current-status-icon');
+const lastTimeEl = document.getElementById('last-action-time');
+const btnTextEl = document.getElementById('btn-text');
+
+// ---------------------------------
+// توابع کاربردی
+// ---------------------------------
+
+/**
+ * محاسبه فاصله بین دو نقطه (فرمول Haversine)
+ */
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // شعاع زمین بر حسب متر
+    const toRad = x => x * Math.PI / 180;
     
-        const entryBtn = document.getElementById('entry-btn');
-        const statusMessage = document.getElementById('status-message');
-        const refreshBtn = document.getElementById('refresh-btn');
+    const Δlat = toRad(lat2 - lat1);
+    const Δlon = toRad(lon2 - lon1);
+
+    const a = Math.sin(Δlat / 2) * Math.sin(Δlat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(Δlon / 2) * Math.sin(Δlon / 2);
     
-        // Fetch allowed locations from backend
-        function fetchAllowedLocations() {
-            fetch('/get_allowed_locations/')  // Replace with your backend URL for fetching allowed locations
-                .then(response => response.json())
-                .then(data => {
-                    allowedLocations = data.locations;  // Assuming backend sends a list of allowed locations
-                    getLocation();  // Trigger location check after getting allowed locations
-                })
-                .catch(error => {
-                    console.error('Error fetching locations:', error);
-                    statusMessage.textContent = "Error fetching allowed locations.";
-                    statusMessage.style.color = 'red';
-                });
-        }
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // فاصله بر حسب متر
+}
+
+/**
+ * به‌روزرسانی ظاهر دکمه و باکس وضعیت بر اساس nextAction
+ */
+function updateUIForAction() {
+    // 1. به‌روزرسانی دکمه اصلی
+    btn.classList.remove('mode-entry', 'mode-exit');
+
+    if (nextAction === 'ENTRY') {
+        btnTextEl.innerText = 'برای ورود نگه دارید';
+        btn.classList.add('mode-entry');
+    } else {
+        btnTextEl.innerText = 'برای خروج نگه دارید';
+        btn.classList.add('mode-exit');
+    }
+
+    // 2. به‌روزرسانی آیکون باکس وضعیت
+    statusIconEl.innerHTML = ''; // پاک کردن آیکون قبلی
+    if (currentStatus === 'IN') {
+        statusIconEl.innerHTML = `<i class="fas fa-door-open" style="color:var(--success)"></i>`;
+    } else {
+        statusIconEl.innerHTML = `<i class="fas fa-door-closed" style="color:var(--info)"></i>`;
+    }
+}
+
+/**
+ * چک کردن موقعیت مکانی کاربر
+ */
+function checkLocation(lat, lon) {
+    if (!lat || !lon) return false;
     
-        // Calculate distance between two points using Haversine formula
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // Radius of the Earth in meters
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δφ = (lat2 - lat1) * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Distance in meters
-        }
+    return allowedLocations.some(l => {
+        const distance = getDistance(lat, lon, l.latitude, l.longitude);
+        return distance <= l.radius;
+    });
+}
+
+/**
+ * دریافت موقعیت فعلی کاربر
+ */
+function getLocation() {
+    msg.innerHTML = "در حال دریافت موقعیت شما <i class='fas fa-map-marker-alt fa-shake'></i>";
+    refreshBtn.disabled = true;
+    btn.disabled = true;
     
-        // Check if current location is within allowed radius
-        function checkLocation(latitude, longitude) {
-            for (const location of allowedLocations) {
-                const distance = getDistance(latitude, longitude, location.latitude, location.longitude);
-                if (distance <= location.radius) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    
-        // Geolocation success callback
-        function success(position) {
-            // Capture the full precision of latitude and longitude
-            latitude = position.coords.latitude.toFixed(9);  // Capture up to 9 decimal places
-            longitude = position.coords.longitude.toFixed(9); // Capture up to 9 decimal places
-    
-            // Print the current location with full decimal precision
-            console.log("Current Location: Latitude: " + latitude + ", Longitude: " + longitude);
-    
+    // **شروع انیمیشن چرخش**
+    refreshIcon.classList.add('fa-spin-active'); 
+
+    if (!navigator.geolocation) {
+        msg.textContent = "Geolocation توسط مرورگر پشتیبانی نمی‌شود. ❌";
+        msg.style.color = 'var(--danger)';
+        refreshBtn.disabled = false;
+        refreshIcon.classList.remove('fa-spin-active'); // توقف انیمیشن
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (p) => {
+            latitude = p.coords.latitude;
+            longitude = p.coords.longitude;
+
             if (checkLocation(latitude, longitude)) {
-                statusMessage.textContent = "شما در موقعیت صحیح قرار دارید. جهت ورود لوگو بالا را نگه دارید.";
-                statusMessage.style.color = 'green';
-                entryBtn.disabled = false;
+                msg.innerHTML = "موقعیت تأیید شد. آماده ثبت اقدام. <i class='fas fa-check-circle'></i>";
+                msg.style.color = 'var(--success)';
+                btn.disabled = false;
             } else {
-                statusMessage.textContent = "شما در موقعیت صحیح قرار ندارید";
-                entryBtn.disabled = true;
+                msg.innerHTML = "خروج از محدوده مجاز. <i class='fas fa-exclamation-triangle'></i>";
+                msg.style.color = 'var(--danger)';
+                btn.disabled = true;
             }
-        }
+            refreshBtn.disabled = false;
+            refreshIcon.classList.remove('fa-spin-active'); // توقف انیمیشن
+        },
+        (error) => {
+            console.error("Geolocation Error:", error);
+            msg.innerHTML = "خطا در دریافت موقعیت. دسترسی موقعیت مکانی را بررسی کنید. <i class='fas fa-times-circle'></i>";
+            msg.style.color = 'var(--danger)';
+            refreshBtn.disabled = false;
+            btn.disabled = true;
+            refreshIcon.classList.remove('fa-spin-active'); // توقف انیمیشن
+        },
+        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+    );
+}
+
+// ---------------------------------
+// مدیریت رویداد نگه داشتن دکمه (شروع)
+// این تابع برای هر دو رویداد 'mousedown' و 'touchstart' استفاده می‌شود.
+// ---------------------------------
+function startHold(e) {
+    // جلوگیری از اجرای رویداد ماوس پس از تاچ در دستگاه‌های هیبریدی
+    if (e.type === 'mousedown' && e.pointerType === 'touch') return;
+    if (btn.disabled) return; 
+
+    // برای تاچ‌ها، از رفتار پیش‌فرض (مثل اسکرول) جلوگیری می‌کند
+    e.preventDefault(); 
     
-        // Geolocation error callback
-        function error(err) {
-            statusMessage.textContent = `Error getting location: ${err.message}`;
-            statusMessage.style.color = 'red';
-            entryBtn.disabled = true;
-        }
+    // اگر تایمر قبلی وجود دارد، آن را پاک کنید تا از تکرار جلوگیری شود
+    if (timer) clearInterval(timer);
+
+    deg = 0;
+    progress.style.setProperty('--deg', '0deg');
+    msg.innerText = 'دکمه را نگه دارید...';
+    btnTextEl.innerText = '...';
     
-        // Start the process of getting location
-        function getLocation() {
-            if (navigator.geolocation) {
-                statusMessage.textContent = "در حال دریافت موقعیت ...";
-                navigator.geolocation.getCurrentPosition(success, error);
-            } else {
-                statusMessage.textContent = "Geolocation is not supported by your browser.";
-                statusMessage.style.color = 'red';
-                entryBtn.disabled = true;
-            }
+    // مقدار افزایش زاویه در هر تکرار
+    const angleIncrease = (360 / HOLD_DURATION) * INTERVAL; 
+
+    timer = setInterval(() => {
+        deg += angleIncrease; 
+        
+        if (deg >= 360) {
+            clearInterval(timer);
+            btn.disabled = true; 
+            sendData(); // ارسال داده به سرور
+        } else {
+            progress.style.setProperty('--deg', deg + 'deg');
         }
-    
-        // Send location data to the backend
-        function sendLocationToBackend() {
-            fetch('/profile/{{ user.id }}/register_entry/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    latitude: latitude,
-                    longitude: longitude
-                })
-            })
-            .then(response => {
-                console.log('Response Status:', response.status); // Log the response status
-                return response.json();
-            })
-            .then(data => {
-                console.log('Backend Response:', data); // Log the response data
-                statusMessage.textContent = data.message;  // Display the message from the backend
-                statusMessage.style.color = data.success ? 'green' : 'red';
-            })
-            .catch(error => {
-                console.error('Error:', error); // Log any errors
-                statusMessage.textContent = "عدم توانایی در ثبت";
-                statusMessage.style.color = 'red';
-            });
+    }, INTERVAL); 
+}
+
+// ---------------------------------
+// مدیریت رویداد نگه داشتن دکمه (پایان/لغو)
+// این تابع برای همه رویدادهای رها کردن استفاده می‌شود.
+// ---------------------------------
+function endHold() {
+    if (timer) {
+        clearInterval(timer);
+        // اگر کامل نشده است، پیشرفت را ریست کن و پیام را برگردان
+        if (deg < 360) { 
+             progress.style.setProperty('--deg', '0deg');
+             if (!btn.disabled) {
+                msg.innerHTML = "موقعیت تأیید شد. آماده ثبت اقدام. <i class='fas fa-check-circle'></i>";
+                btnTextEl.innerText = nextAction === 'ENTRY' ? 'برای ورود نگه دارید' : 'برای خروج نگه دارید';
+             }
         }
+    }
+}
+
+// **اضافه کردن شنونده‌های رویداد برای دسکتاپ و موبایل**
+
+// شروع (Start)
+btn.addEventListener('mousedown', startHold);
+btn.addEventListener('touchstart', startHold, { passive: false }); // { passive: false } برای جلوگیری از اسکرول ضروری است
+
+// پایان (End/Cancel)
+['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(e => {
+    btn.addEventListener(e, endHold);
+});
+
+
+// ---------------------------------
+// ارسال داده به سرور و به‌روزرسانی UI
+// ---------------------------------
+
+function sendData() {
+    msg.innerHTML = `در حال ثبت **${nextAction === 'ENTRY' ? 'ورود' : 'خروج'}**... <i class='fas fa-spinner fa-spin'></i>`;
+    msg.style.color = 'var(--primary)';
+
+    fetch('/profile/{{ user.id }}/register_entry/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            latitude,
+            longitude,
+            action: nextAction
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        msg.innerHTML = d.message;
+        msg.style.color = d.success ? 'var(--success)' : 'var(--danger)';
+        
+        if (d.success) {
+            // **لرزش موفقیت (پالس کوتاه)**
+            if (navigator.vibrate) navigator.vibrate(100); 
             
-        // Handle button hold
-        entryBtn.addEventListener('mousedown', () => {
-            holding = true;
-            holdTimer = setTimeout(() => {
-                if (holding) {
-                    statusMessage.textContent = "با موفقیت ثبت گردید";  // Temporary message while processing
-                    entryBtn.disabled = true;
-                    holding = false;
-                    // Send the location data to the backend
-                    sendLocationToBackend();
-                }
-            }, 2000);  // 2 seconds hold
-        });
-    
-        entryBtn.addEventListener('mouseup', () => {
-            holding = false;
-            clearTimeout(holdTimer);
-        });
-    
-        entryBtn.addEventListener('mouseleave', () => {
-            holding = false;
-            clearTimeout(holdTimer);
-        });
-    
-        // Refresh button event
-        refreshBtn.addEventListener('click', () => {
-            getLocation();  // Refresh the user's location
-        });
-    
-        // Get the allowed locations and user's location when the page loads
-        window.onload = fetchAllowedLocations;
-   
-   
-   
-   
-   
-        function showText() {
-            // If the logo fails to load, show the fallback text
-            const fallbackText = document.getElementById('fallback-text');
-            fallbackText.style.display = 'block';
+            currentStatus = nextAction === 'ENTRY' ? 'IN' : 'OUT';
+            nextAction = currentStatus === 'IN' ? 'EXIT' : 'ENTRY';
+            
+            updateUIForAction();
+            
+            statusTextEl.innerHTML = currentStatus === 'IN' ? '**داخل**' : '**خروج**';
+
+            if (d.time) {
+                lastTimeEl.innerText = `در ساعت ${d.time}`;
+            }
+
+        } else {
+             // **لرزش خطا (دو پالس کوتاه)**
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+            
+            btn.disabled = false;
         }
 
+        progress.style.setProperty('--deg', '0deg');
+        if (checkLocation(latitude, longitude) && !btn.disabled) {
+             btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        msg.innerHTML = `خطای شبکه یا سرور. لطفا دوباره تلاش کنید. <i class='fas fa-bug'></i>`;
+        msg.style.color = 'var(--danger)';
+        
+        // لرزش خطا در صورت عدم توانایی برقراری ارتباط
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        
+        btn.disabled = false; 
+        updateUIForAction();
+    });
+}
 
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   </script>
-    
+// ---------------------------------
+// شروع
+// ---------------------------------
+updateUIForAction(); 
 
-</body>
+function init() {
+    fetch('/get_allowed_locations/')
+    .then(r => r.json())
+    .then(d => {
+        allowedLocations = d.locations || []; 
+        getLocation();
+    })
+    .catch(error => {
+        msg.innerHTML = "خطا در دریافت مکان‌های مجاز. ❌";
+        msg.style.color = 'var(--danger)';
+        refreshBtn.disabled = false;
+    });
+}
+
+window.onload = init;
+document.getElementById('refresh-btn').onclick = getLocation;
+</script>
+
 {% endblock %}
