@@ -394,13 +394,22 @@
   // document.body.style.overflow = 'hidden';
 
   // --- Persian datepicker for doing_date, if present ---
-  if (window.$ && $('#doing_date').length && $.fn.persianDatepicker) {
-    $('#doing_date').persianDatepicker({
-      format: 'YYYY/MM/DD',
-      initialValue: false,
-      autoClose: true,
-    });
-  }
+// Persian datepicker for doing_date
+if (window.$ && $('#doing_date').length && $.fn.pDatepicker) {
+  $('#doing_date').pDatepicker({
+    format: 'YYYY/MM/DD',
+    initialValue: false,
+    autoClose: true,
+    calendarType: 'persian',
+    calendar: {
+      persian: {
+        locale: 'fa',
+        leapYearMode: 'astronomical', // ✅ مهم: جلوگیری از اختلاف ۱ روزه
+      }
+    }
+  });
+}
+
 
   // --- Limit hours_spent to 32 (inside modal) ---
   const hoursInput = document.querySelector('#id_hours_spent');
