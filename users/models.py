@@ -8,6 +8,7 @@ from django.db import models
 from django_quill.fields import QuillField
 from django.utils.translation import gettext_lazy as _
 from tinymce.models import HTMLField
+from Projects.models import Project
 from users.fields import JalaliDateField  # Adjust the import path as needed
 from phonenumber_field.modelfields import PhoneNumberField
 from khayyam import JalaliDatetime
@@ -999,7 +1000,7 @@ class EntryExitLog(models.Model):
     is_entry = models.BooleanField(default=True)  # True for entry, False for exit
 
     location = models.ForeignKey(Location,on_delete=models.CASCADE, related_name='Entry_locations')
-
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True)  # ✅ اضافه شود
 
 
     def jalali_date(self):

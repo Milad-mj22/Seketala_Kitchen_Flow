@@ -555,3 +555,70 @@ def assign_stories_to_project(request):
 def select_sprint(request):
     sprints = Sprint.objects.all()  # تمام اسپرینت‌ها را می‌گیریم
     return render(request, 'select_sprint.html', {'sprints': sprints})
+
+
+
+
+
+
+
+
+
+
+from django.http import HttpResponse
+from django.db.models import Count, Sum, Q, F
+from django.db.models.functions import Coalesce
+from decimal import Decimal
+from openpyxl import Workbook
+from django.contrib.auth.models import User
+
+
+def export_tasks_report_excel(request):
+    users = User.objects.annotate(
+        total_tasks=Count('task', filter=Q(task__is_delete=False)),
+        todo_tasks=Count('task', filter=Q(task__status='todo')),
+        doing_tasks=Count('task', filter=Q(task__status='doing')),
+        done_tasks=Count('task', filter=Q(task__status='done')),
+
+        total_goal_time=Coalesce(Sum('task__goal_time'), Decimal('0.0')),
+        total_spent_time=Coalesce(Sum('timeentry__hours_spent'), Decimal('0.0')),
+    ).annotate(
+        remaining_time=F('total_goal_time') - F('total_spent_time')
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Task Report"
+
+    # هدرها
+    ws.append([
+        "نام کاربر",
+        "تعداد کل تسک",
+        "Todo",
+        "Doing",
+        "Done",
+        "ساعت هدف",
+        "ساعت انجام شده",
+        "ساعت باقی‌مانده"
+    ])
+
+    # دیتا
+    for u in users:
+        ws.append([
+            u.username,
+            u.total_tasks,
+            u.todo_tasks,
+            u.doing_tasks,
+            u.done_tasks,
+            float(u.total_goal_time),
+            float(u.total_spent_time),
+            float(u.remaining_time),
+        ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=task_report.xlsx'
+
+    wb.save(response)
+    return response
