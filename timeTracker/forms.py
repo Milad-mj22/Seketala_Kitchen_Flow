@@ -55,6 +55,10 @@ class TaskForm(forms.ModelForm):
         fields = ['title','priority', 'description', 'story','goal_time', 'assigned_to', 'status']
 
 
+
+
+
+
 class StoryForm(forms.ModelForm):
     class Meta:
         model = Story
