@@ -79,21 +79,6 @@ def project_time_report(request, project_id):
     })
 
 
-
-
-
-# views.py
-from decimal import Decimal
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Value, DecimalField
-from django.db.models.functions import Coalesce
-from django.shortcuts import render
-
-from .models import Project
-from timeTracker.models import Sprint, TimeEntry  # adjust import path to your app
-
-DECIMAL = DecimalField(max_digits=12, decimal_places=2)
-
 @login_required
 def projects_time_summary(request):
     # Sprint dropdown options
@@ -123,12 +108,7 @@ def projects_time_summary(request):
     # ---------------------------------------------------------
     projects_qs = Project.objects.select_related("city").prefetch_related("persons")
 
-
-    # If you want to limit projects by user access, uncomment:
-    # projects_qs = projects_qs.filter(persons=request.user)
-
     if sprint_filter_id:
-        # Only sum time entries that belong to stories in the selected sprint
         projects_qs = projects_qs.annotate(
             total_spent=Coalesce(
                 Sum(
@@ -140,7 +120,6 @@ def projects_time_summary(request):
             )
         )
     else:
-        # "all" (or invalid) => sum across all sprints
         projects_qs = projects_qs.annotate(
             total_spent=Coalesce(
                 Sum("story__task__timeentry__hours_spent"),
@@ -162,10 +141,93 @@ def projects_time_summary(request):
         total=Coalesce(Sum("hours_spent"), Value(Decimal("0.00")), output_field=DECIMAL)
     )["total"] or Decimal("0.00")
 
+    # ---------------------------------------------------------
+    # ✅ Mini-chart data: per-project per-user hours (contributors)
+    # ---------------------------------------------------------
+    contrib_qs = TimeEntry.objects.filter(task__story__project__isnull=False)
+    if sprint_filter_id:
+        contrib_qs = contrib_qs.filter(task__story__sprint_id=sprint_filter_id)
+
+    total_time = 0
+    
+    if sprint_filter_id:
+        total_time = Sprint.objects.filter(id=sprint_filter_id)
+    else:
+        total_sprints = Sprint.objects.all()
+
+        for sprint in total_sprints:
+            total_time += sprint.total_hours
+
+    active_users_count = TimeEntry.objects.filter(task__story__project__isnull=False)
+    if sprint_filter_id:
+        active_users_count = active_users_count.filter(task__story__sprint_id=sprint_filter_id)
+    active_users_count = active_users_count.values("user_id").distinct().count()
+    
+    avg_per_user = Decimal("0.00")
+    if active_users_count > 0:
+        avg_per_user = (grand_total / Decimal(active_users_count)).quantize(Decimal("0.01"))
+   
+   
+    user_contrib_rows = (
+        time_qs.values("user_id", "user__username")
+        .annotate(total=Coalesce(Sum("hours_spent"), Value(Decimal("0.00")), output_field=DECIMAL))
+        .order_by("-total", "user__username")
+    )
+
+    user_contrib = []
+    for r in user_contrib_rows:
+        pct = Decimal("0.0")
+        if grand_total > 0:
+            pct = (r["total"] / grand_total * 100).quantize(Decimal("0.1"))
+        user_contrib.append({
+            "username": r["user__username"],
+            "hours": r["total"],
+            "pct": pct,
+        })
+
+    total_time *= len(user_contrib) 
+    
+   
+    contrib_rows = (
+        contrib_qs.values(
+            "task__story__project_id",
+            "user_id",
+            "user__username",
+        )
+        .annotate(spent=Coalesce(Sum("hours_spent"), Value(Decimal("0.00")), output_field=DECIMAL))
+        .order_by("task__story__project_id", "-spent", "user__username")
+    )
+
+    contributors_by_project = {}
+    for x in contrib_rows:
+        pid = x["task__story__project_id"]
+        contributors_by_project.setdefault(pid, []).append({
+            "username": x["user__username"],
+            "spent": x["spent"],
+        })
+
+    # compute max per project for bar scaling
+    for pid, lst in contributors_by_project.items():
+        max_spent = max((c["spent"] for c in lst), default=Decimal("0.00"))
+        contributors_by_project[pid] = {
+            "max_spent": max_spent,
+            "items": lst[:6],  # ✅ show top 6 in mini chart (adjust as you like)
+            "more_count": max(0, len(lst) - 6),
+        }
+
     return render(request, "projects/projects_time_summary.html", {
-        "rows": rows,  # ✅ now Project objects with .image.url available
+        "rows": rows,
         "sprints": sprints_qs,
         "selected_sprint": selected_sprint or "all",
         "selected_sprint_obj": selected_sprint_obj,
         "grand_total": grand_total,
+
+        # ✅ mini chart
+        "contributors_by_project": contributors_by_project,
+        "grand_total": grand_total,
+        "active_users_count": active_users_count,
+        "avg_per_user": avg_per_user,
+        "user_contrib": user_contrib,   # optional for showing top contributors
+        "total_time":total_time    
+    
     })

@@ -24,13 +24,12 @@ class Sprint(models.Model):
     name = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()
-
     is_active = models.BooleanField(default=True)
-
-
+    total_hours = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
+    
     
 class Story(models.Model):
     title = models.CharField(max_length=255)
