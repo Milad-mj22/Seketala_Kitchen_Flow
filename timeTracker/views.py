@@ -98,6 +98,7 @@ def sprint_edit(request, sprint_id):
 
     return render(request, 'sprints/sprint_edit.html', {'form': form, 'sprint': sprint})
 
+
 @login_required
 def task_create(request):
     profile = request.user.profile
@@ -242,29 +243,47 @@ def _get_filtered_tasks_queryset(request):
     return qs, teams
 
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.shortcuts import render
+from django.core.paginator import Paginator
+
 @login_required
 def task_list(request):
     profile = request.user.profile
 
     tasks_qs, teams = _get_filtered_tasks_queryset(request)
 
-    # یوزرها و اسپرینت‌ها همانند قبل
     users = User.objects.filter(profile__teams__in=teams).distinct()
-    sprints = Sprint.objects.filter(story__team__in=teams, is_active=True).distinct()
+    sprints_qs = Sprint.objects.filter(story__team__in=teams, is_active=True).distinct()
 
     selected_team_id = request.GET.get('team')
     selected_user_id = request.GET.get('user')
-    selected_sprint_id = request.GET.get('sprint')
+    selected_sprint_id = request.GET.get('sprint')   # may be None
     selected_priority = request.GET.get('priority')
+
+    # ✅ AUTO-SELECT last sprint if not provided
+    if not selected_sprint_id:
+        # Prefer ordering by a real date field if you have it
+        # Use whatever you actually have: end_date, start_date, created_at, etc.
+        last_sprint = (
+            sprints_qs.order_by('-start_date', '-id').first()
+            # or: sprints_qs.order_by('-end_date', '-id').first()
+            # or: sprints_qs.order_by('-created_at', '-id').first()
+            # fallback: sprints_qs.order_by('-id').first()
+        )
+        if last_sprint:
+            selected_sprint_id = str(last_sprint.id)
+            # ✅ Apply the default filter to tasks
+            tasks_qs = tasks_qs.filter(story__sprint_id=last_sprint.id)
+
+    # The sprints list for dropdown (keep as queryset or list)
+    sprints = sprints_qs
 
     full_mode = True
     page_number = 1
 
-
-    if not full_mode :
-
-        # صفحه اول را سرور رندر می‌کند
+    if not full_mode:
         page_size = 30
         paginator = Paginator(tasks_qs, page_size)
         tasks_page = paginator.page(page_number)
@@ -274,7 +293,6 @@ def task_list(request):
     else:
         tasks = tasks_qs
         has_more = False
-    
 
     return render(request, 'tasks/task_list.html', {
         'tasks': tasks,
@@ -283,12 +301,13 @@ def task_list(request):
         'sprints': sprints,
         'selected_team_id': selected_team_id,
         'selected_user_id': selected_user_id,
-        'selected_sprint_id': selected_sprint_id,
+        'selected_sprint_id': selected_sprint_id,  # ✅ now set automatically
         'selected_priority': selected_priority,
         'title': 'Task Board',
         'current_page': page_number,
         'has_more': has_more,
     })
+
 
 
 from django.http import JsonResponse
