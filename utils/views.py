@@ -535,7 +535,7 @@ def import_tasks_csv(request):
                 if user.exists():
                     user = user.first()
                 else:
-                    print('not find assign name')
+                    print('not find assign name',assigned_name)
                 Task.objects.create(
                     title=title,
                     description=description,
