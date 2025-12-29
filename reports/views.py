@@ -85,7 +85,12 @@ def data_dashboard_view(request):
 
     sprint_id = request.GET.get('sprint')
     sprints = Sprint.objects.all()
-    selected_sprint = Sprint.objects.filter(id=sprint_id).first() if sprint_id else sprints.first()
+    sprints_qs = Sprint.objects.filter( is_active=True).distinct()
+
+    if sprint_id is None:
+        selected_sprint = sprints_qs.order_by('-start_date', '-id').first()
+    else:
+        selected_sprint = Sprint.objects.filter(id=sprint_id).first() 
 
     entries = TimeEntry.objects.select_related('task__story__team', 'user', 'task__story__sprint')
     if selected_sprint:
@@ -226,168 +231,149 @@ def _clamp_decimal(x: Decimal, lo: Decimal, hi: Decimal) -> Decimal:
         return hi
     return x
 
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db.models import Sum, Value, F
+from django.db.models.functions import Coalesce, Greatest
+from django.shortcuts import render
 
+@login_required
 def users_task_dashboard(request):
-    excluded_usernames = [
-        "test",
-        "test2",
-        "milad_test",
-        "milad",
-    ]
-
+    excluded_usernames = ["test", "test2", "milad_test", "milad"]
     users = User.objects.exclude(username__in=excluded_usernames)
+
+    # ✅ sprints for dropdown (adjust team filtering if you want)
+    sprints_qs = Sprint.objects.filter(is_active=True).order_by("-start_date", "-id")
+    last_sprint = sprints_qs.first()
+
+    selected_sprint = request.GET.get("sprint")  # can be None, "all", or an id string
+
+    # ✅ default behavior: if not provided => last sprint
+    if not selected_sprint and last_sprint:
+        selected_sprint = str(last_sprint.id)
+
+    # ✅ interpret selection
+    sprint_filter_id = None
+    if selected_sprint and selected_sprint != "all":
+        try:
+            sprint_filter_id = int(selected_sprint)
+        except (TypeError, ValueError):
+            sprint_filter_id = None  # fallback to "no filter"
 
     rows = []
 
     for user in users:
-        # -----------------------------------------
-        # Base tasks: spent + remaining per task
-        # -----------------------------------------
         base_tasks = Task.objects.filter(
             assigned_to=user,
             is_delete=False
-        ).annotate(
-            spent=Coalesce(Sum('timeentry__hours_spent'), Value(0), output_field=DECIMAL),
+        )
+
+        # ✅ apply sprint filter (ONLY if not "all")
+        # Change this path if your FK differs:
+        # e.g. base_tasks = base_tasks.filter(sprint_id=sprint_filter_id)
+        if sprint_filter_id:
+            base_tasks = base_tasks.filter(story__sprint_id=sprint_filter_id)
+
+        base_tasks = base_tasks.annotate(
+            spent=Coalesce(Sum("timeentry__hours_spent"), Value(0), output_field=DECIMAL),
         ).annotate(
             remaining=Greatest(
-                Coalesce(F('goal_time'), Value(0), output_field=DECIMAL) - F('spent'),
+                Coalesce(F("goal_time"), Value(0), output_field=DECIMAL) - F("spent"),
                 Value(0),
                 output_field=DECIMAL
             )
         )
 
-        todo_tasks = base_tasks.filter(status='todo')
-        doing_tasks = base_tasks.filter(status='doing')
+        todo_tasks = base_tasks.filter(status="todo")
+        doing_tasks = base_tasks.filter(status="doing")
+        done_tasks = base_tasks.filter(status="done")
 
-        # اگر status='done' ندارید، این خط و بخش‌های مربوط به done را حذف کنید
-        done_tasks = base_tasks.filter(status='done')
-
-        # -----------------------------------------
-        # Totals across ALL tasks (performance base)
-        # -----------------------------------------
         all_tasks_agg = base_tasks.aggregate(
-            total_goal=Coalesce(Sum('goal_time'), Value(0), output_field=DECIMAL),
-            total_spent=Coalesce(Sum('spent'), Value(0), output_field=DECIMAL),
-            total_remaining=Coalesce(Sum('remaining'), Value(0), output_field=DECIMAL),
+            total_goal=Coalesce(Sum("goal_time"), Value(0), output_field=DECIMAL),
+            total_spent=Coalesce(Sum("spent"), Value(0), output_field=DECIMAL),
+            total_remaining=Coalesce(Sum("remaining"), Value(0), output_field=DECIMAL),
         )
+
         total_goal_all = all_tasks_agg["total_goal"] or Decimal("0")
         total_spent_all_tasks = all_tasks_agg["total_spent"] or Decimal("0")
         total_remaining_all = all_tasks_agg["total_remaining"] or Decimal("0")
 
-        # Also total spent across TimeEntry table (optional redundancy; keep if you want)
-        total_spent_all = TimeEntry.objects.filter(user=user).aggregate(
-            total=Coalesce(Sum('hours_spent'), Value(0), output_field=DECIMAL)
-        )["total"] or Decimal("0")
-
-        # -----------------------------------------
-        # Progress (unclamped raw + clamped for UI)
-        # -----------------------------------------
         if total_goal_all > 0:
             progress_raw = (total_spent_all_tasks / total_goal_all) * 100
         else:
             progress_raw = Decimal("0")
 
-        # UI progress can be clamped to 0..100, but we also keep raw for "overrun" warning
         progress_ui = _clamp_decimal(progress_raw, Decimal("0"), Decimal("100"))
-        progress_int = int(progress_ui.quantize(Decimal("1")))          # for progress bar width
-        progress_display = progress_ui.quantize(Decimal("0.1"))         # shown percent
+        progress_int = int(progress_ui.quantize(Decimal("1")))
+        progress_display = progress_ui.quantize(Decimal("0.1"))
 
-        # Overrun: spent > goal  => show warning + show raw percent (optional)
         is_overrun = (total_goal_all > 0 and total_spent_all_tasks > total_goal_all)
-        overrun_percent = Decimal("0.0")
-        if total_goal_all > 0:
-            overrun_percent = progress_raw.quantize(Decimal("0.1"))
+        overrun_percent = progress_raw.quantize(Decimal("0.1")) if total_goal_all > 0 else Decimal("0.0")
 
-        # Over-commitment: goal is high but progress low
-        # heuristic thresholds (tune as you like)
-        # - if remaining is big AND progress is low => warning
-        is_overcommit = (total_goal_all >= Decimal("20") and progress_ui < Decimal("40") and total_remaining_all >= Decimal("10"))
+        is_overcommit = (
+            total_goal_all >= Decimal("20")
+            and progress_ui < Decimal("40")
+            and total_remaining_all >= Decimal("10")
+        )
 
-        # -----------------------------------------
-        # UI status classes
-        # -----------------------------------------
         if progress_ui >= Decimal("70"):
-            status_text = "✅ عملکرد خوب"
-            status_class = "pill-good"
-            progress_class = "p-good"
+            status_text, status_class, progress_class = "✅ عملکرد خوب", "pill-good", "p-good"
         elif progress_ui >= Decimal("40"):
-            status_text = "⚠️ عملکرد متوسط"
-            status_class = "pill-mid"
-            progress_class = "p-mid"
+            status_text, status_class, progress_class = "⚠️ عملکرد متوسط", "pill-mid", "p-mid"
         else:
-            status_text = "⛔ عملکرد ضعیف"
-            status_class = "pill-low"
-            progress_class = "p-low"
+            status_text, status_class, progress_class = "⛔ عملکرد ضعیف", "pill-low", "p-low"
 
-        # -----------------------------------------
-        # Optional DONE totals
-        # -----------------------------------------
         done_agg = done_tasks.aggregate(
-            done_goal=Coalesce(Sum('goal_time'), Value(0), output_field=DECIMAL),
-            done_spent=Coalesce(Sum('spent'), Value(0), output_field=DECIMAL),
-            done_remaining=Coalesce(Sum('remaining'), Value(0), output_field=DECIMAL),
+            done_goal=Coalesce(Sum("goal_time"), Value(0), output_field=DECIMAL),
+            done_spent=Coalesce(Sum("spent"), Value(0), output_field=DECIMAL),
+            done_remaining=Coalesce(Sum("remaining"), Value(0), output_field=DECIMAL),
         )
 
         rows.append({
             "user": user,
-
-            # totals
             "total_goal_all": total_goal_all,
             "total_spent_all_tasks": total_spent_all_tasks,
             "total_remaining_all": total_remaining_all,
-            "total_spent_all": total_spent_all,  # from TimeEntry directly
 
-            # progress / status
             "progress_int": progress_int,
             "progress_display": progress_display,
-            "progress_raw_display": overrun_percent,  # only meaningful when overrun
+            "progress_raw_display": overrun_percent,
             "status_text": status_text,
             "status_class": status_class,
             "progress_class": progress_class,
 
-            # warnings
             "is_overrun": is_overrun,
             "is_overcommit": is_overcommit,
 
-            # task lists
             "todo_tasks": todo_tasks,
             "doing_tasks": doing_tasks,
             "done_tasks": done_tasks,
 
-            # done totals
             "done_total_goal": done_agg["done_goal"],
             "done_total_spent": done_agg["done_spent"],
             "done_total_remaining": done_agg["done_remaining"],
         })
 
-    # -------------------------------------------------
-    # Ranking: sort by progress (desc), then by spent (desc)
-    # -------------------------------------------------
     rows_sorted = sorted(
         rows,
         key=lambda r: (Decimal(r["progress_display"]), Decimal(r["total_spent_all_tasks"])),
         reverse=True
     )
 
-    # add rank & medal label
     for idx, r in enumerate(rows_sorted, start=1):
         r["rank"] = idx
-        if idx == 1:
-            r["rank_badge"] = "🥇"
-        elif idx == 2:
-            r["rank_badge"] = "🥈"
-        elif idx == 3:
-            r["rank_badge"] = "🥉"
-        else:
-            r["rank_badge"] = "⭐"
+        r["rank_badge"] = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else "⭐"
 
-    # summary for top section
-    summary = {
-        "users_count": len(rows_sorted),
-    }
+    summary = {"users_count": len(rows_sorted)}
 
     return render(
         request,
         "scrum_reports/sprint_hours.html",
-        {"data": rows_sorted, "summary": summary}
+        {
+            "data": rows_sorted,
+            "summary": summary,
+            "sprints": sprints_qs,                 # ✅ for dropdown
+            "selected_sprint": selected_sprint,    # ✅ "all" or id as string
+        }
     )

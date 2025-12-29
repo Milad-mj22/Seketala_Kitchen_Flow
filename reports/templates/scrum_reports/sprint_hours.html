@@ -166,9 +166,121 @@
   .alert-mini .d{ color: rgba(0,0,0,.65); font-size:.88rem; }
   .alert-overrun{ background: rgba(220,53,69,.08); border-color: rgba(220,53,69,.18); }
   .alert-overcommit{ background: rgba(255,193,7,.12); border-color: rgba(255,193,7,.22); }
+
+
+  .filter-card{
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .filter-card .card-header{
+    background: linear-gradient(135deg, rgba(13,110,253,.08), rgba(111,66,193,.08));
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    padding: 14px 16px;
+  }
+  .filter-card .card-body{
+    padding: 14px 16px;
+  }
+
+  .filter-label{
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .filter-label .kpi-icon{
+    width: 34px; height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 1px solid rgba(0,0,0,.06);
+    background: rgba(0,0,0,.02);
+  }
+
+  .filter-select{
+    border-radius: 14px !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    padding: 10px 12px !important;
+    font-weight: 800;
+    background-color: rgba(248,249,250,.9);
+  }
+  .filter-select:focus{
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.12) !important;
+    border-color: rgba(13,110,253,.35) !important;
+  }
+
+  .filter-meta{
+    font-size: .88rem;
+    color: rgba(0,0,0,.65);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+
 </style>
 
 <div class="rtl-report container-fluid py-3">
+<!-- Sprint Filter -->
+<div class="card mb-4 shadow-sm filter-card">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="filter-label">
+      <span class="kpi-icon">🗓️</span>
+      فیلتر گزارش بر اساس اسپرینت
+    </div>
+
+    <span class="status-pill">
+      {% if selected_sprint == "all" %}
+        همه اسپرینت‌ها
+      {% else %}
+        اسپرینت انتخاب‌شده
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-12 col-md-8 col-lg-6">
+        <label class="form-label fw-bold mb-2">اسپرینت</label>
+
+        <select name="sprint" class="form-select filter-select" onchange="this.form.submit()">
+          <option value="all" {% if selected_sprint == "all" %}selected{% endif %}>
+            ✅ همه اسپرینت‌ها
+          </option>
+
+          {% for sp in sprints %}
+            <option value="{{ sp.id }}" {% if selected_sprint == sp.id|stringformat:"s" %}selected{% endif %}>
+              🏁 {{ sp.title|default:"Sprint" }}
+              {% if sp.start_date %} — {{ sp.start_date }}{% endif %}
+              {% if sp.name %} — {{ sp.name }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+
+        <div class="mt-2 filter-meta">
+          <span>با تغییر اسپرینت، گزارش به صورت خودکار آپدیت می‌شود.</span>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-lg-3">
+        <noscript>
+          <button class="btn btn-primary w-100" style="border-radius: 14px; font-weight: 900;">
+            اعمال فیلتر
+          </button>
+        </noscript>
+
+        <a href="?" class="btn btn-light w-100"
+           style="border-radius: 14px; font-weight: 900; border: 1px solid rgba(0,0,0,.08);">
+          ریست
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
 
   <!-- Ranking -->
   <div class="card mb-4 shadow-sm rank-card">

@@ -14,7 +14,11 @@ class Project(models.Model):
     city = models.ForeignKey(City,on_delete=models.SET_NULL, null=True,related_name='project_city')
     persons = models.ManyToManyField(User, related_name="projects_person")  # people involved in mission
     description = models.TextField(blank=True)
-
+    image = models.ImageField(
+        upload_to="projects/",
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return self.name
