@@ -12,7 +12,6 @@ from khayyam import JalaliDatetime
 from StoneFlow.models import PreInvoice, PreInvoiceItem
 from order_flow.models import MaterialUsage, OrderStep
 from users.EntryModule.EntryUtils import get_latest_exit, is_user_in , UserWorkTimeManager
-from users.utils.utils import send_push_notification
 from .decorators import job_required
 from users.utils.CalulatedDistance import calculate_distance
 
@@ -165,93 +164,6 @@ class RegisterView(View):
         return render(request, self.template_name, {'form': form})
 
 
-def send_notification(request, user_id):
-    try:
-        user = User.objects.get(id=user_id)
-        send_push_notification(user, "شما یک پیام جدید دارید!")
-        return JsonResponse({"message": f"Notification sent to {user.username}"})
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
-
-
-@login_required
-def send_push_notification(request):
-    from webpush import send_user_notification
-    payload = {
-        "head": "New Notification",
-        "body": "This is a test notification!",
-        "icon": "https://your-site.com/static/icon.png",
-        "url": "https://your-site.com/",
-    }
-    send_user_notification(user=request.user, payload=payload, ttl=1000)
-    return JsonResponse({"message": "Notification sent"})
-
-
-@csrf_exempt
-def send_test_notification(request):
-    if request.method == "POST":
-        try:
-            user_id =request.user.id
-            user = User.objects.get(id=user_id)
-            profile = Profile.objects.get(user=user)# Get the latest subscription for testing
-            if not profile or not profile.push_endpoint:
-                return JsonResponse({"error": "No valid subscription found"}, status=400)
-
-            # Extract push service URL origin (scheme + host + port if exists)
-            endpoint_origin = f"{urlparse(profile.push_endpoint).scheme}://{urlparse(profile.push_endpoint).netloc}"
-
-            payload = json.dumps({
-                "title": "اعلان تستی",
-                "body": "این یک پیام آزمایشی است.",
-                "icon": "/static/img/notification-icon.png"
-            })
-
-            #print("Push Endpoint:", profile.push_endpoint)
-            #print("P256DH Key:", profile.push_p256dh)
-            #print("Auth Key:", profile.push_auth)
-
-
-
-            # Prepare the subscription info
-            subscription_info = {
-                "endpoint": profile.push_endpoint,
-                "keys": {
-                    "p256dh": profile.push_p256dh,
-                    "auth": profile.push_auth
-                },
-            }
-
-            # Prepare the VAPID claims
-            vapid_claims = {
-                "sub": "mailto:m.moltaji@yahoo.com",  # Update with your email
-            }
-
-            # Send push notification
-            response = webpush(
-                subscription_info=subscription_info,
-                data='test',
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,  # Ensure this is set in your settings
-                vapid_claims=vapid_claims,
-                verbose=True  # You can set to True for debugging
-            )
-            
-            #print(f"Notification sent to {user.username}. Response: {response.status_code}")
-            #print(f"Notification sent to {user.username}")
-            return JsonResponse({"message": "Notification sent successfully!"})
-        except WebPushException as ex:
-            import traceback
-            #print("WebPushException:", ex)
-            #print("Traceback:", traceback.format_exc())  
-
-            if ex.response:
-                print("Response Status:", ex.response.status_code)
-                print("Response Headers:", ex.response.headers)
-                #print("Response Body:", ex.response.text)  # This will show the exact error message from the push server
-
-            return JsonResponse({"error": f"Failed to send notification: {str(ex)}"}, status=500)
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-
 @csrf_exempt
 def save_subscription(request):
     if request.method == "POST":
@@ -272,23 +184,6 @@ def save_subscription(request):
             return JsonResponse({"error": "User not found"}, status=404)
         
         
-# Class based view that extends from the built in login view to add a remember me functionality
-
-# class CustomLoginView(LoginView):
-#     form_class = LoginForm
-
-#     def form_valid(self, form):
-#         remember_me = form.cleaned_data.get('remember_me')
-
-#         if not remember_me:
-#             # set session expiry to 0 seconds. So it will automatically close the session after the browser is closed.
-#             self.request.session.set_expiry(0)
-
-#             # Set session as modified to force data updates/cookie to be saved.
-#             self.request.session.modified = True
-
-#         # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
-#         return super(CustomLoginView, self).form_valid(form)
 
 
 
@@ -2870,22 +2765,23 @@ def delete_buyer_activity(request, pk):
 @csrf_exempt
 @login_required
 def subscribe(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        profile = request.user.profile
-        keys = data.get('keys', {})
-        profile.push_endpoint = data.get('endpoint')
-        profile.push_p256dh = keys.get('p256dh')
-        profile.push_auth = keys.get('auth')
-        profile.save()
-        return JsonResponse({'status': 'subscription saved'})
-    return JsonResponse({'error': 'invalid request'}, status=400)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'invalid request'}, status=400)
 
+    data = json.loads(request.body)
+    profile = request.user.profile
+    keys = data.get('keys', {})
 
-from django.http import JsonResponse
+    profile.push_endpoint = data.get('endpoint')
+    profile.push_p256dh = keys.get('p256dh')
+    profile.push_auth = keys.get('auth')
+    profile.save()
+
+    return JsonResponse({'status': 'subscription saved'})
+
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
+from django.http import JsonResponse
 from pywebpush import webpush, WebPushException
 import json
 
@@ -2915,19 +2811,33 @@ def send_test_notification(request):
         return JsonResponse({'status': 'notification sent'})
 
     except WebPushException as ex:
-        if ex.response and ex.response.status_code in [404, 410]:
+        msg = str(ex)
+        # ۱) اگر خود response هست و status_code داره
+        if getattr(ex, "response", None) is not None:
+            status = getattr(ex.response, "status_code", None)
+            if status in [404, 410]:
+                profile.push_endpoint = None
+                profile.push_p256dh = None
+                profile.push_auth = None
+                profile.save()
+                return JsonResponse(
+                    {'error': 'Subscription removed due to invalid endpoint'},
+                    status=410
+                )
+
+        # ۲) fallback: اگر داخل متن خطا 410 یا unsubscribed/expired بود
+        if "410" in msg or "unsubscribed or expired" in msg:
             profile.push_endpoint = None
             profile.push_p256dh = None
             profile.push_auth = None
             profile.save()
-            return JsonResponse({'error': 'Subscription removed due to invalid endpoint'}, status=410)
-        return JsonResponse({'error': str(ex)}, status=500)
+            return JsonResponse(
+                {'error': 'Subscription removed due to invalid endpoint'},
+                status=410
+            )
 
-
-
-
-
-
+        # هر خطای دیگه → 500
+        return JsonResponse({'error': msg}, status=500)
 
 
 
@@ -3311,3 +3221,14 @@ def add_material_to_category(request, category_id):
         "category": category,
         "materials": all_materials,
     })
+
+def remove_material_from_category(request, category_id, material_id):
+    category = get_object_or_404(MaterialCategory, id=category_id)
+    material = get_object_or_404(raw_material, id=material_id, category=category)
+
+    if request.method == "POST":
+        material.category = None
+        material.save()
+        return redirect("category_detail", category_id=category.id)
+
+    return redirect("category_detail", category_id=category.id)

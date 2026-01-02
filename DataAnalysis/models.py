@@ -13,3 +13,23 @@ class Sale(models.Model):
 
     def __str__(self):
         return f"{self.kname} - {self.factnum}"
+
+
+
+class Invoice(models.Model):
+    invoice_number = models.CharField(max_length=50, unique=True)
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField()
+
+    total_price = models.BigIntegerField()
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+    food_name = models.CharField(max_length=100)
+    price = models.BigIntegerField()
+    quantity = models.IntegerField()
+    total = models.BigIntegerField()

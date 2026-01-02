@@ -253,15 +253,28 @@ CHANNEL_LAYERS = {
     },
 }
 
+import getpass
+
+username = getpass.getuser()
+print(username)
+
+if username == 'milad':
+    WEBPUSH_SETTINGS = {
+        "VAPID_PUBLIC_KEY":"BDlfGLF-v7-BFPrQHbhQOXuqiq8PrxxBC0w21uydGWioXSYxR2Vah6TpFpjhlOM_VaomyhhbEcgpqM2qtFHzYcbxwbqYsilEyc",
+        "VAPID_PRIVATE_KEY": "5KaSPAHVDcRdKvBZAmbcF4ctWa-vJkZweLvEI_YzZ1k",
+        "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
+    }
 
 
 
-WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": "BK6rRtCRtgFjW0rft-prnCQXA9tcDsxfpWLtgpZpVSYLJvbaqj97m_-e6Vebzo-dY8OFnAloOdo-jN03UbdDiKo",
-    "VAPID_PRIVATE_KEY": "RR4yTzBUza6n-Dq36iqB97ooXeoBB87Ey8NEvJbjrPU",
-    "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
-}
+else:
 
+
+    WEBPUSH_SETTINGS = {
+        "VAPID_PUBLIC_KEY":"BDlfGLF-v7-9m_uak02iKI63xiy9wPkikqehmhyl0yoO17LuU2FA8tvraM9toimunurINJyxJJbRoBAd4qWhT80",
+        "VAPID_PRIVATE_KEY": "CDhKWLY0OVZ0EIt6skWCXGIXYcMUS0aeAs_sR_txd8g",
+        "VAPID_ADMIN_EMAIL": "m.moltaji@yahoo.com",
+    }
 
 
 

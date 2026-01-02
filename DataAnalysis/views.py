@@ -7,7 +7,7 @@ import sqlite3
 from django.shortcuts import render, redirect
 from django.conf import settings
 from .forms import DBUploadForm
-from .models import Sale
+from .models import InvoiceItem, Sale
 from persiantools.jdatetime import JalaliDate
 
 
@@ -124,3 +124,59 @@ def dashboard(request):
     }
 
     return render(request, 'factors_data_dashboard.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Invoice
+from .utils import jalali_date_time_to_gregorian
+
+
+
+
+class ReceiveInvoice(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        data = request.data
+        if request.headers.get("X-API-KEY") != "SECRET123":
+            return Response({"error": "unauthorized"}, status=403)
+        
+        date_time = jalali_date_time_to_gregorian(data['date'],data['time'])
+
+        invoice, created = Invoice.objects.get_or_create(
+            invoice_number=data["invoice_number"],
+            defaults={
+                "phone": data["phone"],
+                "created_at": date_time,
+                "total_price": data["total_price"],
+            }
+        )
+
+        if not created:
+            return Response({"status": "already_exists"})
+
+        for item in data["items"]:
+            InvoiceItem.objects.create(
+                invoice=invoice,
+                food_name=item["food"],
+                price=item["price"],
+                quantity=item["quantity"],
+                total=item["price"] * item["quantity"]
+            )
+
+        return Response({"status": "ok"}, status=status.HTTP_201_CREATED)
