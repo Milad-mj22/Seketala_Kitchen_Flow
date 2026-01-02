@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "TasksManager",
     "timeTracker",
     "reports",
+    "HotelManagment"
 ]
 
 # --------------------------------------------------

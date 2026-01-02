@@ -1,0 +1,13 @@
+{% extends "users/base.html" %}
+{% block title %} حذف مهمان {% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h3>آیا از حذف {{ object.first_name }} {{ object.last_name }} مطمئن هستید؟</h3>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">حذف</button>
+        <a href="{% url 'guest_list' %}" class="btn btn-secondary">انصراف</a>
+    </form>
+</div>
+{% endblock %}

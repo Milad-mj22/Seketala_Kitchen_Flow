@@ -51,6 +51,7 @@ urlpatterns = [
     path('TasksManager/', include('TasksManager.urls')),
     path('Missions/', include('Missions.urls')),
     path('reports/', include('reports.urls')),
+    path('hotel/', include('HotelManagment.urls')),
 
 
     

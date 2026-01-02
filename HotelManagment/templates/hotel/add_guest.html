@@ -1,0 +1,257 @@
+{% extends "users/base.html" %}
+{% block title %}ثبت مهمان جدید{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/store.css' %}">
+<script src="{% static 'js/all.min.js' %}"></script>
+
+<style>
+    body {
+        direction: rtl;
+        background: radial-gradient(circle at top left, #eef2ff, #f9fafb 40%, #f5f3ff 100%);
+    }
+
+    .inventory-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px 16px 40px;
+    }
+
+    .page-shell {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        border-radius: 28px;
+        padding: 20px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
+
+    .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    @media (min-width: 768px) {
+        .page-header {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    .page-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title-pill {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        box-shadow: 0 12px 28px rgba(79, 70, 229, 0.55);
+    }
+
+    .page-title-pill i {
+        color: #fff;
+        font-size: 18px;
+    }
+
+    .page-title {
+        font-weight: 800;
+        font-size: 24px;
+        color: #0f172a;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .inventory-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .field-card {
+        border-radius: 14px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        padding: 14px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .field-card:focus-within {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.18);
+    }
+
+    .field-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: #4b5563;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .field-input,
+    .field-select {
+        width: 100%;
+        border-radius: 999px;
+        font-size: 14px;
+        border: 1px solid #e5e7eb;
+        padding: 10px 14px;
+        height: 42px;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        text-align: right;
+        direction: rtl;
+    }
+
+    .field-input:focus,
+    .field-select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+    }
+
+    .submit-wrapper {
+        margin-top: 16px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        border-radius: 999px;
+        padding: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        border: none;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 12px 28px rgba(248, 113, 113, 0.5);
+    }
+
+    @media (min-width: 768px) {
+        .inventory-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    }
+</style>
+
+<div class="inventory-page" style="text-align: right;">
+    <div class="page-shell">
+        <div class="page-header">
+            <div class="page-title-wrapper">
+                <div class="page-title-pill">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <div>
+
+                    {% if edit_mode %}
+                        <h1 class="page-title">ویرایش مهمان</h1>
+                    {% else %}
+                        <h1 class="page-title">ثبت مهمان جدید</h1>
+                    {% endif %}
+
+
+
+                    <div class="page-subtitle">
+                        وارد کردن اطلاعات مهمان و رزرو اتاق به‌صورت سریع و زیبا
+                    </div>
+                </div>
+            </div>
+        </div>
+<form method="post">
+    {% csrf_token %}
+    <div class="inventory-layout">
+
+        <div class="field-card">
+            <label class="field-label">نام</label>
+            <input type="text" name="first_name" class="form-control field-input" required
+                   value="{{ form.first_name.value|default_if_none:'' }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">نام خانوادگی</label>
+            <input type="text" name="last_name" class="form-control field-input" required
+                   value="{{ form.last_name.value|default_if_none:'' }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">کد ملی</label>
+            <input type="text" name="national_code" class="form-control field-input" required
+                   value="{{ form.national_code.value|default_if_none:'' }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">شماره تلفن</label>
+            <input type="text" name="phone_number" class="form-control field-input" required
+                   value="{{ form.phone_number.value|default_if_none:'' }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">تعداد نفرات در اتاق</label>
+            <input type="number" name="persons_in_room" min="1" class="form-control field-input" required
+                   value="{{ form.persons_in_room.value|default_if_none:1 }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">انتخاب اتاق</label>
+            <select name="room" class="form-select field-select" required>
+                <option value="" disabled {% if not form.room.value %}selected{% endif %}>انتخاب اتاق...</option>
+                {% for room in rooms %}
+                    <option value="{{ room.id }}" {% if form.room.value == room.id|stringformat:"s" %}selected{% endif %}>
+                        {{ room.room_number }} | ظرفیت: {{ room.room_capacity }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">تاریخ ورود</label>
+            <input type="date" name="date_in" class="form-control field-input" required
+                   value="{{ form.date_in.value|default_if_none:'' }}">
+        </div>
+
+        <div class="field-card">
+            <label class="field-label">تاریخ خروج</label>
+            <input type="date" name="date_out" class="form-control field-input" required
+                   value="{{ form.date_out.value|default_if_none:'' }}">
+        </div>
+
+        <div class="submit-wrapper">
+            <button type="submit" class="btn-submit">
+                {% if edit_mode %}ویرایش{% else %}ثبت مهمان{% endif %}
+            </button>
+        </div>
+
+    </div>
+</form>
+
+
+
+
+
+
+
+
+    </div>
+</div>
+
+{% endblock %}
