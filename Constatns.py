@@ -7,7 +7,7 @@ class Base:
         dorsa = 'dorsa'
         kaman = 'kaman'
 
-    name = Name.dorsa
+    name = Name.moallem
 
 class Constants:
     if Base.name == Base.Name.seke:
