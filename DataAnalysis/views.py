@@ -82,53 +82,53 @@ def upload_db(request):
     return render(request, "UploadDB/upload_db.html", {"form": form})
 
 
+from django.shortcuts import render
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
 
+from django.shortcuts import render
 from django.db.models import Sum
-from .models import Sale
-from django.db.models import Sum
-from django.core.serializers.json import DjangoJSONEncoder
-import json
-from .models import Sale
+from django.db.models.functions import TruncDate
+
+from .models import Invoice, InvoiceItem
+
 
 def dashboard(request):
     top_customers = (
-        Sale.objects.values('kname' , 'tel')
-        .annotate(total_spent=Sum('total'))
+        Invoice.objects.values('phone')
+        .annotate(total_spent=Sum('total_price'))
         .order_by('-total_spent')[:10]
     )
 
     daily_qs = (
-        Sale.objects.values('dat')
-        .annotate(total_day=Sum('total'))
-        .order_by('dat')
+        Invoice.objects
+        .values('created_at__date')
+        .annotate(total_day=Sum('total_price'))
+        .order_by('created_at__date')
     )
 
-    # serialize daily_sales to JSON-friendly format (date -> ISO string)
-    daily_sales_list = [
-        {'dat': d['dat'].isoformat() if hasattr(d['dat'], 'isoformat') else str(d['dat']),
-         'total_day': float(d['total_day'] or 0)}
-        for d in daily_qs
-    ]
+    summary = Invoice.objects.aggregate(
+        total_revenue=Sum('total_price')
+    )
 
-    summary = Sale.objects.aggregate(
-        total_revenue=Sum('total'),
+    daily_item_volume = (
+        InvoiceItem.objects
+        .annotate(day=TruncDate('invoice__created_at'))
+        .values('day')
+        .annotate(total_qty=Sum('quantity'))
+        .order_by('day')
     )
 
     context = {
         'top_customers': top_customers,
         'daily_sales': daily_qs,
-        'daily_sales_json': json.dumps(daily_sales_list, cls=DjangoJSONEncoder),
-        'total_revenue': summary['total_revenue'] or 0,
+        'total_revenue': summary['total_revenue'] or 0,  # تومان
         'days_count': daily_qs.count(),
-        'customers_count': Sale.objects.values('kname').distinct().count(),
+        'customers_count': Invoice.objects.values('phone').distinct().count(),
+        'daily_item_volume': daily_item_volume,
     }
 
     return render(request, 'factors_data_dashboard.html', context)
-
-
-
-
-
 
 
 
