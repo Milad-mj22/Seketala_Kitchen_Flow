@@ -10,6 +10,7 @@ urlpatterns = [
 
     path('upload-db/', views.upload_db, name='upload_db'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('nahve/', views.calc_nahve_pardakh, name='calc_nahve_pardakht'),
     path("api/receive-invoice/", views.ReceiveInvoice.as_view()),
 
     
