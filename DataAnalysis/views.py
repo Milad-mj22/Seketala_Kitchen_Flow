@@ -155,12 +155,16 @@ class ReceiveInvoice(APIView):
         data = request.data
         if request.headers.get("X-API-KEY") != "SECRET123":
             return Response({"error": "unauthorized"}, status=403)
+    
+        
         
         date_time = jalali_date_time_to_gregorian(data['date'],data['time'])
 
         invoice, created = Invoice.objects.get_or_create(
             invoice_number=data["invoice_number"],
             defaults={
+                "name": data["name"],
+                "nahveh": data["nahveh"],
                 "phone": data["phone"],
                 "created_at": date_time,
                 "total_price": data["total_price"],

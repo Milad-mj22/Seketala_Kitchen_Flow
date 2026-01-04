@@ -18,6 +18,8 @@ class Sale(models.Model):
 
 class Invoice(models.Model):
     invoice_number = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=200,default='')
+    nahveh = models.CharField(max_length=300,default='')
     phone = models.CharField(max_length=20)
     created_at = models.DateTimeField()
 
@@ -29,6 +31,7 @@ class InvoiceItem(models.Model):
         on_delete=models.CASCADE,
         related_name="items"
     )
+
     food_name = models.CharField(max_length=100)
     price = models.BigIntegerField()
     quantity = models.IntegerField()
