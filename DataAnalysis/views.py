@@ -93,6 +93,8 @@ from django.db.models.functions import TruncDate
 from .models import Invoice, InvoiceItem
 
 
+from django.db.models import Sum
+
 def dashboard(request):
     top_customers = (
         Invoice.objects.values('phone')
@@ -141,7 +143,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Invoice
-from .utils import jalali_date_time_to_gregorian
+from .utils import extract_payment_methods, jalali_date_time_to_gregorian
 
 
 
@@ -184,3 +186,50 @@ class ReceiveInvoice(APIView):
             )
 
         return Response({"status": "ok"}, status=status.HTTP_201_CREATED)
+    
+
+from django.db.models import Max
+from collections import defaultdict
+from datetime import datetime
+import re
+
+def calc_nahve_pardakh(request):
+    date_str = request.GET.get('date')
+
+    # 🔹 اگر تاریخ نفرستاده بود → آخرین تاریخ دیتابیس
+    if date_str:
+        selected_date = datetime.strptime(date_str, '%Y/%m/%d').date()
+    else:
+        last_date = Invoice.objects.aggregate(
+            max_date=Max('created_at')
+        )['max_date']
+
+        if not last_date:
+            return render(request, 'nahve.html', {})
+
+        selected_date = last_date.date()
+
+    invoices = Invoice.objects.filter(
+        created_at__date=selected_date
+    )
+
+    totals = defaultdict(int)
+
+    for invoice in invoices:
+        if 'اسنپ' not in invoice.name:
+            methods = extract_payment_methods(invoice.nahveh)
+            for method in methods:
+                totals[method] += invoice.total_price
+        else:
+   
+            totals['اسنپ']  += invoice.total_price
+  
+
+    context = {
+        'selected_date': selected_date,
+        'labels': list(totals.keys()),
+        'values': list(totals.values()),
+        'table_data': totals.items()
+    }
+
+    return render(request, 'utils/nahve.html', context)

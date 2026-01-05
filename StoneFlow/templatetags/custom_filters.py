@@ -89,3 +89,8 @@ def get_item(d, key):
         return d.get(key)
     except Exception:
         return None
+    
+
+@register.filter
+def sum_total(table_data):
+    return sum(total for _, total in table_data)
