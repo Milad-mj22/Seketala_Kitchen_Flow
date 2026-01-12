@@ -82,40 +82,64 @@ def upload_db(request):
     return render(request, "UploadDB/upload_db.html", {"form": form})
 
 
-from django.shortcuts import render
-from django.db.models import Sum
-from django.db.models.functions import TruncDate
 
-from django.shortcuts import render
-from django.db.models import Sum
-from django.db.models.functions import TruncDate
 
 from .models import Invoice, InvoiceItem
 
 
-from django.db.models import Sum
+from django.db.models import Sum, Count, F
+from django.db.models.functions import TruncDate
+from datetime import timedelta
+from django.db.models import Case, When, DateField
+from django.db.models.functions import Cast
 
 def dashboard(request):
+
+    # 🔹 ساخت روز کاری (3 صبح تا 3 صبح)
+    work_day = Case(
+        When(
+            created_at__hour__lt=3,
+            then=Cast(F('created_at') - timedelta(days=1), DateField())
+        ),
+        default=Cast(F('created_at'), DateField()),
+        output_field=DateField()
+    )
+
+    # 🔹 10 مشتری برتر
     top_customers = (
-        Invoice.objects.values('phone')
+        Invoice.objects
+        .values('phone')
         .annotate(total_spent=Sum('total_price'))
         .order_by('-total_spent')[:10]
     )
 
+    # 🔹 فروش روزانه بر اساس روز کاری
     daily_qs = (
         Invoice.objects
-        .values('created_at__date')
+        .annotate(day=work_day)
+        .values('day')
         .annotate(total_day=Sum('total_price'))
-        .order_by('created_at__date')
+        .order_by('day')
     )
 
+    # 🔹 مجموع کل فروش
     summary = Invoice.objects.aggregate(
         total_revenue=Sum('total_price')
     )
 
+    # 🔹 حجم فروش آیتم‌ها بر اساس روز کاری
     daily_item_volume = (
         InvoiceItem.objects
-        .annotate(day=TruncDate('invoice__created_at'))
+        .annotate(
+            day=Case(
+                When(
+                    invoice__created_at__hour__lt=3,
+                    then=Cast(F('invoice__created_at') - timedelta(days=1), DateField())
+                ),
+                default=Cast(F('invoice__created_at'), DateField()),
+                output_field=DateField()
+            )
+        )
         .values('day')
         .annotate(total_qty=Sum('quantity'))
         .order_by('day')
@@ -131,7 +155,6 @@ def dashboard(request):
     }
 
     return render(request, 'factors_data_dashboard.html', context)
-
 
 
 
@@ -192,6 +215,10 @@ from django.db.models import Max
 from collections import defaultdict
 from datetime import datetime
 import re
+from django.db.models import Max
+from collections import defaultdict
+from datetime import datetime, timedelta, time
+import re
 
 def calc_nahve_pardakh(request):
     date_str = request.GET.get('date')
@@ -205,12 +232,17 @@ def calc_nahve_pardakh(request):
         )['max_date']
 
         if not last_date:
-            return render(request, 'nahve.html', {})
+            return render(request, 'utils/nahve.html', {})
 
         selected_date = last_date.date()
 
+    # 🔹 بازه روز کاری: 3 صبح تا 3 صبح روز بعد
+    start_datetime = datetime.combine(selected_date, time(3, 0))
+    end_datetime = start_datetime + timedelta(days=1)
+
     invoices = Invoice.objects.filter(
-        created_at__date=selected_date
+        created_at__gte=start_datetime,
+        created_at__lt=end_datetime
     )
 
     totals = defaultdict(int)
@@ -221,9 +253,7 @@ def calc_nahve_pardakh(request):
             for method in methods:
                 totals[method] += invoice.total_price
         else:
-   
-            totals['اسنپ']  += invoice.total_price
-  
+            totals['اسنپ'] += invoice.total_price
 
     context = {
         'selected_date': selected_date,

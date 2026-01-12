@@ -164,7 +164,7 @@
       <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
         <h3 class="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">👑 مشتریان وفادار</h3>
         <div class="space-y-4">
-          {% for c in top_customers|slice:":5" %}
+          {% for c in top_customers|slice:":15" %}
           <div class="flex items-center justify-between group">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors ir-num">{{ forloop.counter }}</div>
@@ -190,9 +190,11 @@
 <script id="daily-sales-data" type="application/json">
 [
 {% for d in daily_sales %}
-  { "date": "{{ d.created_at__date|date:'Y-m-d' }}", "total_toman": {{ d.total_day|default:0 }} }{% if not forloop.last %},{% endif %}
+  { "date": "{{ d.day|date:'Y-m-d' }}", "total_toman": {{ d.total_day|default:0 }} }{% if not forloop.last %},{% endif %}
 {% endfor %}
 ]
+</script>
+
 </script>
 
 <!-- ✅ Items volume data -->
@@ -313,7 +315,7 @@
   document.getElementById('resetZoomSales').onclick = () => salesChart.resetZoom();
 
   // Top sales records (rial)
-  const top5 = [...salesRial].sort((a, b) => b.total_rial - a.total_rial).slice(0, 5);
+  const top5 = [...salesRial].sort((a, b) => b.total_rial - a.total_rial).slice(0,10);
   const listEl = document.getElementById('top10List');
   listEl.innerHTML = top5.map((d) => {
     const dt = new Date(d.date);
