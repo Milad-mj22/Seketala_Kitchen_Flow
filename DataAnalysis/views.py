@@ -192,6 +192,10 @@ from django.db.models import Max
 from collections import defaultdict
 from datetime import datetime
 import re
+from django.db.models import Max
+from collections import defaultdict
+from datetime import datetime, timedelta, time
+import re
 
 def calc_nahve_pardakh(request):
     date_str = request.GET.get('date')
@@ -205,12 +209,17 @@ def calc_nahve_pardakh(request):
         )['max_date']
 
         if not last_date:
-            return render(request, 'nahve.html', {})
+            return render(request, 'utils/nahve.html', {})
 
         selected_date = last_date.date()
 
+    # 🔹 بازه روز کاری: 3 صبح تا 3 صبح روز بعد
+    start_datetime = datetime.combine(selected_date, time(3, 0))
+    end_datetime = start_datetime + timedelta(days=1)
+
     invoices = Invoice.objects.filter(
-        created_at__date=selected_date
+        created_at__gte=start_datetime,
+        created_at__lt=end_datetime
     )
 
     totals = defaultdict(int)
@@ -221,9 +230,7 @@ def calc_nahve_pardakh(request):
             for method in methods:
                 totals[method] += invoice.total_price
         else:
-   
-            totals['اسنپ']  += invoice.total_price
-  
+            totals['اسنپ'] += invoice.total_price
 
     context = {
         'selected_date': selected_date,
