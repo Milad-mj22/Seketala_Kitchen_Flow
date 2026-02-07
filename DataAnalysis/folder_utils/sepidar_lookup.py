@@ -1,8 +1,10 @@
 import pandas as pd
 from pathlib import Path
+from rapidfuzz import process, fuzz
 
-# Load once at import time
-
+# -----------------------------
+# Normalization
+# -----------------------------
 def normalize_fa(text: str) -> str:
     return (
         text.replace("ي", "ی")
@@ -11,36 +13,43 @@ def normalize_fa(text: str) -> str:
             .strip()
     )
 
+EXCEL_PATH = Path(r"cache\sepidar_food_code.xlsx")
 
-EXCEL_PATH = Path(r"cache\sepidar_food_code.xlsx")  # adjust path
+_df = pd.read_excel(EXCEL_PATH, dtype=str)
 
-_df = pd.read_excel(
-    EXCEL_PATH,
-
-    dtype=str
-)
-
-# -----------------------------
-# Normalize columns (Persian-safe)
-# -----------------------------
 _df["كد"] = _df["كد"].astype(str).str.strip()
 _df["عنوان"] = _df["عنوان"].apply(normalize_fa)
 
-# -----------------------------
 # Build NAME -> CODE map
-# -----------------------------
 _NAME_TO_CODE = dict(zip(_df["عنوان"], _df["كد"]))
+_NAMES = list(_NAME_TO_CODE.keys())
 
+# -----------------------------
+# Fuzzy lookup (≥ 90%)
 
-def get_code_by_name(name: str) -> str | None:
+# -----------------------------
+def get_code_by_name(name: str, threshold: int = 90) -> str | None:
     if not name:
         return None
-    return _NAME_TO_CODE.get(name.strip())
 
+    name = normalize_fa(name)
+
+    match = process.extractOne(
+        name,
+        _NAMES,
+        scorer=fuzz.ratio
+    )
+
+    if match and match[1] >= threshold:
+        matched_name = match[0]
+        return _NAME_TO_CODE[matched_name]
+
+    return None
 
 # -----------------------------
 # Test
 # -----------------------------
 if __name__ == "__main__":
-    a = get_code_by_name("ماشروم برگر")
-    print(a)
+    print(get_code_by_name("ماشروم برگر"))      # exact
+    print(get_code_by_name("ماشرومبرگر"))       # missing space
+    print(get_code_by_name("ماشروم برکر"))      # typo
