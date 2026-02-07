@@ -1,5 +1,5 @@
 ﻿aiohappyeyeballs
-aiohttp
+# aiohttp
 aiosignal
 amqp
 annotated-types
@@ -32,7 +32,7 @@ django-widget-tweaks
 dnspython
 email_validator
 et_xmlfile
-frozenlist
+# frozenlist
 h11
 http_ece
 hyperlink
@@ -101,3 +101,5 @@ onvif-zeep
 
 vidgear
 selenium
+pandas
+django-pwa

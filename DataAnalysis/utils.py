@@ -47,3 +47,21 @@ def extract_payment_methods(nahveh_text):
     # 3️⃣ در غیر اینصورت کل متن
     else:
         return {nahveh_text.strip()}
+
+
+
+from datetime import datetime, time, timedelta
+from django.utils import timezone
+
+from datetime import datetime, time, timedelta
+from django.utils import timezone
+
+
+def get_date_range(selected_date):
+    # Start at 03:00 of selected date
+    start = datetime.combine(selected_date, time(3, 0))
+
+    # End at 03:00 of next day
+    end = start + timedelta(days=1)
+
+    return start, end
