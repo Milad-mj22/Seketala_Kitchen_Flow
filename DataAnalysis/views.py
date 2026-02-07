@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
 # Create your views here.
 # views.py
@@ -82,68 +82,64 @@ def upload_db(request):
     return render(request, "UploadDB/upload_db.html", {"form": form})
 
 
+from django.shortcuts import render
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
 
+from django.shortcuts import render
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
 
 from .models import Invoice, InvoiceItem
 
 
-from django.db.models import Sum, Count, F
+from django.db.models import Sum
+from django.db.models import Sum, F, ExpressionWrapper, DurationField, DateField
 from django.db.models.functions import TruncDate
-from datetime import timedelta
-from django.db.models import Case, When, DateField
-from django.db.models.functions import Cast
+from django.db import models
+from datetime import timedelta, time
+from django.db.models import Sum, F, DateTimeField, ExpressionWrapper
+
 
 def dashboard(request):
-
-    # 🔹 ساخت روز کاری (3 صبح تا 3 صبح)
-    work_day = Case(
-        When(
-            created_at__hour__lt=3,
-            then=Cast(F('created_at') - timedelta(days=1), DateField())
-        ),
-        default=Cast(F('created_at'), DateField()),
-        output_field=DateField()
-    )
-
-    # 🔹 10 مشتری برتر
     top_customers = (
-        Invoice.objects
-        .values('phone')
+        Invoice.objects.values('phone')
         .annotate(total_spent=Sum('total_price'))
         .order_by('-total_spent')[:10]
     )
 
-    # 🔹 فروش روزانه بر اساس روز کاری
     daily_qs = (
         Invoice.objects
-        .annotate(day=work_day)
-        .values('day')
+        .annotate(
+            shifted_time=ExpressionWrapper(
+                F('created_at') - timedelta(hours=3),
+                output_field=DateTimeField() 
+            )
+        )
+        .values('created_at__date')
         .annotate(total_day=Sum('total_price'))
-        .order_by('day')
+        .order_by('created_at__date')
     )
 
-    # 🔹 مجموع کل فروش
+
     summary = Invoice.objects.aggregate(
         total_revenue=Sum('total_price')
     )
 
-    # 🔹 حجم فروش آیتم‌ها بر اساس روز کاری
     daily_item_volume = (
         InvoiceItem.objects
         .annotate(
-            day=Case(
-                When(
-                    invoice__created_at__hour__lt=3,
-                    then=Cast(F('invoice__created_at') - timedelta(days=1), DateField())
-                ),
-                default=Cast(F('invoice__created_at'), DateField()),
-                output_field=DateField()
+            shifted_time=ExpressionWrapper(
+                F('invoice__created_at') - timedelta(hours=3),
+                output_field=DateTimeField()
             )
         )
+        .annotate(day=TruncDate('shifted_time'))
         .values('day')
         .annotate(total_qty=Sum('quantity'))
         .order_by('day')
     )
+
 
     context = {
         'top_customers': top_customers,
@@ -155,6 +151,7 @@ def dashboard(request):
     }
 
     return render(request, 'factors_data_dashboard.html', context)
+
 
 
 
@@ -263,3 +260,144 @@ def calc_nahve_pardakh(request):
     }
 
     return render(request, 'utils/nahve.html', context)
+
+
+
+
+
+
+from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from datetime import datetime
+import pandas as pd
+
+from .models import Invoice, InvoiceItem
+from .utils import get_date_range  # or paste function directly
+
+
+def invoice_report(request):
+    # default = today
+    date_str = request.GET.get('date')
+
+    if date_str:
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        selected_date = timezone.now().date()
+
+    start, end = get_date_range(selected_date)
+
+    invoices = Invoice.objects.filter(
+        created_at__range=(start, end)
+    ).prefetch_related("items")
+
+    context = {
+        "invoices": invoices,
+        "selected_date": selected_date
+    }
+    return render(request, "invoice_report.html", context)
+
+from dateutil import parser
+
+
+def download_invoice_excel(request):
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            selected_date = parser.parse(date_str).date()
+        except (ValueError, TypeError):
+            selected_date = datetime.today().date()
+    else:
+        selected_date = datetime.today().date()
+
+
+    # selected_date = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else timezone.localdate()
+
+    start, end = get_date_range(selected_date)
+
+    rows = []
+
+    items = InvoiceItem.objects.filter(
+        invoice__created_at__range=(start, end)
+    ).select_related("invoice")
+
+    for item in items:
+        rows.append({
+            "Invoice Number": item.invoice.invoice_number,
+            "Name": item.invoice.name,
+            "Phone": item.invoice.phone,
+            "Food": item.food_name,
+            "Price": item.price,
+            "Quantity": item.quantity,
+            "Total": item.total,
+            "Date": item.invoice.created_at
+        })
+
+    df = pd.DataFrame(rows)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="invoice_detail.xlsx"'
+
+    df.to_excel(response, index=False)
+    return response
+
+
+
+
+def download_invoice_summary_excel(request):
+    date_str = request.GET.get('date')
+    selected_date = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else timezone.localdate()
+
+    start, end = get_date_range(selected_date)
+
+    items = InvoiceItem.objects.filter(
+        invoice__created_at__range=(start, end)
+    )
+
+    rows = [{
+        "Food": i.food_name,
+        "Quantity": i.quantity,
+        "Total": i.total
+    } for i in items]
+
+    df = pd.DataFrame(rows)
+
+    summary = df.groupby("Food", as_index=False).sum()
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="invoice_summary.xlsx"'
+
+    summary.to_excel(response, index=False)
+    return response
+
+
+
+def invoice_detail_api(request, invoice_number):
+    invoice = get_object_or_404(
+        Invoice.objects.prefetch_related("items"),
+        invoice_number=invoice_number
+    )
+
+    data = {
+        "invoice_number": invoice.invoice_number,
+        "name": invoice.name,
+        "phone": invoice.phone,
+        "nahveh": invoice.nahveh,
+        "created_at": invoice.created_at.strftime("%Y-%m-%d %H:%M"),
+        "total_price": invoice.total_price,
+        "items": [
+            {
+                "food_name": item.food_name,
+                "price": item.price,
+                "quantity": item.quantity,
+                "total": item.total,
+            }
+            for item in invoice.items.all()
+        ]
+    }
+
+    return JsonResponse(data)
