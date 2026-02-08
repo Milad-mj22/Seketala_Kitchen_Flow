@@ -148,11 +148,11 @@ tr.clickable:hover {
             <button type="submit">Filter</button>
 
             <a href="{% url 'download_invoice_excel' %}?date={{ selected_date }}">
-                <button type="button" class="secondary">Excel</button>
+                <button type="button" class="secondary">Raw Excel</button>
             </a>
 
             <a href="{% url 'download_invoice_summary_excel' %}?date={{ selected_date }}">
-                <button type="button" class="secondary">Summary</button>
+                <button type="button" class="secondary">Sepidar Format</button>
             </a>
         </form>
     </div>

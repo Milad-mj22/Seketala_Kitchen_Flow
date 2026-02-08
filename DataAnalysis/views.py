@@ -6,6 +6,9 @@ import os
 import sqlite3
 from django.shortcuts import render, redirect
 from django.conf import settings
+import jdatetime
+
+from .folder_utils.sepidar_date import format_jalali_datetime
 from .forms import DBUploadForm
 from .models import InvoiceItem, Sale
 from persiantools.jdatetime import JalaliDate
@@ -401,3 +404,113 @@ def invoice_detail_api(request, invoice_number):
     }
 
     return JsonResponse(data)
+
+
+
+
+from io import BytesIO
+from pathlib import Path
+from datetime import datetime
+
+from openpyxl import load_workbook
+from openpyxl.utils import column_index_from_string
+from django.http import HttpResponse
+from django.utils import timezone
+from .folder_utils.foodsoft_lookup import get_kname_by_kcod
+from .folder_utils.sepidar_lookup import get_code_by_name
+
+
+def sepidar_download_excel(request):
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            selected_date = parser.parse(date_str).date()
+        except (ValueError, TypeError):
+            selected_date = datetime.today().date()
+    else:
+        selected_date = datetime.today().date()
+
+
+    # selected_date = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else timezone.localdate()
+
+    start, end = get_date_range(selected_date)
+
+    invoices = (
+        Invoice.objects
+        .filter(created_at__range=(start, end))
+        .prefetch_related("items")
+    )
+
+    # -----------------------------
+    # 1) Build rows (one row per invoice item)
+    # -----------------------------
+    rows = []
+    for inv in invoices:
+        for it in inv.items.all():
+
+
+            name = get_kname_by_kcod(it.food_name)
+            code = get_code_by_name(name=name)
+            if code is None:
+                print(f'food soft : {it.food_name}' )
+
+            rows.append({
+                "فاكتور شماره": inv.invoice_number,
+                "فاكتور نام مشتري": inv.name,
+                # "phone": inv.phone,
+                "قلم فاكتور كد": code,
+                "قلم فاكتور في": it.price,
+                "قلم فاكتور واحد اصلي": it.quantity,
+                "قلم فاكتور كل": it.total,
+                "فاكتور تاريخ": format_jalali_datetime(inv.created_at)
+            })
+
+    # -----------------------------
+    # 2) Template + mapping
+    # -----------------------------
+    template_path = r"/home/seketal1/Seketala_Kitchen_Flow/cache/sepidar_template.xlsx"  # must be .xlsx
+    wb = load_workbook(template_path)
+    ws = wb[wb.sheetnames[0]]  # or wb["Sheet1"]
+
+    START_ROW =2 # where the first data row begins in your template
+
+    # Only these columns will be filled; everything else stays unchanged
+    # مثال: اگر نمیخوای ستون C پر بشه، اصلا اینجا قرارش نده
+    COL_MAP = {
+        "فاكتور شماره": "B",
+        "فاكتور تاريخ": "C",
+        "قلم فاكتور كد": "F",
+        "قلم فاكتور واحد اصلي": "I",
+        "قلم فاكتور في": "K",
+        "قلم فاكتور كل": "L",
+        "فاكتور نام مشتري": "R",
+        # "date": "M",   # if you don't want it, comment/remove it
+    }
+
+    # Precompute numeric column indexes (faster)
+    col_idx_map = {k: column_index_from_string(v) for k, v in COL_MAP.items()}
+
+    # -----------------------------
+    # 3) Write only mapped columns
+    # -----------------------------
+    for i, record in enumerate(rows):
+        excel_row = START_ROW + i
+        for field, col_idx in col_idx_map.items():
+            ws.cell(row=excel_row, column=col_idx, value=record.get(field))
+
+    # -----------------------------
+    # 4) Return as download
+    # -----------------------------
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    j_date = jdatetime.date.fromgregorian(date=selected_date)
+
+    filename = f"sepidar_{j_date.strftime('%Y-%m-%d')}.xlsx"
+    resp = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
