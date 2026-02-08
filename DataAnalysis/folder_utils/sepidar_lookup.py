@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from rapidfuzz import process, fuzz
+from user_management.utils import check_server
 
 # -----------------------------
 # Normalization
@@ -13,13 +14,16 @@ def normalize_fa(text: str) -> str:
             .strip()
     )
 
-EXCEL_PATH = Path(r"cache\sepidar_food_code.xlsx")
 
-<<<<<<< HEAD
-EXCEL_PATH = Path(r"/home/seketal1/Seketala_Kitchen_Flow/cache/sepidar_food_code.xlsx")  # adjust path
-=======
+# Load once at import time
+SERVER = check_server()
+
+if SERVER:
+    EXCEL_PATH = Path(r"/home/seketal1/Seketala_Kitchen_Flow/cache/sepidar_food_code.xlsx")  # adjust path
+else:
+    EXCEL_PATH = Path(r"cache\sepidar_food_code.xlsx")
+
 _df = pd.read_excel(EXCEL_PATH, dtype=str)
->>>>>>> d89bfb35680fe46bba190b49ccc855a03cfa87af
 
 _df["كد"] = _df["كد"].astype(str).str.strip()
 _df["عنوان"] = _df["عنوان"].apply(normalize_fa)

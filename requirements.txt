@@ -104,3 +104,4 @@ selenium
 pandas
 django-pwa
 xlrd
+rapidfuzz

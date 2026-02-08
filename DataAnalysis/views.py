@@ -105,31 +105,29 @@ from django.db.models import Sum, F, DateTimeField, ExpressionWrapper
 
 
 def dashboard(request):
-    top_customers = (
+    top_customers = list(
         Invoice.objects.values('phone')
         .annotate(total_spent=Sum('total_price'))
         .order_by('-total_spent')[:10]
     )
 
-    daily_qs = (
+    daily_sales = list(
         Invoice.objects
         .annotate(
             shifted_time=ExpressionWrapper(
                 F('created_at') - timedelta(hours=3),
-                output_field=DateTimeField() 
+                output_field=DateTimeField()
             )
         )
-        .values('created_at__date')
+        .annotate(day=TruncDate('shifted_time'))
+        .values('day')
         .annotate(total_day=Sum('total_price'))
-        .order_by('created_at__date')
+        .order_by('day')
     )
 
+    summary = Invoice.objects.aggregate(total_revenue=Sum('total_price'))
 
-    summary = Invoice.objects.aggregate(
-        total_revenue=Sum('total_price')
-    )
-
-    daily_item_volume = (
+    daily_item_volume = list(
         InvoiceItem.objects
         .annotate(
             shifted_time=ExpressionWrapper(
@@ -143,18 +141,17 @@ def dashboard(request):
         .order_by('day')
     )
 
+    customers_count = Invoice.objects.values('phone').distinct().count()
 
     context = {
         'top_customers': top_customers,
-        'daily_sales': daily_qs,
-        'total_revenue': summary['total_revenue'] or 0,  # تومان
-        'days_count': daily_qs.count(),
-        'customers_count': Invoice.objects.values('phone').distinct().count(),
+        'daily_sales': daily_sales,
+        'total_revenue': summary['total_revenue'] or 0,
+        'days_count': len(daily_sales),
+        'customers_count': customers_count,
         'daily_item_volume': daily_item_volume,
     }
-
     return render(request, 'factors_data_dashboard.html', context)
-
 
 
 
@@ -468,7 +465,16 @@ def sepidar_download_excel(request):
     # -----------------------------
     # 2) Template + mapping
     # -----------------------------
-    template_path = r"/home/seketal1/Seketala_Kitchen_Flow/cache/sepidar_template.xlsx"  # must be .xlsx
+
+    from user_management.utils import check_server
+
+
+    # Load once at import time
+    SERVER = check_server()
+    if SERVER:
+        template_path = r"/home/seketal1/Seketala_Kitchen_Flow/cache/sepidar_template.xlsx"  # must be .xlsx
+    else:
+        template_path = r'cache\sepidar_template.xlsx'
     wb = load_workbook(template_path)
     ws = wb[wb.sheetnames[0]]  # or wb["Sheet1"]
 

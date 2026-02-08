@@ -1,8 +1,14 @@
 import pandas as pd
 from pathlib import Path
+import os
+from user_management.utils import check_server
 
 # Load once at import time
-EXCEL_PATH = Path(r"/home/seketal1/Seketala_Kitchen_Flow/cache/food_soft_food_code.xls")  # adjust path
+SERVER = check_server()
+if SERVER:
+    EXCEL_PATH = Path(r"/home/seketal1/Seketala_Kitchen_Flow/cache/food_soft_food_code.xls")  # adjust path
+else:
+    EXCEL_PATH = Path(r"cache\food_soft_food_code.xls")  # adjust path
 _df = pd.read_excel(EXCEL_PATH, dtype=str)
 
 # Optional: normalize
