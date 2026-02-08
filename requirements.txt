@@ -103,3 +103,4 @@ vidgear
 selenium
 pandas
 django-pwa
+xlrd

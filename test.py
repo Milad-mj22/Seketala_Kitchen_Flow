@@ -1,21 +1,9 @@
-import cv2
+import pandas as pd
 
-# Public camera URL (HTTP or RTSP)
-stream_url = "https://www.earthcam.com/myearthcam/guapiarain"
-stream_url="https://www.skylinewebcams.com/4e15c1e9-199c-4868-9b21-4e758a472666"
+df2 = pd.read_excel(r"cache\food_soft_food_code.xls")
+df1 = pd.read_excel(r"c:\Users\milad\Desktop\new_sepidar.xlsx")
 
-def get_frame():
-    cap = cv2.VideoCapture(stream_url)
-    ret, frame = cap.read()
-    cap.release()
-    if not ret:
-        return None
-    
-    # Encode frame as JPEG
-    ret, jpeg = cv2.imencode('.jpg', frame)
-    if not ret:
-        return None
+# فرض می‌کنیم اسم ستون name هست
+only_in_file1 = df1[~df1["عنوان"].isin(df2["kname"])]
 
-    return jpeg.tobytes()
-
-get_frame()
+print(list(only_in_file1['عنوان']))
