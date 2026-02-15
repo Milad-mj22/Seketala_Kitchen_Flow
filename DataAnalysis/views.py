@@ -250,9 +250,9 @@ def calc_nahve_pardakh(request):
         if 'اسنپ' not in invoice.name:
             methods = extract_payment_methods(invoice.nahveh)
             for method in methods:
-                totals[method] += invoice.total_price
+                totals[method] += invoice.total_price - invoice.discount
         else:
-            totals['اسنپ'] += invoice.total_price
+            totals['اسنپ'] += invoice.total_price - invoice.discount
 
     context = {
         'selected_date': selected_date,
@@ -391,6 +391,7 @@ def invoice_detail_api(request, invoice_number):
         "nahveh": invoice.nahveh,
         "created_at": invoice.created_at.strftime("%Y-%m-%d %H:%M"),
         "total_price": invoice.total_price,
+        "discount": invoice.discount,
         "items": [
             {
                 "food_name": item.food_name,

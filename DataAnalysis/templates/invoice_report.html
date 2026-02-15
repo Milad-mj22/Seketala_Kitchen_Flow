@@ -164,6 +164,7 @@ tr.clickable:hover {
                     <th>Invoice</th>
                     <th>Name</th>
                     <th>Total</th>
+                    <th>Discount</th>
                     <th>Date</th>
                 </tr>
             </thead>
@@ -174,6 +175,7 @@ tr.clickable:hover {
                     <td>{{ invoice.invoice_number }}</td>
                     <td>{{ invoice.name }}</td>
                     <td>{{ invoice.total_price }}</td>
+                    <td>{{ invoice.discount }}</td>
                     <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
                 </tr>
                 {% empty %}
@@ -198,6 +200,7 @@ tr.clickable:hover {
         <p><strong>Nahveh:</strong> <span id="m_nahveh"></span></p>
         <p><strong>Date:</strong> <span id="m_date"></span></p>
         <p><strong>Total:</strong> <span id="m_total"></span></p>
+        <p><strong>Discount :</strong> <span id="m_disc"></span></p>
 
         <hr style="margin:16px 0">
 
@@ -208,6 +211,7 @@ tr.clickable:hover {
                     <th>Price</th>
                     <th>Qty</th>
                     <th>Total</th>
+                    <th>Discount</th>
                 </tr>
             </thead>
             <tbody id="m_items"></tbody>
@@ -243,6 +247,7 @@ function openModal(event, invoiceNumber) {
             document.getElementById("m_nahveh").innerText = data.nahveh;
             document.getElementById("m_date").innerText = data.created_at;
             document.getElementById("m_total").innerText = data.total_price;
+            document.getElementById("m_disc").innerText = data.discount;
 
             const itemsBody = document.getElementById("m_items");
             itemsBody.innerHTML = "";
@@ -253,6 +258,7 @@ function openModal(event, invoiceNumber) {
                         <td>${item.price}</td>
                         <td>${item.quantity}</td>
                         <td>${item.total}</td>
+       
                     </tr>
                 `;
             });
