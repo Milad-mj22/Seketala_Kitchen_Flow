@@ -22,7 +22,9 @@ class Invoice(models.Model):
     nahveh = models.CharField(max_length=300,default='')
     phone = models.CharField(max_length=20)
     created_at = models.DateTimeField()
-
+    
+    
+    discount = models.IntegerField(default=0)
     total_price = models.BigIntegerField()
 
 class InvoiceItem(models.Model):

@@ -69,6 +69,7 @@ def upload_db(request):
                             'kname': row[3],
                             'tel': row[4],
                             'address': row[5],
+                       
                         }
                     )
                 conn.close()
@@ -190,6 +191,7 @@ class ReceiveInvoice(APIView):
                 "phone": data["phone"],
                 "created_at": date_time,
                 "total_price": data["total_price"],
+                "discount" : data['takhfif']
             }
         )
 
