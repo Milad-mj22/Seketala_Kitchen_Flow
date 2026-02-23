@@ -117,8 +117,14 @@ class Profile(models.Model):
     push_p256dh = models.TextField(blank=True, null=True)
     push_auth = models.TextField(blank=True, null=True)
 
-    categories = models.ManyToManyField(MaterialCategory, blank=True, related_name="users_category")
 
+    # 👇 New Field
+    code_vaset = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name='کد واسط'
+    )
 
 
     def __str__(self):

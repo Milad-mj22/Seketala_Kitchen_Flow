@@ -27,6 +27,11 @@ class Invoice(models.Model):
     discount = models.IntegerField(default=0)
     total_price = models.BigIntegerField()
 
+    peyk = models.PositiveIntegerField(default=0)
+    anaam = models.PositiveIntegerField(default=0)
+
+
+
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(
         Invoice,
@@ -38,3 +43,27 @@ class InvoiceItem(models.Model):
     price = models.BigIntegerField()
     quantity = models.IntegerField()
     total = models.BigIntegerField()
+
+
+class Payment(models.Model):
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Cash"
+        CARD = "card", "Card"
+        ONLINE = "online", "Online"
+        PEYK = "nesiye", "Nesiye"
+        ANAAM = "anaam", 'Anaam'
+
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+
+    method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices
+    )
+
+    amount = models.BigIntegerField()
+    created_at = models.DateTimeField()

@@ -27,9 +27,12 @@ class InvoiceAdmin(admin.ModelAdmin):
         'created_at',
         'items_count',
         'total_price_formatted',
+        'discount',
+        'peyk',
+        'anaam'
     )
 
-    list_filter = ('created_at', 'nahveh')
+    list_filter = ('created_at',)
     search_fields = ('invoice_number', 'name', 'phone')
     ordering = ('-created_at',)
 
@@ -44,6 +47,9 @@ class InvoiceAdmin(admin.ModelAdmin):
                 'phone',
                 'nahveh',
                 'created_at',
+                'discount',
+                'peyk',
+                'anaam'
             )
         }),
         ('مبالغ', {

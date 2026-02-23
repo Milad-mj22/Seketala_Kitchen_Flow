@@ -191,7 +191,8 @@ class ReceiveInvoice(APIView):
                 "phone": data["phone"],
                 "created_at": date_time,
                 "total_price": data["total_price"],
-                "discount" : data['takhfif']
+                "discount" : data['takhfif'],
+                "peyk" : data['peyk']
             }
         )
 
@@ -523,3 +524,191 @@ def sepidar_download_excel(request):
     )
     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
+
+
+
+
+
+
+# views.py
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from .models import Invoice, InvoiceItem, Payment
+import json
+
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def factor_list(request):
+    """View to display factors for the logged-in user"""
+    # Get the user's code_vaset from their profile
+    pryk_id = request.user.profile.code_vaset
+    
+    # Filter invoices where peyk field matches user's code_vaset
+    invoices = Invoice.objects.filter(peyk=pryk_id).order_by('-created_at')
+    
+    # Calculate payment summaries for each invoice
+    for invoice in invoices:
+        payments = invoice.payments.all()
+        invoice.paid_amount = sum(p.amount for p in payments)
+        invoice.remaining = invoice.total_price - invoice.paid_amount
+        
+        # Group payments by method
+        payment_methods = {}
+        for payment in payments:
+            if payment.method not in payment_methods:
+                payment_methods[payment.method] = 0
+            payment_methods[payment.method] += payment.amount
+        
+        invoice.payment_methods = payment_methods
+    
+    # Add count for empty state message
+    context = {
+        'invoices': invoices,
+        'invoices_count': invoices.count(),
+        'user_code': pryk_id
+    }
+    
+    return render(request, 'factor_list.html', context)
+
+
+
+from django.core.exceptions import PermissionDenied
+
+@login_required
+def factor_detail(request, invoice_id):
+    """View to show factor details and payment management"""
+    pryk_id = request.user.profile.code_vaset
+    
+    # Get invoice and verify it belongs to this user
+    invoice = get_object_or_404(
+        Invoice.objects.prefetch_related('items', 'payments'), 
+        id=invoice_id,
+        peyk=pryk_id  # This ensures the invoice belongs to the logged-in user
+    )
+    
+    # Get existing payments
+    payments = invoice.payments.all()
+    total_paid = sum(p.amount for p in payments)
+    remaining = invoice.total_price - total_paid
+    
+    # Group payments by method
+    payment_by_method = {}
+    for payment in payments:
+        if payment.method not in payment_by_method:
+            payment_by_method[payment.method] = 0
+        payment_by_method[payment.method] += payment.amount
+    
+    context = {
+        'invoice': invoice,
+        'items': invoice.items.all(),
+        'payments': payments,
+        'total_paid': total_paid,
+        'remaining': remaining,
+        'payment_by_method': payment_by_method,
+        'payment_methods': Payment.PaymentMethod.choices,
+    }
+    
+    return render(request, 'factor_detail.html', context)
+
+
+
+
+
+
+@csrf_exempt
+def update_payments(request, invoice_id):
+    """API endpoint to update payments"""
+    if request.method == 'POST':
+        try:
+            invoice = get_object_or_404(Invoice, id=invoice_id)
+            data = json.loads(request.body)
+            
+            # Delete existing payments
+            invoice.payments.all().delete()
+            
+            # Create new payments
+            for method_data in data['payments']:
+                if int(method_data['amount']) > 0:
+                    Payment.objects.create(
+                        invoice=invoice,
+                        method=method_data['method'],
+                        amount=int(method_data['amount']),
+                        created_at=timezone.now()
+                    )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Payments updated successfully'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+
+
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import datetime
+
+@login_required
+def api_factors(request):
+    """API endpoint for infinite scroll loading"""
+    pryk_id = request.user.profile.code_vaset
+    page = int(request.GET.get('page', 1))
+    filter_type = request.GET.get('filter', 'today')  # 'today' or 'all'
+    
+    # Base queryset
+    queryset = Invoice.objects.filter(peyk=pryk_id)
+    
+    # Apply filter
+    if filter_type == 'today':
+        today = timezone.now().date()
+        queryset = queryset.filter(created_at__date=today)
+    
+    # Order by date (newest first)
+    queryset = queryset.order_by('-created_at')
+    
+    # Paginate (20 items per page)
+    paginator = Paginator(queryset, 20)
+    current_page = paginator.get_page(page)
+    
+    # Prepare data
+    invoices_data = []
+    for invoice in current_page.object_list:
+        payments = invoice.payments.all()
+        paid_amount = sum(p.amount for p in payments)
+        
+        # Group payments by method
+        payment_methods = {}
+        for payment in payments:
+            if payment.method not in payment_methods:
+                payment_methods[payment.method] = 0
+            payment_methods[payment.method] += payment.amount
+        
+        invoices_data.append({
+            'id': invoice.id,
+            'invoice_number': invoice.invoice_number,
+            'name': invoice.name,
+            'phone': invoice.phone,
+            'total_price': float(invoice.total_price),
+            'paid_amount': float(paid_amount),
+            'remaining': float(invoice.total_price - paid_amount),
+            'created_at': invoice.created_at.isoformat(),
+            'payment_methods': payment_methods
+        })
+    
+    return JsonResponse({
+        'invoices': invoices_data,
+        'has_more': current_page.has_next(),
+        'current_page': page,
+        'total_pages': paginator.num_pages
+    })

@@ -20,4 +20,9 @@ urlpatterns = [
         views.invoice_detail_api,
         name="invoice_detail_api"
     ),
+    path('factors/', views.factor_list, name='factor_list'),
+    path('factors/<int:invoice_id>/', views.factor_detail, name='factor_detail'),
+    path('factors/<int:invoice_id>/update-payments/', views.update_payments, name='update_payments'),
+    path('api/factors/', views.api_factors, name='api_factors'),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
